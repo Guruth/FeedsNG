@@ -18,8 +18,8 @@ interface FeedRepository {
 
     suspend fun insertUserGroup(userId: UserId, groupData: GroupData): GroupId
     suspend fun getAllUserGroups(userId: UserId): Flow<Group>
-    
-    suspend fun addFeedToUserGroup(userId: UserId, groupId: GroupId, feedId: FeedId)
+
+    suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId)
     suspend fun addFeedToUser(userId: UserId, feedId: FeedId)
     fun getAllUserFeeds(userId: UserId): Flow<Feed>
 

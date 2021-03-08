@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.flow
 import sh.weller.feedsng.feed.FeedData
+import sh.weller.feedsng.feed.FeedId
 import sh.weller.feedsng.feed.FeedItemData
 import sh.weller.feedsng.feed.GroupData
 import sh.weller.feedsng.user.UserId
@@ -17,12 +18,14 @@ import strikt.api.expectThat
 import strikt.assertions.*
 import strikt.java.time.isAfter
 import java.time.Instant
+import java.util.*
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
 internal class SpringR2DBCFeedRepositoryTest {
 
     @Test
-    fun `tables get created on init`() {
+    fun `init`() {
         val (client, _) = getTestSetup()
 
         runBlocking {
@@ -45,11 +48,11 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeed, getFeed and getFeedWithFeedURL`() {
+    fun `insertFeed, getFeed, getFeedWithFeedURL`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
-            val insertedId = cut.insertFeed(testFeed)
+            val insertedId = cut.insertFeed(firstTestFeed)
 
             val queryById = cut.getFeed(insertedId)
             expectThat(queryById)
@@ -58,37 +61,37 @@ internal class SpringR2DBCFeedRepositoryTest {
                     get { feedId }.isEqualTo(insertedId)
                     get { feedData }
                         .and {
-                            get { name }.isEqualTo(testFeed.name)
-                            get { description }.isEqualTo(testFeed.description)
-                            get { feedUrl }.isEqualTo(testFeed.feedUrl)
-                            get { siteUrl }.isEqualTo(testFeed.siteUrl)
-                            get { lastUpdated }.isEqualTo(testFeed.lastUpdated)
+                            get { name }.isEqualTo(firstTestFeed.name)
+                            get { description }.isEqualTo(firstTestFeed.description)
+                            get { feedUrl }.isEqualTo(firstTestFeed.feedUrl)
+                            get { siteUrl }.isEqualTo(firstTestFeed.siteUrl)
+                            get { lastUpdated }.isEqualTo(firstTestFeed.lastUpdated)
                         }
                 }
 
-            val queryByFeedURL = cut.getFeedWithFeedURL(testFeed.feedUrl)
+            val queryByFeedURL = cut.getFeedWithFeedURL(firstTestFeed.feedUrl)
             expectThat(queryByFeedURL)
                 .isNotNull()
                 .and {
                     get { feedId }.isEqualTo(insertedId)
                     get { feedData }
                         .and {
-                            get { name }.isEqualTo(testFeed.name)
-                            get { description }.isEqualTo(testFeed.description)
-                            get { feedUrl }.isEqualTo(testFeed.feedUrl)
-                            get { siteUrl }.isEqualTo(testFeed.siteUrl)
-                            get { lastUpdated }.isEqualTo(testFeed.lastUpdated)
+                            get { name }.isEqualTo(firstTestFeed.name)
+                            get { description }.isEqualTo(firstTestFeed.description)
+                            get { feedUrl }.isEqualTo(firstTestFeed.feedUrl)
+                            get { siteUrl }.isEqualTo(firstTestFeed.siteUrl)
+                            get { lastUpdated }.isEqualTo(firstTestFeed.lastUpdated)
                         }
                 }
         }
     }
 
     @Test
-    fun `setFeedLastRefreshedTimestamp updates the timestamp`() {
+    fun `insertFeed, setFeedLastRefreshedTimestamp, getFeed`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
-            val insertedId = cut.insertFeed(testFeed)
+            val insertedId = cut.insertFeed(firstTestFeed)
 
             val currentTimestamp = Instant.now()
             delay(500)
@@ -105,11 +108,11 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeedItems, getFeedItems and getItem`() {
+    fun `insertFeed, insertFeedItems, getFeedItems, getFeedItem`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
-            val feedId = cut.insertFeed(testFeed)
+            val feedId = cut.insertFeed(firstTestFeed)
             val feedItemIds = cut.insertFeedItems(feedId, testFeedItems).toList()
             expectThat(feedItemIds)
                 .isNotEmpty()
@@ -137,30 +140,80 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `insertUserGroup, getAllUserGroups`() {
+    fun `insertUserGroup, addFeedToUserGroup, getAllUserGroups`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
-            cut.insertUserGroup(UserId(1), GroupData("firstGroup", emptyList()))
-            cut.insertUserGroup(UserId(1), GroupData("secondGroup", emptyList()))
-            cut.insertUserGroup(UserId(2), GroupData("thirdGroup", emptyList()))
+            val firstUser = UserId(1)
+            val secondUser = UserId(2)
 
-            val userGroups = cut.getAllUserGroups(UserId(1)).toList()
+            val firstGroup = cut.insertUserGroup(firstUser, GroupData("firstGroup", emptyList()))
+            cut.addFeedToUserGroup(firstGroup, FeedId(1))
+            cut.addFeedToUserGroup(firstGroup, FeedId(2))
+
+            val secondGroup = cut.insertUserGroup(firstUser, GroupData("secondGroup", emptyList()))
+            cut.addFeedToUserGroup(secondGroup, FeedId(3))
+
+            val thirdGroup = cut.insertUserGroup(secondUser, GroupData("thirdGroup", emptyList()))
+            cut.addFeedToUserGroup(thirdGroup, FeedId(4))
+            cut.addFeedToUserGroup(thirdGroup, FeedId(5))
+
+            val userGroups = cut.getAllUserGroups(firstUser).toList()
             expectThat(userGroups)
                 .hasSize(2)
-                .map { it.groupData.name }
-                .containsExactlyInAnyOrder("firstGroup", "secondGroup")
+                .and {
+                    map { it.groupData.name }
+                        .containsExactlyInAnyOrder("firstGroup", "secondGroup")
+
+                    flatMap { group -> group.groupData.feeds.map { it.id } }
+                        .hasSize(3)
+                        .containsExactlyInAnyOrder(1, 2, 3)
+                }
         }
     }
 
+    @Test
+    fun `insertFeed, addFeedToUserGroup, addFeedToUser, getAllUserFeeds`() {
+        val (_, cut) = getTestSetup()
+
+        runBlocking {
+            val firstUser = UserId(1)
+
+            val firstFeed = cut.insertFeed(firstTestFeed)
+            val secondFeed = cut.insertFeed(secondTestFeed)
+
+            val firstGroup = cut.insertUserGroup(firstUser, GroupData("firstGroup", emptyList()))
+            cut.addFeedToUserGroup(firstGroup, firstFeed)
+            cut.addFeedToUser(firstUser, secondFeed)
+
+            val feeds = cut.getAllUserFeeds(firstUser).toList()
+            expectThat(feeds)
+                .hasSize(2)
+                .map { it.feedData.name }
+                .containsExactlyInAnyOrder(firstTestFeed.name, secondTestFeed.name)
+        }
+    }
+
+    @Test
+    fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItem`() {
+        assertTrue { false }
+    }
+
     private fun getTestSetup(): Pair<DatabaseClient, SpringR2DBCFeedRepository> {
-        val factory = H2ConnectionFactory.inMemory("testdb")
+        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
         val repository = SpringR2DBCFeedRepository(Dispatchers.Default, factory)
         return Pair(client, repository)
     }
 
-    private val testFeed = FeedData(
+    private val firstTestFeed = FeedData(
+        name = "Test",
+        description = "Test",
+        feedUrl = "http://foo.bar",
+        siteUrl = "https://bar.foo",
+        lastUpdated = Instant.now()
+    )
+    private val secondTestFeed = FeedData(
         name = "Test",
         description = "Test",
         feedUrl = "http://foo.bar",
