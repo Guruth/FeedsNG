@@ -6,9 +6,9 @@ plugins {
     id("org.springframework.boot") version "2.4.3"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
-    kotlin("jvm") version "1.4.31"
-    kotlin("plugin.spring") version "1.4.31"
-    kotlin("plugin.serialization") version "1.4.31"
+    kotlin("jvm") version "1.5.0-M1"
+    kotlin("plugin.spring") version "1.5.0-M1"
+    kotlin("plugin.serialization") version "1.5.0-M1"
 }
 
 group = "sh.weller"
