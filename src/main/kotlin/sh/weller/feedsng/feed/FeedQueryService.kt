@@ -1,19 +1,21 @@
 package sh.weller.feedsng.feed
 
+import kotlinx.coroutines.flow.Flow
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 
 interface FeedQueryService {
-    suspend fun getGroups(userId: UserId): List<Group>
-    suspend fun getGroup(userId: UserId, groupId: GroupId): Group
+    suspend fun getFeed(feedId: FeedId): Feed?
 
-    suspend fun getFeeds(userId: UserId): List<Feed>
-    suspend fun getFeed(userId: UserId, feedId: FeedId): Feed
-
-    suspend fun getFeedItems(userId: UserId, feedIds: List<FeedId>?, since: Instant?): List<UserFeedItem>
-    suspend fun getSavedFeedItems(userId: UserId, feedIdList: List<FeedId>?, since: Instant?): List<UserFeedItem>
-    suspend fun getUnreadFeedItems(userId: UserId, feedIdList: List<FeedId>?, since: Instant?): List<UserFeedItem>
-    suspend fun getFeedItem(userId: UserId, feedItemId: FeedItemId): UserFeedItem
+    suspend fun getGroups(userId: UserId): Flow<Group>
+    fun getFeeds(userId: UserId): Flow<Feed>
+    fun getFeedItems(
+        userId: UserId,
+        feedIdList: List<FeedId>,
+        since: Instant?,
+        limit: Int?,
+        filter: FeedItemFilter?
+    ): Flow<UserFeedItem>
 }
 
 data class Group(
@@ -58,3 +60,7 @@ data class FeedItemData(
     val url: String,
     val created: Instant,
 )
+
+enum class FeedItemFilter {
+    UNREAD, SAVED;
+}
