@@ -2,17 +2,13 @@ package sh.weller.feedsng.feed.impl.database.impl
 
 import io.r2dbc.h2.H2ConnectionFactory
 import io.r2dbc.spi.Row
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.flow
-import sh.weller.feedsng.feed.FeedData
-import sh.weller.feedsng.feed.FeedId
-import sh.weller.feedsng.feed.FeedItemData
-import sh.weller.feedsng.feed.GroupData
+import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.user.UserId
 import strikt.api.expectThat
 import strikt.assertions.*
@@ -20,7 +16,6 @@ import strikt.java.time.isAfter
 import java.time.Instant
 import java.util.*
 import kotlin.test.Test
-import kotlin.test.assertTrue
 
 internal class SpringR2DBCFeedRepositoryTest {
 
@@ -177,16 +172,16 @@ internal class SpringR2DBCFeedRepositoryTest {
         val (_, cut) = getTestSetup()
 
         runBlocking {
-            val firstUser = UserId(1)
+            val user = UserId(1)
 
             val firstFeed = cut.insertFeed(firstTestFeed)
             val secondFeed = cut.insertFeed(secondTestFeed)
 
-            val firstGroup = cut.insertUserGroup(firstUser, GroupData("firstGroup", emptyList()))
+            val firstGroup = cut.insertUserGroup(user, GroupData("firstGroup", emptyList()))
             cut.addFeedToUserGroup(firstGroup, firstFeed)
-            cut.addFeedToUser(firstUser, secondFeed)
+            cut.addFeedToUser(user, secondFeed)
 
-            val feeds = cut.getAllUserFeeds(firstUser).toList()
+            val feeds = cut.getAllUserFeeds(user).toList()
             expectThat(feeds)
                 .hasSize(2)
                 .map { it.feedData.name }
@@ -196,13 +191,35 @@ internal class SpringR2DBCFeedRepositoryTest {
 
     @Test
     fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItem`() {
-        assertTrue { false }
+        val (_, cut) = getTestSetup()
+
+        runBlocking {
+            val user = UserId(1)
+
+            val firstFeed = cut.insertFeed(firstTestFeed)
+            val feedItemIds = cut.insertFeedItems(firstFeed, testFeedItems).toList()
+
+            val secondFeed = cut.insertFeed(secondTestFeed)
+            cut.insertFeedItems(secondFeed, listOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now())))
+
+            cut.addFeedToUser(user, firstFeed)
+            cut.updateUserFeedItem(user, listOf(feedItemIds.first()), UpdateAction.READ)
+
+            val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeed).toList()
+            expectThat(userFeedItems)
+                .hasSize(2)
+
+            val readUserFeedItems =
+                cut.getAllUserFeedItemsOfFeed(user, firstFeed, filter = FeedItemFilter.UNREAD).toList()
+            expectThat(readUserFeedItems)
+                .hasSize(1)
+        }
     }
 
     private fun getTestSetup(): Pair<DatabaseClient, SpringR2DBCFeedRepository> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repository = SpringR2DBCFeedRepository(Dispatchers.Default, factory)
+        val repository = SpringR2DBCFeedRepository(factory)
         return Pair(client, repository)
     }
 
@@ -211,7 +228,7 @@ internal class SpringR2DBCFeedRepositoryTest {
         description = "Test",
         feedUrl = "http://foo.bar",
         siteUrl = "https://bar.foo",
-        lastUpdated = Instant.now()
+        lastUpdated = Instant.now().minusMillis(500)
     )
     private val secondTestFeed = FeedData(
         name = "Test",
@@ -230,7 +247,7 @@ internal class SpringR2DBCFeedRepositoryTest {
             created = Instant.now().minusMillis(5000)
         ),
         FeedItemData(
-            title = "TestItem1",
+            title = "TestItem2",
             author = "TestAuthor",
             html = "<body>Foo</body>",
             url = "https://foo.bar/",

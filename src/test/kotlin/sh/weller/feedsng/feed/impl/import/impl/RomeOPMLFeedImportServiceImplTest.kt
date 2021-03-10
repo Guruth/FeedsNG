@@ -1,6 +1,9 @@
 package sh.weller.feedsng.feed.impl.import.impl
 
 import org.junit.jupiter.api.Test
+import sh.weller.feedsng.common.Failure
+import sh.weller.feedsng.common.Success
+import sh.weller.feedsng.feed.impl.import.FeedImport
 import strikt.api.expectThat
 import strikt.assertions.*
 import java.io.File
@@ -18,7 +21,8 @@ class RomeOPMLFeedImportServiceImplTest {
         val result = cut.importFrom(testFile.readText())
 
         expectThat(result)
-            .isNotNull()
+            .isA<Success<FeedImport>>()
+            .get { value }
             .and { get { feedUrls }.hasSize(1).contains("https://blog.jetbrains.com/kotlin/feed/") }
             .and {
                 get { feedGroupImport }
@@ -36,7 +40,7 @@ class RomeOPMLFeedImportServiceImplTest {
         val result = cut.importFrom(invalidTestFile.readText())
 
         expectThat(result)
-            .isNull()
+            .isA<Failure<String>>()
     }
 
     @Test
@@ -46,6 +50,6 @@ class RomeOPMLFeedImportServiceImplTest {
         val result = cut.importFrom(emptyTestFile.readText())
 
         expectThat(result)
-            .isNull()
+            .isA<Failure<String>>()
     }
 }
