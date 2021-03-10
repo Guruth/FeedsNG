@@ -1,7 +1,9 @@
 package sh.weller.feedsng.feed.impl.import
 
+import sh.weller.feedsng.common.ResultNG
+
 interface FeedImportService {
-    fun importFrom(content: String): FeedImport?
+    fun importFrom(content: String): ResultNG<FeedImport, String>
 }
 
 data class FeedImport(
