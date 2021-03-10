@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.fetcher.impl
+package sh.weller.feedsng.feed.impl.fetch.impl
 
 import com.rometools.rome.feed.synd.SyndEntry
 import com.rometools.rome.feed.synd.SyndFeed
@@ -6,24 +6,26 @@ import com.rometools.rome.io.SyndFeedInput
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
+import sh.weller.feedsng.common.Failure
+import sh.weller.feedsng.common.ResultNG
+import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.FeedData
 import sh.weller.feedsng.feed.FeedItemData
-import sh.weller.feedsng.feed.impl.fetcher.FeedFetcher
-import sh.weller.feedsng.feed.impl.fetcher.FeedFetcherResult
+import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.time.Instant
 
-class RomeFeedFetcherImpl(
+class RomeFeedFetcherServiceImpl(
     private val client: WebClient
-) : FeedFetcher {
+) : FeedFetcherService {
 
-    override suspend fun getFeedData(feedUrl: String): FeedFetcherResult<FeedData> =
+    override suspend fun getFeedData(feedUrl: String): ResultNG<FeedData, String> =
         this.getSyndFeedMapping(feedUrl) {
             it.toFeedData(feedUrl)
         }
 
-    override suspend fun getFeedItemData(feedUrl: String): FeedFetcherResult<List<FeedItemData>> =
+    override suspend fun getFeedItemData(feedUrl: String): ResultNG<List<FeedItemData>, String> =
         this.getSyndFeedMapping(feedUrl) {
             it.toFeedItemData()
         }
@@ -31,7 +33,7 @@ class RomeFeedFetcherImpl(
     private suspend fun <T> getSyndFeedMapping(
         feedUrl: String,
         mappingFunction: (SyndFeed) -> T
-    ): FeedFetcherResult<T> {
+    ): ResultNG<T, String> {
         return try {
             client
                 .get()
@@ -42,13 +44,13 @@ class RomeFeedFetcherImpl(
                         val feedInput = SyndFeedInput()
                         val syndFeed = feedInput.build(InputStreamReader(ByteArrayInputStream(rawResponse)))
                         val mappedData = mappingFunction(syndFeed)
-                        FeedFetcherResult.Success(mappedData)
+                        Success(mappedData)
                     } else {
-                        FeedFetcherResult.Error(it.statusCode().reasonPhrase)
+                        Failure(it.statusCode().reasonPhrase)
                     }
                 }
         } catch (e: Exception) {
-            FeedFetcherResult.Error(e.message ?: "Unknown Error")
+            Failure(e.message ?: "Unknown Error")
         }
     }
 
