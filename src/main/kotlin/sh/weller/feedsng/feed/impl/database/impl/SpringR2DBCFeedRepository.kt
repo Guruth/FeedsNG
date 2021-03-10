@@ -2,6 +2,7 @@ package sh.weller.feedsng.feed.impl.database.impl
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
@@ -10,17 +11,15 @@ import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.feed.impl.database.FeedRepository
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
-import kotlin.coroutines.CoroutineContext
 
 class SpringR2DBCFeedRepository(
-    context: CoroutineContext,
     factory: ConnectionFactory = ConnectionFactories.get("r2dbc:h2:mem:///test?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
 ) : FeedRepository {
 
     private val client = DatabaseClient.create(factory)
 
     init {
-        runBlocking(context) {
+        runBlocking {
             client
                 .sql(
                     """
@@ -195,7 +194,7 @@ class SpringR2DBCFeedRepository(
             )
             .bind("feed_id", feedId.id)
             .bindIfNotNull("created", since)
-            .mapToFeedItem(feedId)
+            .mapToFeedItem()
             .flow()
     }
 
@@ -210,7 +209,7 @@ class SpringR2DBCFeedRepository(
             )
             .bind("feed_id", feedId.id)
             .bind("id", feedItemId.id)
-            .mapToFeedItem(feedId)
+            .mapToFeedItem()
             .awaitOneOrNull()
     }
 
@@ -229,7 +228,7 @@ class SpringR2DBCFeedRepository(
             .awaitOne()
     }
 
-    override suspend fun getAllUserGroups(userId: UserId): Flow<Group> {
+    override fun getAllUserGroups(userId: UserId): Flow<Group> {
         return client
             .sql(
                 """
@@ -252,7 +251,7 @@ class SpringR2DBCFeedRepository(
             .toGroupFlow()
     }
 
-    private suspend fun Flow<Triple<GroupId, String, FeedId?>>.toGroupFlow(): Flow<Group> = flow {
+    private fun Flow<Triple<GroupId, String, FeedId?>>.toGroupFlow(): Flow<Group> = flow {
         val groupNameMap = mutableMapOf<GroupId, String>()
         val groupFeedMap = mutableMapOf<GroupId, MutableList<FeedId?>>()
 
@@ -294,7 +293,7 @@ class SpringR2DBCFeedRepository(
             .awaitSingle()
     }
 
-
+    @FlowPreview
     override fun getAllUserFeeds(userId: UserId): Flow<Feed> {
         val groupFeedFlow = client
             .sql(
@@ -361,17 +360,29 @@ class SpringR2DBCFeedRepository(
         userId: UserId,
         feedId: FeedId,
         since: Instant?,
-        limit: Int?
+        limit: Int?,
+        filter: FeedItemFilter?
     ): Flow<UserFeedItem> {
+
+        val filterQuery = if (filter == null) {
+            ""
+        } else {
+            when (filter) {
+                FeedItemFilter.UNREAD -> "AND (UFI.read IS NULL OR UFI.read = false) "
+                FeedItemFilter.SAVED -> "AND UFI.saved = true "
+            }
+        }
+
         return client
             .sql(
                 """
                 |SELECT 
-                |FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
+                |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
-                |AND UFI.user_id = :user_id 
+                |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
                 |${andWhereIfNotNull("created", ">=", since)}
+                |$filterQuery
                 |${limitIfNotNull(limit)}
                 |ORDER BY created
             """.trimMargin()
@@ -379,80 +390,26 @@ class SpringR2DBCFeedRepository(
             .bind("feed_id", feedId.id)
             .bind("user_id", userId.id)
             .bindIfNotNull("created", since)
-            .mapToUserFeedItem(feedId)
+            .mapToUserFeedItem()
             .flow()
     }
+
+    override suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem {
+        return client
+            .sql(
+                """
+                |SELECT 
+                |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |WHERE FI.ID = :feed_item_id 
+                |AND FI.feed_id = :feed_id
+                |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
+                |ORDER BY created
+            """.trimMargin()
+            )
+            .bind("feed_item_id", feedItemId.id)
+            .bind("user_id", userId.id)
+            .mapToUserFeedItem()
+            .awaitSingle()
+    }
 }
-
-private fun DatabaseClient.GenericExecuteSpec.mapToUserFeedItem(feedId: FeedId) =
-    this.map { row ->
-        UserFeedItem(
-            isSaved = row.getReified("saved"),
-            isRead = row.getReified("read"),
-            feedItem = FeedItem(
-                feedItemId = row.getInt("id").toFeedItemId(),
-                feedId = feedId,
-                feedItemData = FeedItemData(
-                    title = row.getReified("title"),
-                    author = row.getReified("author"),
-                    html = row.getReified("html"),
-                    url = row.getReified("item_url"),
-                    created = row.getReified("created")
-                )
-            )
-        )
-    }
-
-private fun DatabaseClient.GenericExecuteSpec.mapToFeedItem(feedId: FeedId) =
-    this.map { row ->
-        FeedItem(
-            feedItemId = row.getInt("id").toFeedItemId(),
-            feedId = feedId,
-            feedItemData = FeedItemData(
-                title = row.getReified("title"),
-                author = row.getReified("author"),
-                html = row.getReified("html"),
-                url = row.getReified("item_url"),
-                created = row.getReified("created")
-            )
-        )
-    }
-
-private fun DatabaseClient.GenericExecuteSpec.mapToFeed() =
-    this.map { row ->
-        Feed(
-            feedId = row.getInt("id").toFeedId(),
-            feedData = FeedData(
-                name = row.getReified("name"),
-                description = row.getReified("description"),
-                feedUrl = row.getReified("feed_url"),
-                siteUrl = row.getReified("site_url"),
-                lastUpdated = row.getReified("last_updated")
-            )
-        )
-    }
-
-
-private fun andWhereIfNotNull(fieldName: String, operator: String, value: Any?): String =
-    if (value != null) {
-        " AND $fieldName $operator :$fieldName"
-    } else {
-        ""
-    }
-
-private fun DatabaseClient.GenericExecuteSpec.bindIfNotNull(
-    fieldName: String,
-    value: Any?
-): DatabaseClient.GenericExecuteSpec =
-    if (value != null) {
-        this.bind(fieldName, value)
-    } else {
-        this
-    }
-
-private fun limitIfNotNull(limit: Int?): String =
-    if (limit != null) {
-        " LIMIT $limit"
-    } else {
-        ""
-    }

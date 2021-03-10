@@ -6,7 +6,6 @@ import sh.weller.feedsng.user.UserId
 import java.time.Instant
 
 interface FeedRepository {
-
     suspend fun insertFeed(feedData: FeedData): FeedId
     suspend fun setFeedLastRefreshedTimestamp(feedId: FeedId)
     suspend fun getFeedWithFeedURL(feedUrl: String): Feed?
@@ -17,7 +16,7 @@ interface FeedRepository {
     suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem?
 
     suspend fun insertUserGroup(userId: UserId, groupData: GroupData): GroupId
-    suspend fun getAllUserGroups(userId: UserId): Flow<Group>
+    fun getAllUserGroups(userId: UserId): Flow<Group>
 
     suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId)
     suspend fun addFeedToUser(userId: UserId, feedId: FeedId)
@@ -28,6 +27,9 @@ interface FeedRepository {
         userId: UserId,
         feedId: FeedId,
         since: Instant? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        filter: FeedItemFilter? = null
     ): Flow<UserFeedItem>
+
+    suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem
 }
