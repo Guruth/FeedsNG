@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+    <head>
+        <title>OPML Test File</title>
+    </head>
+    <body>
+        <outline text="Kotlin Blog" title="Kotlin Blog" type="rss" xmlUrl="https://blog.jetbrains.com/kotlin/feed/"
+                 htmlUrl="http://blog.jetbrains.com/kotlin"/>
+
+        <outline text="Folder" title="Folder">
+            <outline text="Jetbrains Blog" title="Jetbrains Blog" type="rss" xmlUrl="https://blog.jetbrains.com/feed/"
+                     htmlUrl="https://blog.jetbrains.com/"/>
+        </outline>
+    </body>
+</opml>
