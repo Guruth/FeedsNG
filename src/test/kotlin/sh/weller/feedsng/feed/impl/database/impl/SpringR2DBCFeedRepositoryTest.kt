@@ -49,7 +49,7 @@ internal class SpringR2DBCFeedRepositoryTest {
 
         runBlocking {
             val insertedId = cut.insertFeed(firstTestFeed)
-            val secondInsertedId = cut.insertFeed(secondTestFeed)
+            cut.insertFeed(secondTestFeed)
 
             val queryById = cut.getFeed(insertedId)
             expectThat(queryById)
