@@ -1,5 +1,7 @@
 package sh.weller.feedsng.feed.impl.fetch.impl
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
@@ -30,8 +32,8 @@ internal class RomeFeedFetcherServiceImplTest {
 
             val feedItemDataList = cut.getFeedItemData("https://blog.jetbrains.com/kotlin/feed/")
             expectThat(feedItemDataList)
-                .isA<Success<List<FeedItemData>>>()
-                .get { value }
+                .isA<Success<Flow<FeedItemData>>>()
+                .get { runBlocking { value.toList() } }
                 .isNotEmpty()
         }
     }

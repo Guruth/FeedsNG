@@ -3,6 +3,8 @@ package sh.weller.feedsng.feed.impl.fetch.impl
 import com.rometools.rome.feed.synd.SyndEntry
 import com.rometools.rome.feed.synd.SyndFeed
 import com.rometools.rome.io.SyndFeedInput
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
@@ -25,7 +27,7 @@ class RomeFeedFetcherServiceImpl(
             it.toFeedData(feedUrl)
         }
 
-    override suspend fun getFeedItemData(feedUrl: String): Result<List<FeedItemData>, String> =
+    override suspend fun getFeedItemData(feedUrl: String): Result<Flow<FeedItemData>, String> =
         this.getSyndFeedMapping(feedUrl) {
             it.toFeedItemData()
         }
@@ -63,17 +65,20 @@ class RomeFeedFetcherServiceImpl(
             lastUpdated = this.getFeedUpdatedTimestamp(),
         )
 
-    private fun SyndFeed.toFeedItemData(): List<FeedItemData> =
-        this.entries
-            .map {
+    private fun SyndFeed.toFeedItemData(): Flow<FeedItemData> = flow {
+        for (entry in this@toFeedItemData.entries) {
+            emit(
                 FeedItemData(
-                    title = it.getFeedItemTitle(),
-                    author = it.author,
-                    html = it.getFeedItemDescription(),
-                    url = it.uri,
-                    created = it.getFeedItemCreatedTimestamp()
+                    title = entry.getFeedItemTitle(),
+                    author = entry.author,
+                    html = entry.getFeedItemDescription(),
+                    url = entry.uri,
+                    created = entry.getFeedItemCreatedTimestamp()
                 )
-            }
+            )
+        }
+    }
+
 
     private fun SyndFeed.getFeedUpdatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: Instant.now()
