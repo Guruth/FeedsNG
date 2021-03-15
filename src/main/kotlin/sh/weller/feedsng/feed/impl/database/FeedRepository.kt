@@ -12,7 +12,7 @@ interface FeedRepository {
     suspend fun getFeed(feedId: FeedId): Feed?
     suspend fun getAllFeeds(): Flow<Feed>
 
-    fun insertFeedItems(feedId: FeedId, feedItems: List<FeedItemData>): Flow<FeedItemId>
+    fun insertFeedItems(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId>
     fun getFeedItems(feedId: FeedId, since: Instant? = null, limit: Int? = null): Flow<FeedItem>
     suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem?
 
@@ -23,7 +23,7 @@ interface FeedRepository {
     suspend fun addFeedToUser(userId: UserId, feedId: FeedId)
     fun getAllUserFeeds(userId: UserId): Flow<Feed>
 
-    suspend fun updateUserFeedItem(userId: UserId, feedItemIdList: List<FeedItemId>, updateAction: UpdateAction)
+    suspend fun updateUserFeedItem(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: UpdateAction)
     fun getAllUserFeedItemsOfFeed(
         userId: UserId,
         feedId: FeedId,

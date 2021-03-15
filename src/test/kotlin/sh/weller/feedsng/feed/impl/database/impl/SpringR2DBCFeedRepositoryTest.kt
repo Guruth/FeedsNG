@@ -3,6 +3,7 @@ package sh.weller.feedsng.feed.impl.database.impl
 import io.r2dbc.h2.H2ConnectionFactory
 import io.r2dbc.spi.Row
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -117,7 +118,7 @@ internal class SpringR2DBCFeedRepositoryTest {
 
         runBlocking {
             val feedId = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItems(feedId, testFeedItems).toList()
+            val feedItemIds = cut.insertFeedItems(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(feedItemIds)
                 .isNotEmpty()
                 .hasSize(2)
@@ -205,14 +206,15 @@ internal class SpringR2DBCFeedRepositoryTest {
         runBlocking {
             val user = UserId(1)
 
+
             val firstFeed = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItems(firstFeed, testFeedItems).toList()
+            val feedItemIds = cut.insertFeedItems(firstFeed, flowOf(*testFeedItems.toTypedArray())).toList()
 
             val secondFeed = cut.insertFeed(secondTestFeed)
-            cut.insertFeedItems(secondFeed, listOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now())))
+            cut.insertFeedItems(secondFeed, flowOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now())))
 
             cut.addFeedToUser(user, firstFeed)
-            cut.updateUserFeedItem(user, listOf(feedItemIds.first()), UpdateAction.READ)
+            cut.updateUserFeedItem(user, flowOf(feedItemIds.first()), UpdateAction.READ)
 
             val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeed).toList()
             expectThat(userFeedItems)

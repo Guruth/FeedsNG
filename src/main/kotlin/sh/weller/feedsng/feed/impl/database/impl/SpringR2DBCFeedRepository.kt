@@ -170,9 +170,9 @@ class SpringR2DBCFeedRepository(
             .flow()
     }
 
-    override fun insertFeedItems(feedId: FeedId, feedItems: List<FeedItemData>): Flow<FeedItemId> {
-        return flow {
-            feedItems.forEach {
+    override fun insertFeedItems(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId> {
+        return feedItemDataFlow
+            .transform {
                 val feedItemId = client
                     .sql(
                         """
@@ -191,7 +191,7 @@ class SpringR2DBCFeedRepository(
                     .awaitSingle()
                 emit(feedItemId)
             }
-        }
+
     }
 
     override fun getFeedItems(feedId: FeedId, since: Instant?, limit: Int?): Flow<FeedItem> {
@@ -340,7 +340,7 @@ class SpringR2DBCFeedRepository(
 
     override suspend fun updateUserFeedItem(
         userId: UserId,
-        feedItemIdList: List<FeedItemId>,
+        feedItemIdFlow: Flow<FeedItemId>,
         updateAction: UpdateAction
     ) {
         val columnToUpdate = when (updateAction) {
@@ -351,22 +351,24 @@ class SpringR2DBCFeedRepository(
             UpdateAction.READ, UpdateAction.SAVE -> true
             UpdateAction.UNREAD, UpdateAction.UNSAVE -> false
         }
-        feedItemIdList.forEach {
-            client
-                .sql(
-                    """
+        feedItemIdFlow
+            .onEach {
+                client
+                    .sql(
+                        """
                 |MERGE INTO user_feed_item (feed_item_id, user_id, $columnToUpdate)
                 |KEY (feed_item_id, user_id)
                 |VALUES (:feed_item_id, :user_id, :updateValue)
             """.trimMargin()
-                )
-                .bind("feed_item_id", it.id)
-                .bind("user_id", userId.id)
-                .bind("updateValue", updateValue)
-                .fetch()
-                .rowsUpdated()
-                .awaitSingle()
-        }
+                    )
+                    .bind("feed_item_id", it.id)
+                    .bind("user_id", userId.id)
+                    .bind("updateValue", updateValue)
+                    .fetch()
+                    .rowsUpdated()
+                    .awaitSingle()
+            }
+            .collect()
     }
 
     override fun getAllUserFeedItemsOfFeed(
