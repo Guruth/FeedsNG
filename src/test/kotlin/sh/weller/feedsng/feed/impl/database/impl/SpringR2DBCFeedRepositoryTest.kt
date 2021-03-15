@@ -43,11 +43,12 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeed, getFeed, getFeedWithFeedURL`() {
+    fun `insertFeed, getFeed, getFeedWithFeedURL, getAllFeeds`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
             val insertedId = cut.insertFeed(firstTestFeed)
+            val secondInsertedId = cut.insertFeed(secondTestFeed)
 
             val queryById = cut.getFeed(insertedId)
             expectThat(queryById)
@@ -77,6 +78,14 @@ internal class SpringR2DBCFeedRepositoryTest {
                             get { siteUrl }.isEqualTo(firstTestFeed.siteUrl)
                             get { lastUpdated }.isEqualTo(firstTestFeed.lastUpdated)
                         }
+                }
+
+            val allFeeds = cut.getAllFeeds().toList()
+            expectThat(allFeeds)
+                .isNotEmpty()
+                .and {
+                    map { it.feedData.name }
+                        .containsExactlyInAnyOrder(firstTestFeed.name, secondTestFeed.name)
                 }
         }
     }
@@ -233,8 +242,8 @@ internal class SpringR2DBCFeedRepositoryTest {
     private val secondTestFeed = FeedData(
         name = "Test",
         description = "Test",
-        feedUrl = "http://foo.bar",
-        siteUrl = "https://bar.foo",
+        feedUrl = "http://foobar.bar",
+        siteUrl = "https://barfoo.foo",
         lastUpdated = Instant.now()
     )
 

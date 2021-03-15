@@ -10,6 +10,7 @@ interface FeedRepository {
     suspend fun setFeedLastRefreshedTimestamp(feedId: FeedId)
     suspend fun getFeedWithFeedURL(feedUrl: String): Feed?
     suspend fun getFeed(feedId: FeedId): Feed?
+    suspend fun getAllFeeds(): Flow<Feed>
 
     fun insertFeedItems(feedId: FeedId, feedItems: List<FeedItemData>): Flow<FeedItemId>
     fun getFeedItems(feedId: FeedId, since: Instant? = null, limit: Int? = null): Flow<FeedItem>

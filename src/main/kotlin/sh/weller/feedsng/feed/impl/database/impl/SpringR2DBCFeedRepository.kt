@@ -16,6 +16,12 @@ class SpringR2DBCFeedRepository(
     factory: ConnectionFactory = ConnectionFactories.get("r2dbc:h2:mem:///test?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
 ) : FeedRepository {
 
+    /**
+     * ToDos:
+     * - Error Handling
+     * - Check for existing Entries
+     */
+
     private val client = DatabaseClient.create(factory)
 
     init {
@@ -155,6 +161,13 @@ class SpringR2DBCFeedRepository(
             .bind("id", feedId.id)
             .mapToFeed()
             .awaitOneOrNull()
+    }
+
+    override suspend fun getAllFeeds(): Flow<Feed> {
+        return client
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed")
+            .mapToFeed()
+            .flow()
     }
 
     override fun insertFeedItems(feedId: FeedId, feedItems: List<FeedItemData>): Flow<FeedItemId> {
