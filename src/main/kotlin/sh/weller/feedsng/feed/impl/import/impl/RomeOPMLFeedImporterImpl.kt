@@ -4,7 +4,7 @@ import com.rometools.opml.feed.opml.Opml
 import com.rometools.rome.io.ParsingFeedException
 import com.rometools.rome.io.WireFeedInput
 import sh.weller.feedsng.common.Failure
-import sh.weller.feedsng.common.ResultNG
+import sh.weller.feedsng.common.Result
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.impl.import.FeedGroupImport
 import sh.weller.feedsng.feed.impl.import.FeedImport
@@ -13,10 +13,10 @@ import java.io.Reader
 
 class RomeOPMLFeedImportServiceImpl : FeedImportService {
 
-    override fun importFrom(content: String): ResultNG<FeedImport, String> =
+    override fun importFrom(content: String): Result<FeedImport, String> =
         content.reader().toFeedImport()
 
-    private fun Reader.toFeedImport(): ResultNG<FeedImport, String> {
+    private fun Reader.toFeedImport(): Result<FeedImport, String> {
         return try {
             val outlines = (WireFeedInput().build(this) as Opml).outlines
             val feedURLs = mutableListOf<String>()

@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
 import sh.weller.feedsng.common.Failure
-import sh.weller.feedsng.common.ResultNG
+import sh.weller.feedsng.common.Result
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.FeedData
 import sh.weller.feedsng.feed.FeedItemData
@@ -20,12 +20,12 @@ class RomeFeedFetcherServiceImpl(
     private val client: WebClient
 ) : FeedFetcherService {
 
-    override suspend fun getFeedData(feedUrl: String): ResultNG<FeedData, String> =
+    override suspend fun getFeedData(feedUrl: String): Result<FeedData, String> =
         this.getSyndFeedMapping(feedUrl) {
             it.toFeedData(feedUrl)
         }
 
-    override suspend fun getFeedItemData(feedUrl: String): ResultNG<List<FeedItemData>, String> =
+    override suspend fun getFeedItemData(feedUrl: String): Result<List<FeedItemData>, String> =
         this.getSyndFeedMapping(feedUrl) {
             it.toFeedItemData()
         }
@@ -33,7 +33,7 @@ class RomeFeedFetcherServiceImpl(
     private suspend fun <T> getSyndFeedMapping(
         feedUrl: String,
         mappingFunction: (SyndFeed) -> T
-    ): ResultNG<T, String> {
+    ): Result<T, String> {
         return try {
             client
                 .get()
