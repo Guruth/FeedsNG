@@ -9,7 +9,7 @@
 
         <outline text="Folder" title="Folder">
             <outline text="Jetbrains Blog" title="Jetbrains Blog" type="rss" xmlUrl="https://blog.jetbrains.com/feed/"
-                     htmlUrl="https://blog.jetbrains.com/"/>
+                     htmlUrl="https://blog.jetbrains.com"/>
         </outline>
     </body>
 </opml>
