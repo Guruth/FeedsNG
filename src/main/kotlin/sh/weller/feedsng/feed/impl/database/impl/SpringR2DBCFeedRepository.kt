@@ -2,6 +2,7 @@ package sh.weller.feedsng.feed.impl.database.impl
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.awaitSingle
@@ -12,6 +13,7 @@ import sh.weller.feedsng.feed.impl.database.FeedRepository
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 
+@OptIn(FlowPreview::class)
 class SpringR2DBCFeedRepository(
     factory: ConnectionFactory = ConnectionFactories.get("r2dbc:h2:mem:///test?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
 ) : FeedRepository {
@@ -170,14 +172,14 @@ class SpringR2DBCFeedRepository(
             .flow()
     }
 
-    override fun insertFeedItems(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId> {
+    override fun insertFeedItemsIfNotExist(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId> {
         return feedItemDataFlow
             .transform {
                 val feedItemId = client
                     .sql(
                         """
-                    |INSERT INTO feed_item 
-                    |(feed_id, title, author, html, item_url, created) 
+                    |MERGE INTO feed_item (feed_id, title, author, html, item_url, created) 
+                    |KEY (feed_id, item_url)
                     |VALUES (:feed_id, :title, :author, :html, :item_url, :created)""".trimMargin()
                     )
                     .bind("feed_id", feedId.id)
@@ -306,7 +308,6 @@ class SpringR2DBCFeedRepository(
             .awaitSingle()
     }
 
-    @FlowPreview
     override fun getAllUserFeeds(userId: UserId): Flow<Feed> {
         val groupFeedFlow = client
             .sql(

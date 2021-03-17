@@ -12,7 +12,7 @@ interface FeedRepository {
     suspend fun getFeed(feedId: FeedId): Feed?
     suspend fun getAllFeeds(): Flow<Feed>
 
-    fun insertFeedItems(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId>
+    fun insertFeedItemsIfNotExist(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId>
     fun getFeedItems(feedId: FeedId, since: Instant? = null, limit: Int? = null): Flow<FeedItem>
     suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem?
 

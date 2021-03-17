@@ -113,12 +113,12 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeed, insertFeedItems, getFeedItems, getFeedItem`() {
+    fun `insertFeed, insertFeedItemsIfNotExist, getFeedItems, getFeedItem`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
             val feedId = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItems(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
+            val feedItemIds = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(feedItemIds)
                 .isNotEmpty()
                 .hasSize(2)
@@ -141,6 +141,10 @@ internal class SpringR2DBCFeedRepositoryTest {
             val singleFeedItem = cut.getFeedItem(feedId, feedItemIds.first())
             expectThat(singleFeedItem)
                 .isNotNull()
+
+            val duplicatedItems = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
+            expectThat(duplicatedItems)
+                .containsExactlyInAnyOrder(feedItemIds)
         }
     }
 
@@ -208,10 +212,13 @@ internal class SpringR2DBCFeedRepositoryTest {
 
 
             val firstFeed = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItems(firstFeed, flowOf(*testFeedItems.toTypedArray())).toList()
+            val feedItemIds = cut.insertFeedItemsIfNotExist(firstFeed, flowOf(*testFeedItems.toTypedArray())).toList()
 
             val secondFeed = cut.insertFeed(secondTestFeed)
-            cut.insertFeedItems(secondFeed, flowOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now())))
+            cut.insertFeedItemsIfNotExist(
+                secondFeed,
+                flowOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now()))
+            )
 
             cut.addFeedToUser(user, firstFeed)
             cut.updateUserFeedItem(user, flowOf(feedItemIds.first()), UpdateAction.READ)
@@ -261,7 +268,7 @@ internal class SpringR2DBCFeedRepositoryTest {
             title = "TestItem2",
             author = "TestAuthor",
             html = "<body>Foo</body>",
-            url = "https://foo.bar/",
+            url = "https://foo.baz/",
             created = Instant.now().minusMillis(1000)
         )
     )
