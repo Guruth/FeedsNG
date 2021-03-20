@@ -112,8 +112,8 @@ internal class FeedControlServiceImplTest {
             cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, UpdateAction.SAVE)
             val unreadItem =
                 repo.getUserFeedItem(userId, readItems.first().feedItem.feedId, readItems.first().feedItem.feedItemId)
-
             expectThat(unreadItem)
+                .isNotNull()
                 .and {
                     get { isRead }.isEqualTo(false)
                     get { isSaved }.isEqualTo(true)
