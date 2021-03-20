@@ -255,8 +255,8 @@ internal class SpringR2DBCFeedRepositoryTest {
     private fun getTestSetup(): Pair<DatabaseClient, SpringR2DBCFeedRepository> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repository = SpringR2DBCFeedRepository(factory)
-        return Pair(client, repository)
+        val repo = SpringR2DBCFeedRepository(client)
+        return Pair(client, repo)
     }
 
     private val firstTestFeed = FeedData(

@@ -5,6 +5,9 @@ import com.rometools.rome.feed.synd.SyndFeed
 import com.rometools.rome.io.SyndFeedInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
@@ -18,19 +21,25 @@ import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.time.Instant
 
+@Service
 class RomeFeedFetcherServiceImpl(
-    private val client: WebClient
+    private val client: WebClient = WebClient.create()
 ) : FeedFetcherService {
 
-    override suspend fun getFeedData(feedUrl: String): Result<FeedData, String> =
-        this.getSyndFeedMapping(feedUrl) {
+    override suspend fun getFeedData(feedUrl: String): Result<FeedData, String> {
+        logger.info("Fetching FeedData for $feedUrl")
+        return this.getSyndFeedMapping(feedUrl) {
             it.toFeedData(feedUrl)
         }
+    }
 
-    override suspend fun getFeedItemData(feedUrl: String): Result<Flow<FeedItemData>, String> =
-        this.getSyndFeedMapping(feedUrl) {
+    override suspend fun getFeedItemData(feedUrl: String): Result<Flow<FeedItemData>, String> {
+        logger.info("Fetching FeedItemData for $feedUrl")
+        return this.getSyndFeedMapping(feedUrl)
+        {
             it.toFeedItemData()
         }
+    }
 
     private suspend fun <T> getSyndFeedMapping(
         feedUrl: String,
@@ -96,4 +105,7 @@ class RomeFeedFetcherServiceImpl(
     private fun SyndEntry.getFeedItemCreatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: this.updatedDate?.toInstant() ?: Instant.now()
 
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(RomeFeedFetcherServiceImpl::class.java)
+    }
 }

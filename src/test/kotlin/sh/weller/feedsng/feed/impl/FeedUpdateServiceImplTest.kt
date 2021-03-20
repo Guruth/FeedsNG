@@ -5,6 +5,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.feed.impl.database.FeedRepository
@@ -44,7 +45,8 @@ internal class FeedUpdateServiceImplTest {
 
     private fun getTestSetup(): Triple<FeedUpdateServiceImpl, FeedRepository, FeedFetcherService> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
-        val repo = SpringR2DBCFeedRepository(factory)
+        val client = DatabaseClient.create(factory)
+        val repo = SpringR2DBCFeedRepository(client)
 
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
         val updater = FeedUpdateServiceImpl(

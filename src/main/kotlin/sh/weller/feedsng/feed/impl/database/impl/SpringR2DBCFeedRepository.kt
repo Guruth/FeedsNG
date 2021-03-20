@@ -1,29 +1,21 @@
 package sh.weller.feedsng.feed.impl.database.impl
 
-import io.r2dbc.spi.ConnectionFactories
-import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.*
+import org.springframework.stereotype.Repository
 import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.feed.impl.database.FeedRepository
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 
 @OptIn(FlowPreview::class)
+@Repository
 class SpringR2DBCFeedRepository(
-    factory: ConnectionFactory = ConnectionFactories.get("r2dbc:h2:mem:///test?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE")
+    private val client: DatabaseClient
 ) : FeedRepository {
-
-    /**
-     * ToDos:
-     * - Error Handling
-     * - Check for existing Entries
-     */
-
-    private val client = DatabaseClient.create(factory)
 
     init {
         runBlocking {

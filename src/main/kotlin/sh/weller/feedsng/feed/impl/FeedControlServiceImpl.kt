@@ -2,6 +2,9 @@ package sh.weller.feedsng.feed.impl
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 import sh.weller.feedsng.common.*
 import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.feed.impl.database.FeedRepository
@@ -10,6 +13,7 @@ import sh.weller.feedsng.feed.impl.import.FeedImportService
 import sh.weller.feedsng.user.UserId
 
 @OptIn(FlowPreview::class)
+@Service
 class FeedControlServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,
@@ -20,6 +24,7 @@ class FeedControlServiceImpl(
         userId: UserId,
         fileContent: String
     ): Result<List<Pair<String, String>>, String> {
+        logger.info("Importing feeds from file for $userId")
         val importData = feedImportService
             .importFrom(fileContent)
             .onFailure { return it }
@@ -60,10 +65,12 @@ class FeedControlServiceImpl(
     }
 
     override suspend fun addGroup(userId: UserId, groupName: String): GroupId {
+        logger.info("Adding group $groupName for $userId")
         return feedRepository.insertUserGroup(userId, GroupData(groupName, emptyList()))
     }
 
     override suspend fun addFeedToGroup(userId: UserId, groupId: GroupId, feedUrl: String): Result<FeedId, String> {
+        logger.info("Adding $feedUrl to $groupId for $userId")
         val feedId = getFeedByURLOrFetchAndInsert(feedUrl)
             .onFailure { return it }
 
@@ -72,6 +79,7 @@ class FeedControlServiceImpl(
     }
 
     override suspend fun addFeed(userId: UserId, feedUrl: String): Result<FeedId, String> {
+        logger.info("Adding $feedUrl for $userId")
         val feedId = getFeedByURLOrFetchAndInsert(feedUrl)
             .onFailure { return it }
 
@@ -80,6 +88,7 @@ class FeedControlServiceImpl(
     }
 
     override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: UpdateAction) {
+        logger.info("Updating $groupId with $action for $userId")
         feedRepository.getAllUserGroups(userId)
             .filter { it.groupId == groupId }
             .map { flowOf(*it.groupData.feeds.toTypedArray()) }
@@ -91,11 +100,13 @@ class FeedControlServiceImpl(
     }
 
     override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: UpdateAction) {
+        logger.info("Updating $feedId with $action for $userId")
         val feedItemFlow = feedRepository.getAllFeedItemIds(feedId)
         feedRepository.updateUserFeedItem(userId, feedItemFlow, action)
     }
 
     override suspend fun updateFeedItem(userId: UserId, feedItemId: FeedItemId, action: UpdateAction) {
+        logger.info("Updating $feedItemId with $action for $userId")
         feedRepository.updateUserFeedItem(userId, flowOf(feedItemId), action)
     }
 
@@ -118,5 +129,9 @@ class FeedControlServiceImpl(
             .collect()
 
         return feedId.asSuccess()
+    }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(FeedControlServiceImpl::class.java)
     }
 }
