@@ -8,9 +8,11 @@
                  htmlUrl="http://blog.jetbrains.com/kotlin"/>
 
         <outline text="Folder" title="Folder">
-            <outline text="Jetbrains Blog" title="Jetbrains Blog" type="rss" xmlUrl="https://blog.jetbrains.com/fasdfasdfas"
+            <outline text="Jetbrains Blog" title="Jetbrains Blog" type="rss"
+                     xmlUrl="https://blog.jetbrains.com/fasdfasdfas"
                      htmlUrl="https://blog.jetbrains.com/"/>
-            <outline text="Kotlin Blog" title="Kotlin Blog" type="rss" xmlUrl="https://blog.jetbrains.com/kotlin/asdasdasdasd/"
+            <outline text="Kotlin Blog" title="Kotlin Blog" type="rss"
+                     xmlUrl="https://blog.jetbrains.com/kotlin/asdasdasdasd/"
                      htmlUrl="http://blog.jetbrains.com/kotlin"/>
         </outline>
     </body>
