@@ -1,14 +1,15 @@
 package sh.weller.feedsng.feed.impl
 
-import sh.weller.feedsng.common.Failure
-import sh.weller.feedsng.common.ResultNG
-import sh.weller.feedsng.common.Success
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
+import sh.weller.feedsng.common.*
 import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.feed.impl.database.FeedRepository
 import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
 import sh.weller.feedsng.feed.impl.import.FeedImportService
 import sh.weller.feedsng.user.UserId
 
+@OptIn(FlowPreview::class)
 class FeedControlServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,
@@ -18,81 +19,104 @@ class FeedControlServiceImpl(
     override suspend fun importFromOPML(
         userId: UserId,
         fileContent: String
-    ): ResultNG<List<Pair<String, String>>, String> {
-        val importResult = feedImportService.importFrom(fileContent)
-        if (importResult is Failure) {
-            return importResult
-        }
-        val import = (importResult as Success).value
+    ): Result<List<Pair<String, String>>, String> {
+        val importData = feedImportService
+            .importFrom(fileContent)
+            .onFailure { return it }
 
         val failedImports = mutableListOf<Pair<String, String>>()
 
-        val feedsToImport = import.feedUrls + import.feedGroupImport.flatMap { it.feedUrls }
-        val feedMap = feedsToImport
-            .distinct()
-            .mapNotNull {
-                val feedDetails = feedRepository.getFeedWithFeedURL(it)
-                if (feedDetails != null) {
-                    return@mapNotNull feedDetails
-                }
-
-                val fetchedFeedDetails = feedFetcherService.getFeedData(it)
-                if (fetchedFeedDetails is Failure) {
-                    failedImports.add(it to fetchedFeedDetails.reason)
-                    return@mapNotNull null
-                } else {
-                    val feedData = (fetchedFeedDetails as Success<FeedData>).value
-                    val feedId = feedRepository.insertFeed(feedData)
-                    return@mapNotNull feedRepository.getFeed(feedId)
-                }
+        val feedMap = importData
+            .allDistinctFeedURLs()
+            .mapNotNull { feedURL ->
+                val feedId = getFeedByURLOrFetchAndInsert(feedURL)
+                    .onFailure { failure ->
+                        failedImports.add(feedURL to failure.reason)
+                        return@mapNotNull null
+                    }
+                return@mapNotNull feedRepository.getFeed(feedId)
             }
             .groupBy { it.feedData.feedUrl }
 
-        import.feedUrls
-            .forEach { feedUrl ->
-                val feed: Feed? = feedMap[feedUrl]?.firstOrNull()
-                if (feed != null) {
-                    feedRepository.addFeedToUser(userId, feed.feedId)
-                }
+        importData.feedUrls
+            .mapNotNull { feedMap[it]?.firstOrNull() }
+            .forEach { feed ->
+                feedRepository.addFeedToUser(userId, feed.feedId)
             }
 
-        import.feedGroupImport
+        importData.feedGroupImport
             .forEach { groupImport ->
                 val groupId = feedRepository
                     .insertUserGroup(userId, GroupData(groupImport.name, emptyList()))
                 groupImport.feedUrls
-                    .forEach { feedUrl ->
-                        val feed: Feed? = feedMap[feedUrl]?.firstOrNull()
-                        if (feed != null) {
-                            feedRepository.addFeedToUserGroup(groupId, feed.feedId)
-                        }
+                    .mapNotNull { feedMap[it]?.firstOrNull() }
+                    .forEach { feed ->
+                        feedRepository.addFeedToUserGroup(groupId, feed.feedId)
+
                     }
             }
 
-        return Success(failedImports)
+        return failedImports.asSuccess()
     }
 
-    override fun addGroup(userId: UserId, groupName: String): GroupId {
-        TODO("Not yet implemented")
+    override suspend fun addGroup(userId: UserId, groupName: String): GroupId {
+        return feedRepository.insertUserGroup(userId, GroupData(groupName, emptyList()))
     }
 
-    override fun addFeedToGroup(userId: UserId, groupId: GroupId, feedUrl: String): ResultNG<FeedId, String> {
-        TODO("Not yet implemented")
+    override suspend fun addFeedToGroup(userId: UserId, groupId: GroupId, feedUrl: String): Result<FeedId, String> {
+        val feedId = getFeedByURLOrFetchAndInsert(feedUrl)
+            .onFailure { return it }
+
+        feedRepository.addFeedToUserGroup(groupId, feedId)
+        return feedId.asSuccess()
     }
 
-    override fun addFeed(userId: UserId, feedUrl: String): ResultNG<FeedId, String> {
-        TODO("Not yet implemented")
+    override suspend fun addFeed(userId: UserId, feedUrl: String): Result<FeedId, String> {
+        val feedId = getFeedByURLOrFetchAndInsert(feedUrl)
+            .onFailure { return it }
+
+        feedRepository.addFeedToUser(userId, feedId)
+        return feedId.asSuccess()
     }
 
-    override fun updateFeedGroup(userId: UserId, groupId: GroupId, action: UpdateAction) {
-        TODO("Not yet implemented")
+    override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: UpdateAction) {
+        feedRepository.getAllUserGroups(userId)
+            .filter { it.groupId == groupId }
+            .map { flowOf(*it.groupData.feeds.toTypedArray()) }
+            .flattenConcat()
+            .onEach {
+                updateFeed(userId, it, action)
+            }
+            .collect()
     }
 
-    override fun updateFeed(userId: UserId, feedId: FeedId, action: UpdateAction) {
-        TODO("Not yet implemented")
+    override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: UpdateAction) {
+        val feedItemFlow = feedRepository.getAllFeedItemIds(feedId)
+        feedRepository.updateUserFeedItem(userId, feedItemFlow, action)
     }
 
-    override fun updateFeedItem(userId: UserId, feedItemId: FeedItemId, action: UpdateAction) {
-        TODO("Not yet implemented")
+    override suspend fun updateFeedItem(userId: UserId, feedItemId: FeedItemId, action: UpdateAction) {
+        feedRepository.updateUserFeedItem(userId, flowOf(feedItemId), action)
+    }
+
+    private suspend fun getFeedByURLOrFetchAndInsert(feedUrl: String): Result<FeedId, String> {
+        val feed = feedRepository.getFeedWithFeedURL(feedUrl)
+        if (feed != null) {
+            return feed.feedId.asSuccess()
+        }
+
+        val feedData = feedFetcherService
+            .getFeedData(feedUrl)
+            .onFailure { return it }
+        val feedId = feedRepository.insertFeed(feedData)
+
+        val feedItems = feedFetcherService
+            .getFeedItemData(feedUrl)
+            .onFailure { return it }
+        feedRepository
+            .insertFeedItemsIfNotExist(feedId, feedItems)
+            .collect()
+
+        return feedId.asSuccess()
     }
 }
