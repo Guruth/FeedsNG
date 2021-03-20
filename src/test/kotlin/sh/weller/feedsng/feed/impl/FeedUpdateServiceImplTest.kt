@@ -33,7 +33,7 @@ internal class FeedUpdateServiceImplTest {
             assertNotNull(insertedFeed)
 
             cut.start()
-            delay(6000)
+            delay(2000)
             val updatedFeed = repo.getFeed(feedId)
             assertNotNull(updatedFeed)
             assertTrue { insertedFeed.feedData.lastUpdated.isBefore(updatedFeed.feedData.lastUpdated) }
@@ -51,7 +51,8 @@ internal class FeedUpdateServiceImplTest {
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
         val updater = FeedUpdateServiceImpl(
             repo,
-            fetcher
+            fetcher,
+            feedUpdateConfiguration = FeedUpdateConfiguration(1000)
         )
 
         return Triple(updater, repo, fetcher)
