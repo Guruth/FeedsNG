@@ -113,7 +113,7 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeed, insertFeedItemsIfNotExist, getFeedItems, getFeedItem`() {
+    fun `insertFeed, insertFeedItemsIfNotExist, getFeedItems, getFeedItem, getAllFeedItemIds`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
@@ -123,17 +123,17 @@ internal class SpringR2DBCFeedRepositoryTest {
                 .isNotEmpty()
                 .hasSize(2)
 
-            val feedItems = cut.getFeedItems(feedId).toList()
+            val feedItems = cut.getAllFeedItems(feedId).toList()
             expectThat(feedItems)
                 .isNotEmpty()
                 .hasSize(2)
 
-            val feedItemsWithLimit = cut.getFeedItems(feedId, limit = 1).toList()
+            val feedItemsWithLimit = cut.getAllFeedItems(feedId, limit = 1).toList()
             expectThat(feedItemsWithLimit)
                 .isNotEmpty()
                 .hasSize(1)
 
-            val feedItemsSince = cut.getFeedItems(feedId, since = testFeedItems.last().created).toList()
+            val feedItemsSince = cut.getAllFeedItems(feedId, since = testFeedItems.last().created).toList()
             expectThat(feedItemsSince)
                 .isNotEmpty()
                 .hasSize(1)
@@ -144,6 +144,11 @@ internal class SpringR2DBCFeedRepositoryTest {
 
             val duplicatedItems = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(duplicatedItems)
+                .containsExactlyInAnyOrder(feedItemIds)
+
+            val allFeedIds = cut.getAllFeedItemIds(feedId).toList()
+            expectThat(allFeedIds)
+                .isNotEmpty()
                 .containsExactlyInAnyOrder(feedItemIds)
         }
     }
@@ -204,33 +209,46 @@ internal class SpringR2DBCFeedRepositoryTest {
     }
 
     @Test
-    fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItem`() {
+    fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItemForFeedItems`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
             val user = UserId(1)
 
 
-            val firstFeed = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItemsIfNotExist(firstFeed, flowOf(*testFeedItems.toTypedArray())).toList()
+            val firstFeedId = cut.insertFeed(firstTestFeed)
+            val feedItemIds = cut.insertFeedItemsIfNotExist(firstFeedId, flowOf(*testFeedItems.toTypedArray())).toList()
 
-            val secondFeed = cut.insertFeed(secondTestFeed)
+            val secondFeedId = cut.insertFeed(secondTestFeed)
             cut.insertFeedItemsIfNotExist(
-                secondFeed,
+                secondFeedId,
                 flowOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now()))
             )
 
-            cut.addFeedToUser(user, firstFeed)
+            cut.addFeedToUser(user, firstFeedId)
             cut.updateUserFeedItem(user, flowOf(feedItemIds.first()), UpdateAction.READ)
 
-            val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeed).toList()
+            val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeedId).toList()
             expectThat(userFeedItems)
                 .hasSize(2)
+                .and {
+                    map { it.isRead }
+                        .containsExactlyInAnyOrder(true, false)
+                    map { it.isSaved }
+                        .containsExactly(false, false)
+                }
 
             val readUserFeedItems =
-                cut.getAllUserFeedItemsOfFeed(user, firstFeed, filter = FeedItemFilter.UNREAD).toList()
+                cut.getAllUserFeedItemsOfFeed(user, firstFeedId, filter = FeedItemFilter.UNREAD).toList()
+
             expectThat(readUserFeedItems)
                 .hasSize(1)
+                .and {
+                    map { it.isRead }
+                        .containsExactly(false)
+                    map { it.isSaved }
+                        .containsExactly(false)
+                }
         }
     }
 

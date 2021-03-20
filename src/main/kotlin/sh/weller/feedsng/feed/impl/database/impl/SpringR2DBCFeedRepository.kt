@@ -2,7 +2,6 @@ package sh.weller.feedsng.feed.impl.database.impl
 
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.awaitSingle
@@ -196,7 +195,22 @@ class SpringR2DBCFeedRepository(
 
     }
 
-    override fun getFeedItems(feedId: FeedId, since: Instant?, limit: Int?): Flow<FeedItem> {
+    override suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem? {
+        return client
+            .sql(
+                """
+                |SELECT * FROM feed_item 
+                |WHERE feed_id = :feed_id 
+                |AND id = :id
+            """.trimMargin()
+            )
+            .bind("feed_id", feedId.id)
+            .bind("id", feedItemId.id)
+            .mapToFeedItem()
+            .awaitOneOrNull()
+    }
+
+    override fun getAllFeedItems(feedId: FeedId, since: Instant?, limit: Int?): Flow<FeedItem> {
         return client
             .sql(
                 """
@@ -213,19 +227,22 @@ class SpringR2DBCFeedRepository(
             .flow()
     }
 
-    override suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem? {
+
+    override fun getAllFeedItemIds(feedId: FeedId, since: Instant?, limit: Int?): Flow<FeedItemId> {
         return client
             .sql(
                 """
-                |SELECT * FROM feed_item 
+                |SELECT id FROM feed_item 
                 |WHERE feed_id = :feed_id 
-                |AND id = :id
+                |${andWhereIfNotNull("created", ">=", since)} 
+                |ORDER BY created 
+                |${limitIfNotNull(limit)}
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
-            .bind("id", feedItemId.id)
-            .mapToFeedItem()
-            .awaitOneOrNull()
+            .bindIfNotNull("created", since)
+            .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
+            .flow()
     }
 
     override suspend fun insertUserGroup(userId: UserId, groupData: GroupData): GroupId {
@@ -336,7 +353,7 @@ class SpringR2DBCFeedRepository(
             .mapToFeed()
             .flow()
 
-        return flowOf(groupFeedFlow, userFeedFlow).flattenMerge()
+        return flowOf(groupFeedFlow, userFeedFlow).flattenConcat()
     }
 
     override suspend fun updateUserFeedItem(
@@ -344,22 +361,16 @@ class SpringR2DBCFeedRepository(
         feedItemIdFlow: Flow<FeedItemId>,
         updateAction: UpdateAction
     ) {
-        val columnToUpdate = when (updateAction) {
-            UpdateAction.READ, UpdateAction.UNREAD -> "read"
-            UpdateAction.SAVE, UpdateAction.UNSAVE -> "saved"
-        }
-        val updateValue = when (updateAction) {
-            UpdateAction.READ, UpdateAction.SAVE -> true
-            UpdateAction.UNREAD, UpdateAction.UNSAVE -> false
-        }
+        val columnToUpdate = updateAction.getUpdateColumnName()
+        val updateValue = updateAction.getUpdateValue()
         feedItemIdFlow
             .onEach {
                 client
                     .sql(
                         """
-                |MERGE INTO user_feed_item (feed_item_id, user_id, $columnToUpdate)
-                |KEY (feed_item_id, user_id)
-                |VALUES (:feed_item_id, :user_id, :updateValue)
+                |MERGE INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
+                |KEY (feed_item_id, user_id) 
+                |VALUES (:feed_item_id, :user_id, :updateValue) 
             """.trimMargin()
                     )
                     .bind("feed_item_id", it.id)
@@ -410,7 +421,7 @@ class SpringR2DBCFeedRepository(
             .flow()
     }
 
-    override suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem {
+    override suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem? {
         return client
             .sql(
                 """
@@ -423,9 +434,10 @@ class SpringR2DBCFeedRepository(
                 |ORDER BY created
             """.trimMargin()
             )
+            .bind("feed_id", feedId.id)
             .bind("feed_item_id", feedItemId.id)
             .bind("user_id", userId.id)
             .mapToUserFeedItem()
-            .awaitSingle()
+            .awaitSingleOrNull()
     }
 }
