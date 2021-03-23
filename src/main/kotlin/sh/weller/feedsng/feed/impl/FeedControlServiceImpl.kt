@@ -1,6 +1,9 @@
 package sh.weller.feedsng.feed.impl
 
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,45 +26,54 @@ class FeedControlServiceImpl(
     override suspend fun importFromOPML(
         userId: UserId,
         fileContent: String
-    ): Result<List<Pair<String, String>>, String> {
+    ): Result<Unit, List<String>> = coroutineScope {
         logger.info("Importing feeds from file for $userId")
         val importData = feedImportService
             .importFrom(fileContent)
-            .onFailure { return it }
+            .onFailure { failure -> return@coroutineScope failure.map { listOf(it) } }
 
-        val failedImports = mutableListOf<Pair<String, String>>()
-
-        val feedMap = importData
+        val feedImports = importData
             .allDistinctFeedURLs()
-            .mapNotNull { feedURL ->
-                val feedId = getFeedByURLOrFetchAndInsert(feedURL)
-                    .onFailure { failure ->
-                        failedImports.add(feedURL to failure.reason)
-                        return@mapNotNull null
-                    }
-                return@mapNotNull feedRepository.getFeed(feedId)
-            }
-            .groupBy { it.feedData.feedUrl }
+            .map { async { getFeedByURLOrFetchAndInsert(it) } }
+            .awaitAll()
 
-        importData.feedUrls
-            .mapNotNull { feedMap[it]?.firstOrNull() }
-            .forEach { feed ->
-                feedRepository.addFeedToUser(userId, feed.feedId)
+        importData
+            .feedUrls
+            .map {
+                async {
+                    val feed = feedRepository.getFeedWithFeedURL(it)
+                    if (feed != null) {
+                        feedRepository.addFeedToUser(userId, feed.feedId)
+                    }
+                }
             }
+            .awaitAll()
 
         importData.feedGroupImport
-            .forEach { groupImport ->
+            .flatMap {
                 val groupId = feedRepository
-                    .insertUserGroup(userId, GroupData(groupImport.name, emptyList()))
-                groupImport.feedUrls
-                    .mapNotNull { feedMap[it]?.firstOrNull() }
-                    .forEach { feed ->
-                        feedRepository.addFeedToUserGroup(groupId, feed.feedId)
-
+                    .insertUserGroup(userId, GroupData(it.name, emptyList()))
+                return@flatMap it.feedUrls
+                    .map {
+                        async {
+                            val feed = feedRepository.getFeedWithFeedURL(it)
+                            if (feed != null) {
+                                feedRepository.addFeedToUserGroup(groupId, feed.feedId)
+                            }
+                        }
                     }
-            }
+            }.awaitAll()
 
-        return failedImports.asSuccess()
+
+        val failedImports = feedImports
+            .filterIsInstance<Failure<String>>()
+            .map { it.reason }
+
+        if (failedImports.isEmpty()) {
+            return@coroutineScope Success(Unit)
+        } else {
+            return@coroutineScope failedImports.asFailure()
+        }
     }
 
     override suspend fun addGroup(userId: UserId, groupName: String): GroupId {
@@ -118,12 +130,12 @@ class FeedControlServiceImpl(
 
         val feedData = feedFetcherService
             .getFeedData(feedUrl)
-            .onFailure { return it }
+            .onFailure { failure -> return failure.map { "Failed to import $feedUrl: $it" } }
         val feedId = feedRepository.insertFeed(feedData)
 
         val feedItems = feedFetcherService
             .getFeedItemData(feedUrl)
-            .onFailure { return it }
+            .onFailure { failure -> return failure.map { "Failed to import $feedUrl: $it" } }
         feedRepository
             .insertFeedItemsIfNotExist(feedId, feedItems)
             .collect()

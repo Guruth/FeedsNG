@@ -32,9 +32,7 @@ internal class FeedControlServiceImplTest {
         runBlocking {
             val importResult = cut.importFromOPML(userId, testFileContents)
             expectThat(importResult)
-                .isA<Success<List<Pair<String, String>>>>()
-                .get { value }
-                .isEmpty()
+                .isA<Success<Unit>>()
 
             val importedFeeds = repo.getAllUserFeeds(userId).toList()
 

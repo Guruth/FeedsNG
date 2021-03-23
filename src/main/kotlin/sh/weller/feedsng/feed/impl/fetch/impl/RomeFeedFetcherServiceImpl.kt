@@ -7,23 +7,28 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
+import reactor.netty.http.client.HttpClient
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Result
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.FeedData
 import sh.weller.feedsng.feed.FeedItemData
 import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
+import java.io.*
 import java.time.Instant
 
 @Service
 class RomeFeedFetcherServiceImpl(
-    private val client: WebClient = WebClient.create()
+    private val client: WebClient = WebClient
+        .builder()
+        .clientConnector(ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
+        .codecs { configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) }
+        .build()
 ) : FeedFetcherService {
 
     override suspend fun getFeedData(feedUrl: String): Result<FeedData, String> {
@@ -57,10 +62,12 @@ class RomeFeedFetcherServiceImpl(
                         val mappedData = mappingFunction(syndFeed)
                         Success(mappedData)
                     } else {
+                        logger.error("Could not fetch feed at $feedUrl: ${it.statusCode().reasonPhrase}")
                         Failure(it.statusCode().reasonPhrase)
                     }
                 }
         } catch (e: Exception) {
+            logger.error("Could not fetch feed at $feedUrl: ${e.message}")
             Failure(e.message ?: "Unknown Error")
         }
     }
@@ -68,7 +75,7 @@ class RomeFeedFetcherServiceImpl(
     private fun SyndFeed.toFeedData(feedUrl: String): FeedData =
         FeedData(
             name = this.title,
-            description = this.description,
+            description = this.description ?: "",
             feedUrl = feedUrl,
             siteUrl = this.link,
             lastUpdated = this.getFeedUpdatedTimestamp(),

@@ -4,7 +4,9 @@ import sh.weller.feedsng.common.Result
 import sh.weller.feedsng.user.UserId
 
 interface FeedControlService {
-    suspend fun importFromOPML(userId: UserId, fileContent: String): Result<List<Pair<String, String>>, String>
+    suspend fun importFromOPML(userId: UserId, fileContent: String): Result<Unit, List<String>>
+
+    // TODO: Move Feed to Group
 
     suspend fun addGroup(userId: UserId, groupName: String): GroupId
     suspend fun addFeedToGroup(userId: UserId, groupId: GroupId, feedUrl: String): Result<FeedId, String>

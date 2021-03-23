@@ -1,15 +1,10 @@
 package sh.weller.feedsng.feed.impl
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.TickerMode
 import kotlinx.coroutines.channels.ticker
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.SmartLifecycle
@@ -65,14 +60,17 @@ class FeedUpdateServiceImpl(
             .launchIn(coroutineScope)
     }
 
-    private suspend fun updateFeeds() {
-        feedRepository
-            .getAllFeeds()
-            .onEach {
-                updateFeed(it)
-            }
-            .collect()
-    }
+    private suspend fun updateFeeds() =
+        coroutineScope {
+            feedRepository
+                .getAllFeeds()
+                .toList().map {
+                    async(Dispatchers.IO) {
+                        updateFeed(it)
+                    }
+                }
+                .awaitAll()
+        }
 
     private suspend fun updateFeed(feed: Feed) {
         logger.info("Updating Feed ${feed.feedId} - ${feed.feedData.name} - ${feed.feedData.feedUrl}")
