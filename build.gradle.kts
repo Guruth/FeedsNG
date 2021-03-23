@@ -13,7 +13,6 @@ plugins {
 
 group = "sh.weller"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
@@ -21,8 +20,9 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-security")
+
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    //implementation("org.springframework.boot:spring-boot-starter-security")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -40,8 +40,8 @@ dependencies {
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
+//    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test-common"))
     testImplementation(kotlin("test-annotations-common"))
