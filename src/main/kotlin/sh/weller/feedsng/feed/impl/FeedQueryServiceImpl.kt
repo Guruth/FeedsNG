@@ -1,5 +1,6 @@
 package sh.weller.feedsng.feed.impl
 
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.map
@@ -22,6 +23,7 @@ class FeedQueryServiceImpl(
     override fun getFeeds(userId: UserId): Flow<Feed> =
         feedRepository.getAllUserFeeds(userId)
 
+    @OptIn(FlowPreview::class)
     override fun getFeedItems(
         userId: UserId,
         feedIdList: Flow<FeedId>?,

@@ -20,13 +20,21 @@ import sh.weller.feedsng.feed.FeedData
 import sh.weller.feedsng.feed.FeedItemData
 import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
 import java.io.*
+import java.time.Duration
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Service
 class RomeFeedFetcherServiceImpl(
     private val client: WebClient = WebClient
         .builder()
-        .clientConnector(ReactorClientHttpConnector(HttpClient.create().followRedirect(true)))
+        .clientConnector(
+            ReactorClientHttpConnector(
+                HttpClient.create()
+                    .followRedirect(true)
+                    .responseTimeout(Duration.of(1, ChronoUnit.SECONDS))
+            )
+        )
         .codecs { configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) }
         .build()
 ) : FeedFetcherService {
@@ -76,7 +84,7 @@ class RomeFeedFetcherServiceImpl(
         FeedData(
             name = this.title,
             description = this.description ?: "",
-            feedUrl = feedUrl,
+            feedUrl = this.uri ?: feedUrl,
             siteUrl = this.link,
             lastUpdated = this.getFeedUpdatedTimestamp(),
         )

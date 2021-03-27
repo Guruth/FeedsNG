@@ -23,7 +23,6 @@ class FeverAPIHandler(
 
     private suspend fun feverHandler(request: ServerRequest): ServerResponse {
         val queryParameters = request.queryParams()
-        logger.info("Received request with parameters: $queryParameters")
 
         // TODO: Fetch from request
         val userId = UserId(1)
