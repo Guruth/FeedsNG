@@ -202,7 +202,7 @@ class SpringR2DBCFeedRepository(
             .awaitOneOrNull()
     }
 
-    override fun getAllFeedItems(feedId: FeedId, since: Instant?, limit: Int?): Flow<FeedItem> {
+    override fun getAllFeedItems(feedId: FeedId, since: Instant?): Flow<FeedItem> {
         return client
             .sql(
                 """
@@ -210,7 +210,6 @@ class SpringR2DBCFeedRepository(
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", ">=", since)} 
                 |ORDER BY created 
-                |${limitIfNotNull(limit)}
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -220,7 +219,7 @@ class SpringR2DBCFeedRepository(
     }
 
 
-    override fun getAllFeedItemIds(feedId: FeedId, since: Instant?, limit: Int?): Flow<FeedItemId> {
+    override fun getAllFeedItemIds(feedId: FeedId, since: Instant?): Flow<FeedItemId> {
         return client
             .sql(
                 """
@@ -228,7 +227,6 @@ class SpringR2DBCFeedRepository(
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", ">=", since)} 
                 |ORDER BY created 
-                |${limitIfNotNull(limit)}
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -379,7 +377,6 @@ class SpringR2DBCFeedRepository(
         userId: UserId,
         feedId: FeedId,
         since: Instant?,
-        limit: Int?,
         filter: FeedItemFilter?
     ): Flow<UserFeedItem> {
 
@@ -399,11 +396,10 @@ class SpringR2DBCFeedRepository(
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
-                |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
-                |${andWhereIfNotNull("created", ">=", since)}
-                |$filterQuery
-                |${limitIfNotNull(limit)}
-                |ORDER BY created
+                |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
+                |${andWhereIfNotNull("created", ">=", since)} 
+                |$filterQuery 
+                |ORDER BY created 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)

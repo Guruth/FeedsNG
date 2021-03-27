@@ -14,8 +14,8 @@ interface FeedRepository {
 
     fun insertFeedItemsIfNotExist(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId>
     suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem?
-    fun getAllFeedItems(feedId: FeedId, since: Instant? = null, limit: Int? = null): Flow<FeedItem>
-    fun getAllFeedItemIds(feedId: FeedId, since: Instant? = null, limit: Int? = null): Flow<FeedItemId>
+    fun getAllFeedItems(feedId: FeedId, since: Instant? = null): Flow<FeedItem>
+    fun getAllFeedItemIds(feedId: FeedId, since: Instant? = null): Flow<FeedItemId>
 
     suspend fun insertUserGroup(userId: UserId, groupData: GroupData): GroupId
     fun getAllUserGroups(userId: UserId): Flow<Group>
@@ -29,7 +29,6 @@ interface FeedRepository {
         userId: UserId,
         feedId: FeedId,
         since: Instant? = null,
-        limit: Int? = null,
         filter: FeedItemFilter? = null
     ): Flow<UserFeedItem>
 

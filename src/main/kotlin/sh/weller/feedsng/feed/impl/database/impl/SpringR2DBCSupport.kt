@@ -27,13 +27,6 @@ internal fun DatabaseClient.GenericExecuteSpec.bindIfNotNull(
         this
     }
 
-internal fun limitIfNotNull(limit: Int?): String =
-    if (limit != null) {
-        " LIMIT $limit"
-    } else {
-        ""
-    }
-
 fun DatabaseClient.GenericExecuteSpec.mapToUserFeedItem() =
     this.map { row ->
         UserFeedItem(

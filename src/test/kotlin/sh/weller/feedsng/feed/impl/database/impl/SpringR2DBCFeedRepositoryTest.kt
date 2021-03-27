@@ -128,11 +128,6 @@ internal class SpringR2DBCFeedRepositoryTest {
                 .isNotEmpty()
                 .hasSize(2)
 
-            val feedItemsWithLimit = cut.getAllFeedItems(feedId, limit = 1).toList()
-            expectThat(feedItemsWithLimit)
-                .isNotEmpty()
-                .hasSize(1)
-
             val feedItemsSince = cut.getAllFeedItems(feedId, since = testFeedItems.last().created).toList()
             expectThat(feedItemsSince)
                 .isNotEmpty()

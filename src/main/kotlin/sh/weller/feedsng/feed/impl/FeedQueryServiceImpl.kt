@@ -1,8 +1,8 @@
 package sh.weller.feedsng.feed.impl
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.feed.impl.database.FeedRepository
@@ -24,22 +24,21 @@ class FeedQueryServiceImpl(
 
     override fun getFeedItems(
         userId: UserId,
-        feedIdList: List<FeedId>,
+        feedIdList: Flow<FeedId>?,
         since: Instant?,
-        limit: Int?,
         filter: FeedItemFilter?
-    ): Flow<UserFeedItem> = flow {
-        for (feedId in feedIdList) {
-            emitAll(
+    ): Flow<UserFeedItem> {
+        val feedsToFetch: Flow<FeedId> = feedIdList
+            ?: getFeeds(userId).map { it.feedId }
+
+        return feedsToFetch
+            .flatMapMerge { feedId ->
                 feedRepository.getAllUserFeedItemsOfFeed(
                     userId,
                     feedId,
                     since,
-                    limit,
                     filter
                 )
-            )
-        }
+            }
     }
-
 }

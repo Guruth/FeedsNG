@@ -5,16 +5,29 @@ import sh.weller.feedsng.user.UserId
 import java.time.Instant
 
 interface FeedQueryService {
+    /**
+     * Fetches a specific [Feed] by its [FeedId], if it exists
+     */
     suspend fun getFeed(feedId: FeedId): Feed?
 
+    /**
+     * Fetches all [Group]s of a user
+     */
     suspend fun getGroups(userId: UserId): Flow<Group>
+
+    /**
+     * Fetches all [Feed]s of a user
+     */
     fun getFeeds(userId: UserId): Flow<Feed>
+
+    /**
+     * Fetches all [UserFeedItem]s of a user for the given list of [FeedId]s.
+     */
     fun getFeedItems(
         userId: UserId,
-        feedIdList: List<FeedId>,
-        since: Instant?,
-        limit: Int?,
-        filter: FeedItemFilter?
+        feedIdList: Flow<FeedId>? = null,
+        since: Instant? = null,
+        filter: FeedItemFilter? = null
     ): Flow<UserFeedItem>
 }
 
