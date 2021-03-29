@@ -57,7 +57,7 @@ dependencies {
 
     testImplementation("io.strikt:strikt-core:0.29.0")
     testImplementation("io.strikt:strikt-jvm:0.29.0")
-    testImplementation("io.strikt:strikt-spring:0.29.0")
+    testImplementation("io.strikt:strikt-spring:0.30.0")
 }
 
 tasks.withType<KotlinCompile> {
