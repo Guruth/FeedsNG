@@ -10,19 +10,19 @@ internal inline fun <reified T> Row.getReifiedOrNull(columnName: String): T? = t
 internal fun Row.getInt(columnName: String): Int = this.get(columnName, Integer::class.java)!!.toInt()
 internal fun Row.getIntOrNull(columnName: String): Int? = this.get(columnName, Integer::class.java)?.toInt()
 
-internal fun andWhereIfNotNull(fieldName: String?, operator: String, value: Any?): String =
-    if (fieldName != null && value != null) {
-        " AND $fieldName $operator :$fieldName"
+internal fun andWhereIfNotNull(fieldName: String, parameterName: String, operator: String, value: Any?): String =
+    if (value != null) {
+        "AND $fieldName $operator :$parameterName"
     } else {
         ""
     }
 
 internal fun DatabaseClient.GenericExecuteSpec.bindIfNotNull(
-    fieldName: String?,
+    parameterName: String,
     value: Any?
 ): DatabaseClient.GenericExecuteSpec =
-    if (fieldName != null && value != null) {
-        this.bind(fieldName, value)
+    if (value != null) {
+        this.bind(parameterName, value)
     } else {
         this
     }

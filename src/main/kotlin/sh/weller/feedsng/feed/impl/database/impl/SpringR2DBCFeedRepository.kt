@@ -187,50 +187,18 @@ class SpringR2DBCFeedRepository(
 
     }
 
-    override suspend fun getFeedItem(feedId: FeedId, feedItemId: FeedItemId): FeedItem? {
-        return client
-            .sql(
-                """
-                |SELECT * FROM feed_item 
-                |WHERE feed_id = :feed_id 
-                |AND id = :id
-            """.trimMargin()
-            )
-            .bind("feed_id", feedId.id)
-            .bind("id", feedItemId.id)
-            .mapToFeedItem()
-            .awaitOneOrNull()
-    }
-
-    override fun getAllFeedItems(feedId: FeedId, since: Instant?): Flow<FeedItem> {
-        return client
-            .sql(
-                """
-                |SELECT * FROM feed_item 
-                |WHERE feed_id = :feed_id 
-                |${andWhereIfNotNull("created", ">=", since)} 
-                |ORDER BY created 
-            """.trimMargin()
-            )
-            .bind("feed_id", feedId.id)
-            .bindIfNotNull("created", since)
-            .mapToFeedItem()
-            .flow()
-    }
-
-
-    override fun getAllFeedItemIds(feedId: FeedId, since: Instant?): Flow<FeedItemId> {
+    override fun getAllFeedItemIds(feedId: FeedId, before: Instant?): Flow<FeedItemId> {
         return client
             .sql(
                 """
                 |SELECT id FROM feed_item 
                 |WHERE feed_id = :feed_id 
-                |${andWhereIfNotNull("created", ">=", since)} 
+                |${andWhereIfNotNull("created", "createdBefore", "<", before)} 
                 |ORDER BY created 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
-            .bindIfNotNull("created", since)
+            .bindIfNotNull("createdBefore", before)
             .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
             .flow()
     }
@@ -376,18 +344,10 @@ class SpringR2DBCFeedRepository(
     override fun getAllUserFeedItemsOfFeed(
         userId: UserId,
         feedId: FeedId,
-        since: Instant?,
-        filter: FeedItemFilter?
+        filter: FeedItemFilter?,
+        since: Instant?
     ): Flow<UserFeedItem> {
-
-        val filterQuery = if (filter == null) {
-            ""
-        } else {
-            when (filter) {
-                FeedItemFilter.UNREAD -> "AND (UFI.read IS NULL OR UFI.read = false) "
-                FeedItemFilter.SAVED -> "AND UFI.saved = true "
-            }
-        }
+        val filterQuery = filter.toWhereClause()
 
         return client
             .sql(
@@ -397,26 +357,61 @@ class SpringR2DBCFeedRepository(
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
-                |${andWhereIfNotNull("created", ">=", since)} 
+                |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
                 |ORDER BY created 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
             .bind("user_id", userId.id)
-            .bindIfNotNull("created", since)
+            .bindIfNotNull("createdSince", since)
             .mapToUserFeedItem()
             .flow()
     }
+
+    override fun getAllUserFeedItemIdsOfFeed(
+        userId: UserId,
+        feedId: FeedId,
+        filter: FeedItemFilter?,
+        since: Instant?
+    ): Flow<FeedItemId> {
+        val filterQuery = filter.toWhereClause()
+
+        return client
+            .sql(
+                """
+                |SELECT FI.id 
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |WHERE FI.feed_id = :feed_id 
+                |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
+                |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
+                |$filterQuery 
+                |ORDER BY created 
+            """.trimMargin()
+            )
+            .bind("feed_id", feedId.id)
+            .bind("user_id", userId.id)
+            .bindIfNotNull("createdSince", since)
+            .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
+            .flow()
+    }
+
+    private fun FeedItemFilter?.toWhereClause(): String =
+        when (this) {
+            FeedItemFilter.READ -> "AND UFI.read = true "
+            FeedItemFilter.UNREAD -> "AND (UFI.read IS NULL OR UFI.read = false) "
+            FeedItemFilter.SAVED -> "AND UFI.saved = true "
+            else -> ""
+        }
 
     override suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem? {
         return client
             .sql(
                 """
-                |SELECT 
-                |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
-                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
-                |WHERE FI.ID = :feed_item_id 
+                |SELECT
+                |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id
+                |WHERE FI.ID = :feed_item_id
                 |AND FI.feed_id = :feed_id
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
                 |ORDER BY created

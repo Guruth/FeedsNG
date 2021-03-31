@@ -121,21 +121,7 @@ internal class SpringR2DBCFeedRepositoryTest {
             val feedItemIds = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(feedItemIds)
                 .isNotEmpty()
-                .hasSize(2)
-
-            val feedItems = cut.getAllFeedItems(feedId).toList()
-            expectThat(feedItems)
-                .isNotEmpty()
-                .hasSize(2)
-
-            val feedItemsSince = cut.getAllFeedItems(feedId, since = testFeedItems.last().created).toList()
-            expectThat(feedItemsSince)
-                .isNotEmpty()
-                .hasSize(1)
-
-            val singleFeedItem = cut.getFeedItem(feedId, feedItemIds.first())
-            expectThat(singleFeedItem)
-                .isNotNull()
+                .hasSize(3)
 
             val duplicatedItems = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(duplicatedItems)
@@ -145,6 +131,11 @@ internal class SpringR2DBCFeedRepositoryTest {
             expectThat(allFeedIds)
                 .isNotEmpty()
                 .containsExactlyInAnyOrder(feedItemIds)
+
+            val feedIdsBefore = cut.getAllFeedItemIds(feedId, before = testFeedItems.last().created).toList()
+            expectThat(feedIdsBefore)
+                .isNotEmpty()
+                .hasSize(2)
         }
     }
 
@@ -210,7 +201,6 @@ internal class SpringR2DBCFeedRepositoryTest {
         runBlocking {
             val user = UserId(1)
 
-
             val firstFeedId = cut.insertFeed(firstTestFeed)
             val feedItemIds = cut.insertFeedItemsIfNotExist(firstFeedId, flowOf(*testFeedItems.toTypedArray())).toList()
 
@@ -225,25 +215,34 @@ internal class SpringR2DBCFeedRepositoryTest {
 
             val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeedId).toList()
             expectThat(userFeedItems)
+                .hasSize(3)
+                .and {
+                    map { it.isRead }
+                        .containsExactlyInAnyOrder(true, false, false)
+                    map { it.isSaved }
+                        .containsExactly(false, false, false)
+                }
+
+            val unreadUserFeedItems =
+                cut.getAllUserFeedItemsOfFeed(user, firstFeedId, filter = FeedItemFilter.UNREAD).toList()
+
+            expectThat(unreadUserFeedItems)
                 .hasSize(2)
                 .and {
                     map { it.isRead }
-                        .containsExactlyInAnyOrder(true, false)
+                        .containsExactly(false, false)
                     map { it.isSaved }
                         .containsExactly(false, false)
                 }
 
-            val readUserFeedItems =
-                cut.getAllUserFeedItemsOfFeed(user, firstFeedId, filter = FeedItemFilter.UNREAD).toList()
-
-            expectThat(readUserFeedItems)
-                .hasSize(1)
-                .and {
-                    map { it.isRead }
-                        .containsExactly(false)
-                    map { it.isSaved }
-                        .containsExactly(false)
-                }
+            val readUserFeedItemsBetween =
+                cut.getAllUserFeedItemsOfFeed(
+                    user,
+                    firstFeedId,
+                    since = testFeedItems.first().created.plusMillis(100)
+                ).toList()
+            expectThat(readUserFeedItemsBetween)
+                .hasSize(2)
         }
     }
 
@@ -283,6 +282,13 @@ internal class SpringR2DBCFeedRepositoryTest {
             html = "<body>Foo</body>",
             url = "https://foo.baz/",
             created = Instant.now().minusMillis(1000)
+        ),
+        FeedItemData(
+            title = "TestItem3",
+            author = "TestAuthor",
+            html = "<body>Foo</body>",
+            url = "https://foo.bux/",
+            created = Instant.now()
         )
     )
 
