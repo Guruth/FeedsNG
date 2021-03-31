@@ -13,8 +13,8 @@ import sh.weller.feedsng.common.onFailure
 import sh.weller.feedsng.feed.Feed
 import sh.weller.feedsng.feed.impl.database.FeedRepository
 import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
+import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
 
 @OptIn(ObsoleteCoroutinesApi::class)
 @Service
@@ -95,6 +95,6 @@ class FeedUpdateServiceImpl(
 
 @OptIn(ExperimentalTime::class)
 data class FeedUpdateConfiguration(
-    val initialDelay: Long = 1.minutes.toLongMilliseconds(),
-    val updateInterval: Long = 10.minutes.toLongMilliseconds()
+    val initialDelay: Long = Duration.minutes(1).toLongMilliseconds(),
+    val updateInterval: Long = Duration.minutes(10).toLongMilliseconds()
 )
