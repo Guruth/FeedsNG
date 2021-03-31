@@ -1,14 +1,13 @@
 package sh.weller.feedsng.web.fever
 
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.user.UserId
-
+import java.time.Instant
 
 @Controller
 class FeverAPIHandler(
@@ -92,39 +91,84 @@ class FeverAPIHandler(
         }
 
         if (queryParameters.contains("unread_item_ids")) {
-            val unreadIds = feedQueryService
-                .getFeedItems(
-                    userId = userId,
-                    feedIdList = null,
-                    since = null,
-                    filter = FeedItemFilter.UNREAD
-                )
-                .map { it.feedItem.feedItemId }
-                .toList()
+            val unreadIds = getUnreadItemIds(userId)
             responseBuilder.unreadItemIds(unreadIds)
         }
 
-
         if (queryParameters.contains("saved_item_ids")) {
-            val unreadIds = feedQueryService
-                .getFeedItems(
-                    userId = userId,
-                    feedIdList = null,
-                    since = null,
-                    filter = FeedItemFilter.SAVED
+            val savedIds = getSavedItemIds(userId)
+            responseBuilder.savedItemIds(savedIds)
+        }
+
+        if (queryParameters.getFirst("unread_recently_read") == "1") {
+            feedQueryService
+                .getFeedItemsIds(
+                    userId,
+                    filter = FeedItemFilter.READ,
+                    since = Instant.now().minusSeconds(30)
                 )
-                .map { it.feedItem.feedItemId }
-                .toList()
-            responseBuilder.savedItemIds(unreadIds)
+                .onEach {
+                    feedControlService.updateFeedItem(userId, it, UpdateAction.UNREAD)
+                }
+        }
+
+        if (queryParameters.contains("mark")) {
+            val target = queryParameters
+                .getFirst("mark")
+            val action = queryParameters
+                .getFirst("as")
+                .let {
+                    UpdateAction.fromStringOrNull(it)
+                }
+
+            val id = queryParameters.getFirst("id")?.toIntOrNull()
+            val before = queryParameters.getFirst("before")?.toInstant()
+            if (id != null && action != null) {
+                when (target) {
+                    "item" -> feedControlService.updateFeedItem(userId, id.toFeedItemId(), action)
+                    "feed" -> feedControlService.updateFeed(userId, id.toFeedId(), action, before)
+                    "group" -> feedControlService.updateGroup(userId, id.toGroupId(), action, before)
+                }
+            }
+
+            when (action) {
+                UpdateAction.READ, UpdateAction.UNREAD -> {
+                    val unreadIds = getUnreadItemIds(userId)
+                    responseBuilder.unreadItemIds(unreadIds)
+                }
+                UpdateAction.SAVE, UpdateAction.UNSAVE -> {
+                    val savedIds = getSavedItemIds(userId)
+                    responseBuilder.savedItemIds(savedIds)
+                }
+            }
         }
 
         return ServerResponse.ok().json().bodyValueAndAwait(responseBuilder.build())
     }
 
+    suspend fun getSavedItemIds(userId: UserId): List<FeedItemId> =
+        feedQueryService
+            .getFeedItems(
+                userId = userId,
+                feedIdList = null,
+                filter = FeedItemFilter.SAVED
+            )
+            .map { it.feedItem.feedItemId }
+            .toList()
+
+    suspend fun getUnreadItemIds(userId: UserId): List<FeedItemId> =
+        feedQueryService
+            .getFeedItems(
+                userId = userId,
+                feedIdList = null,
+                filter = FeedItemFilter.UNREAD
+            )
+            .map { it.feedItem.feedItemId }
+            .toList()
+
 
     companion object {
         const val FEVER_API_VERSION = 3
-        private val logger: Logger = LoggerFactory.getLogger(FeverAPIHandler::class.java)
     }
 
 }
@@ -134,3 +178,8 @@ private fun ServerRequest.queryIntListOrNull(parameterName: String): List<Int>? 
 
 private fun String.toIntegerList(): List<Int> =
     this.split(",").mapNotNull { it.toIntOrNull() }
+
+private fun String?.toInstant(): Instant? =
+    this
+        ?.toLong()
+        ?.let { Instant.ofEpochSecond(it) }

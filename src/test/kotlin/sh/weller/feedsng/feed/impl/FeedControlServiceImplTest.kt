@@ -22,7 +22,6 @@ import kotlin.test.assertNotNull
 
 internal class FeedControlServiceImplTest {
 
-
     @Test
     fun importFromOPML() {
         val (repo, cut) = getTestSetup()
@@ -65,18 +64,6 @@ internal class FeedControlServiceImplTest {
                 .hasSize(2)
                 .map { it.feedId }
                 .containsExactlyInAnyOrder(feedIdWithoutGroup, feedIdWithGroup)
-
-            val feedItemsWithoutGroup = repo.getAllFeedItems(feedIdWithoutGroup).toList()
-            expectThat(feedItemsWithoutGroup)
-                .isNotEmpty()
-
-            val feedItemsWithGroup = repo.getAllFeedItems(feedIdWithGroup).toList()
-            expectThat(feedItemsWithGroup)
-                .isNotEmpty()
-
-            expectThat(feedItemsWithoutGroup)
-                .isNotEqualTo(feedItemsWithGroup)
-
         }
     }
 

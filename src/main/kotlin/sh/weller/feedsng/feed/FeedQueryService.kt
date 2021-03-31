@@ -21,14 +21,25 @@ interface FeedQueryService {
     fun getFeeds(userId: UserId): Flow<Feed>
 
     /**
-     * Fetches all [UserFeedItem]s of a user for the given list of [FeedId]s.
+     * Fetches all [UserFeedItem]s of a user for the given list of [FeedId]s that match the [FeedItemFilter].
      */
     fun getFeedItems(
         userId: UserId,
         feedIdList: Flow<FeedId>? = null,
-        since: Instant? = null,
-        filter: FeedItemFilter? = null
+        filter: FeedItemFilter? = null,
+        since: Instant? = null
     ): Flow<UserFeedItem>
+
+
+    /**
+     * Fetches all [FeedItemId]s of a user for the given list of [FeedId]s that match the [FeedItemFilter].
+     */
+    fun getFeedItemsIds(
+        userId: UserId,
+        feedIdList: Flow<FeedId>? = null,
+        filter: FeedItemFilter? = null,
+        since: Instant? = null
+    ): Flow<FeedItemId>
 }
 
 data class Group(
@@ -75,5 +86,5 @@ data class FeedItemData(
 )
 
 enum class FeedItemFilter {
-    UNREAD, SAVED;
+    READ, UNREAD, SAVED;
 }

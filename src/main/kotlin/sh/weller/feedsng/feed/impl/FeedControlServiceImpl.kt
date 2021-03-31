@@ -14,6 +14,7 @@ import sh.weller.feedsng.feed.impl.database.FeedRepository
 import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
 import sh.weller.feedsng.feed.impl.import.FeedImportService
 import sh.weller.feedsng.user.UserId
+import java.time.Instant
 
 @OptIn(FlowPreview::class)
 @Service
@@ -99,25 +100,29 @@ class FeedControlServiceImpl(
         return feedId.asSuccess()
     }
 
-    override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: UpdateAction) {
+    override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: UpdateAction, before: Instant?) {
         logger.info("Updating $groupId with $action for $userId")
         feedRepository.getAllUserGroups(userId)
             .filter { it.groupId == groupId }
             .map { flowOf(*it.groupData.feeds.toTypedArray()) }
             .flattenConcat()
             .onEach {
-                updateFeed(userId, it, action)
+                updateFeed(userId, it, action, before)
             }
             .collect()
     }
 
-    override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: UpdateAction) {
+    override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: UpdateAction, before: Instant?) {
         logger.info("Updating $feedId with $action for $userId")
-        val feedItemFlow = feedRepository.getAllFeedItemIds(feedId)
+        val feedItemFlow = feedRepository.getAllFeedItemIds(feedId = feedId, before = before)
         feedRepository.updateUserFeedItem(userId, feedItemFlow, action)
     }
 
-    override suspend fun updateFeedItem(userId: UserId, feedItemId: FeedItemId, action: UpdateAction) {
+    override suspend fun updateFeedItem(
+        userId: UserId,
+        feedItemId: FeedItemId,
+        action: UpdateAction
+    ) {
         logger.info("Updating $feedItemId with $action for $userId")
         feedRepository.updateUserFeedItem(userId, flowOf(feedItemId), action)
     }

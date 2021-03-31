@@ -27,8 +27,8 @@ class FeedQueryServiceImpl(
     override fun getFeedItems(
         userId: UserId,
         feedIdList: Flow<FeedId>?,
-        since: Instant?,
-        filter: FeedItemFilter?
+        filter: FeedItemFilter?,
+        since: Instant?
     ): Flow<UserFeedItem> {
         val feedsToFetch: Flow<FeedId> = feedIdList
             ?: getFeeds(userId).map { it.feedId }
@@ -38,8 +38,29 @@ class FeedQueryServiceImpl(
                 feedRepository.getAllUserFeedItemsOfFeed(
                     userId,
                     feedId,
-                    since,
-                    filter
+                    filter,
+                    since
+                )
+            }
+    }
+
+    @OptIn(FlowPreview::class)
+    override fun getFeedItemsIds(
+        userId: UserId,
+        feedIdList: Flow<FeedId>?,
+        filter: FeedItemFilter?,
+        since: Instant?
+    ): Flow<FeedItemId> {
+        val feedsToFetch: Flow<FeedId> = feedIdList
+            ?: getFeeds(userId).map { it.feedId }
+
+        return feedsToFetch
+            .flatMapMerge { feedId ->
+                feedRepository.getAllUserFeedItemIdsOfFeed(
+                    userId,
+                    feedId,
+                    filter,
+                    since
                 )
             }
     }
