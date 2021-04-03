@@ -32,7 +32,7 @@ class RomeFeedFetcherServiceImpl(
             ReactorClientHttpConnector(
                 HttpClient.create()
                     .followRedirect(true)
-                    .responseTimeout(Duration.of(1, ChronoUnit.SECONDS))
+                    .responseTimeout(Duration.of(10, ChronoUnit.SECONDS))
             )
         )
         .codecs { configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) }
@@ -65,7 +65,10 @@ class RomeFeedFetcherServiceImpl(
                 .awaitExchange {
                     return@awaitExchange if (it.statusCode().is2xxSuccessful) {
                         val rawResponse = it.awaitBody<ByteArray>()
-                        val feedInput = SyndFeedInput()
+                        val feedInput = SyndFeedInput().apply {
+                            isAllowDoctypes = true
+                            xmlHealerOn = true
+                        }
                         val syndFeed = feedInput.build(InputStreamReader(ByteArrayInputStream(rawResponse)))
                         val mappedData = mappingFunction(syndFeed)
                         Success(mappedData)
@@ -84,7 +87,7 @@ class RomeFeedFetcherServiceImpl(
         FeedData(
             name = this.title,
             description = this.description ?: "",
-            feedUrl = this.uri ?: feedUrl,
+            feedUrl = feedUrl,
             siteUrl = this.link,
             lastUpdated = this.getFeedUpdatedTimestamp(),
         )

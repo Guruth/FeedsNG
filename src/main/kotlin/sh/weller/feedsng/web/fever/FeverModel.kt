@@ -2,6 +2,8 @@ package sh.weller.feedsng.web.fever
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import sh.weller.feedsng.feed.*
 import sh.weller.feedsng.web.fever.FeverAPIHandler.Companion.FEVER_API_VERSION
 import java.time.Instant
@@ -32,7 +34,7 @@ class FeverResponse private constructor(
     val links: Unit? = null // Hot Links not supported
 
 
-    // TODO: A deferred Builder? Takes only Deferreds and awaits on build...
+    // TODO: A deferred Builder? Takes only Deferred and awaits on build...
     class Builder {
         private var lastRefreshedOnTime: String? = null
         private var feedsGroups: List<FeverFeedGroupMapping>? = null
@@ -47,7 +49,7 @@ class FeverResponse private constructor(
         fun lastRefreshedOnTime(lastRefreshedOnTime: Instant) =
             apply { this.lastRefreshedOnTime = lastRefreshedOnTime.epochSecond.toString() }
 
-        fun feedGroupMappings(feedsGroups: List<Group>) = apply {
+        fun feedGroupMappings(feedsGroups: List<Group>) {
             this.feedsGroups = feedsGroups.map { group ->
                 FeverFeedGroupMapping(
                     group.groupId.id,
@@ -56,7 +58,7 @@ class FeverResponse private constructor(
             }
         }
 
-        fun groups(groups: List<Group>) = apply {
+        fun groups(groups: List<Group>) {
             this.groups = groups.map { group ->
                 FeverGroup(
                     group.groupId.id,
@@ -65,7 +67,7 @@ class FeverResponse private constructor(
             }
         }
 
-        fun feeds(feeds: List<Feed>) = apply {
+        fun feeds(feeds: List<Feed>) {
             this.feeds = feeds.map { feed ->
                 FeverFeed(
                     feed.feedId.id,
@@ -78,9 +80,11 @@ class FeverResponse private constructor(
             }
         }
 
-        fun favicons(favicons: List<FeverFavIcon>) = apply { this.favicons = favicons }
+        fun favicons(favicons: List<FeverFavIcon>) {
+            this.favicons = favicons
+        }
 
-        fun items(items: List<UserFeedItem>) = apply {
+        fun items(items: List<UserFeedItem>) {
             this.totalItems = items.size
             this.items = items.map { userFeedItem ->
                 FeverEntry(
@@ -97,11 +101,13 @@ class FeverResponse private constructor(
             }
         }
 
-        fun unreadItemIds(unreadItemIds: List<FeedItemId>) =
-            apply { this.unreadItemIds = unreadItemIds.map { it.id }.joinToString(",") }
+        fun unreadItemIds(unreadItemIds: List<FeedItemId>) {
+            this.unreadItemIds = unreadItemIds.map { it.id }.joinToString(",")
+        }
 
-        fun savedItemIds(savedItemIds: List<FeedItemId>) =
-            apply { this.savedItemIds = savedItemIds.map { it.id }.joinToString(",") }
+        fun savedItemIds(savedItemIds: List<FeedItemId>) {
+            this.savedItemIds = savedItemIds.map { it.id }.joinToString(",")
+        }
 
         fun build(): FeverResponse = FeverResponse(
             apiVersion = FEVER_API_VERSION,
@@ -116,6 +122,10 @@ class FeverResponse private constructor(
             unreadItemIds = unreadItemIds,
             savedItemIds = savedItemIds
         )
+
+        companion object {
+            private val logger: Logger = LoggerFactory.getLogger(Builder::class.java)
+        }
     }
 }
 

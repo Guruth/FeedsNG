@@ -186,6 +186,8 @@ internal class SpringR2DBCFeedRepositoryTest {
             cut.addFeedToUserGroup(firstGroup, firstFeed)
             cut.addFeedToUser(user, secondFeed)
 
+            cut.insertUserGroup(user, GroupData("emptyGroup", emptyList()))
+
             val feeds = cut.getAllUserFeeds(user).toList()
             expectThat(feeds)
                 .hasSize(2)

@@ -292,6 +292,7 @@ class SpringR2DBCFeedRepository(
                 |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
                 |LEFT JOIN feed AS F ON UGF.feed_id = F.id
                 |WHERE UG.user_id = :user_id 
+                |AND F.id IS NOT NULL
                 |""".trimMargin()
             )
             .bind("user_id", userId.id)
