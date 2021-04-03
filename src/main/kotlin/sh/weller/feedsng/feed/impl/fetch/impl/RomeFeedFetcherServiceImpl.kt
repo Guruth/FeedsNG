@@ -13,11 +13,10 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
 import reactor.netty.http.client.HttpClient
-import sh.weller.feedsng.common.Failure
-import sh.weller.feedsng.common.Result
-import sh.weller.feedsng.common.Success
+import sh.weller.feedsng.common.*
 import sh.weller.feedsng.feed.FeedData
 import sh.weller.feedsng.feed.FeedItemData
+import sh.weller.feedsng.feed.impl.fetch.FeedDetails
 import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
 import java.io.*
 import java.time.Duration
@@ -39,73 +38,80 @@ class RomeFeedFetcherServiceImpl(
         .build()
 ) : FeedFetcherService {
 
-    override suspend fun getFeedData(feedUrl: String): Result<FeedData, String> {
-        logger.info("Fetching FeedData for $feedUrl")
-        return this.getSyndFeedMapping(feedUrl) {
-            it.toFeedData(feedUrl)
-        }
+    override suspend fun fetchFeedDetails(feedUrl: String): Result<FeedDetails, String> {
+        val syndFeed = getFeedBytes(feedUrl)
+            .onFailure { return it }
+            .toSyndFeed(feedUrl)
+            .onFailure { return it }
+
+        return RomeFeedDetails(feedUrl, syndFeed).asSuccess()
     }
 
-    override suspend fun getFeedItemData(feedUrl: String): Result<Flow<FeedItemData>, String> {
-        logger.info("Fetching FeedItemData for $feedUrl")
-        return this.getSyndFeedMapping(feedUrl)
-        {
-            it.toFeedItemData()
-        }
-    }
-
-    private suspend fun <T> getSyndFeedMapping(
-        feedUrl: String,
-        mappingFunction: (SyndFeed) -> T
-    ): Result<T, String> {
+    suspend fun getFeedBytes(feedUrl: String): Result<ByteArray, String> {
         return try {
             client
                 .get()
                 .uri(feedUrl)
                 .awaitExchange {
-                    return@awaitExchange if (it.statusCode().is2xxSuccessful) {
-                        val rawResponse = it.awaitBody<ByteArray>()
-                        val feedInput = SyndFeedInput().apply {
-                            isAllowDoctypes = true
-                            xmlHealerOn = true
-                        }
-                        val syndFeed = feedInput.build(InputStreamReader(ByteArrayInputStream(rawResponse)))
-                        val mappedData = mappingFunction(syndFeed)
-                        Success(mappedData)
-                    } else {
+                    if (it.statusCode().isError) {
                         logger.error("Could not fetch feed at $feedUrl: ${it.statusCode().reasonPhrase}")
-                        Failure(it.statusCode().reasonPhrase)
+                        return@awaitExchange Failure(it.statusCode().reasonPhrase)
                     }
+                    return@awaitExchange it.awaitBody<ByteArray>().asSuccess()
                 }
         } catch (e: Exception) {
-            logger.error("Could not fetch feed at $feedUrl: ${e.message}")
+            logger.error("Could not fetch feed $feedUrl: ${e.message}")
             Failure(e.message ?: "Unknown Error")
         }
     }
 
-    private fun SyndFeed.toFeedData(feedUrl: String): FeedData =
-        FeedData(
-            name = this.title,
-            description = this.description ?: "",
-            feedUrl = feedUrl,
-            siteUrl = this.link,
-            lastUpdated = this.getFeedUpdatedTimestamp(),
-        )
-
-    private fun SyndFeed.toFeedItemData(): Flow<FeedItemData> = flow {
-        for (entry in this@toFeedItemData.entries) {
-            emit(
-                FeedItemData(
-                    title = entry.getFeedItemTitle(),
-                    author = entry.author,
-                    html = entry.getFeedItemDescription(),
-                    url = entry.uri,
-                    created = entry.getFeedItemCreatedTimestamp()
-                )
-            )
+    private fun ByteArray.toSyndFeed(feedUrl: String): Result<SyndFeed, String> {
+        return try {
+            val feedInput = SyndFeedInput().apply {
+                isAllowDoctypes = true
+                xmlHealerOn = true
+            }
+            feedInput.build(InputStreamReader(ByteArrayInputStream(this))).asSuccess()
+        } catch (e: Exception) {
+            logger.error("Could not parse feed of $feedUrl: ${e.message}")
+            Failure(e.message ?: "Unknown Error")
         }
     }
 
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(RomeFeedFetcherServiceImpl::class.java)
+    }
+
+}
+
+private class RomeFeedDetails(
+    private val feedUrl: String,
+    private val syndFeed: SyndFeed
+) : FeedDetails {
+
+    override val feedData: FeedData
+        get() = FeedData(
+            name = syndFeed.title,
+            description = syndFeed.description ?: "",
+            feedUrl = feedUrl,
+            siteUrl = syndFeed.link,
+            lastUpdated = syndFeed.getFeedUpdatedTimestamp(),
+        )
+
+    override val feedItemData: Flow<FeedItemData>
+        get() = flow {
+            for (entry in syndFeed.entries) {
+                emit(
+                    FeedItemData(
+                        title = entry.getFeedItemTitle(),
+                        author = entry.author,
+                        html = entry.getFeedItemDescription(),
+                        url = entry.uri,
+                        created = entry.getFeedItemCreatedTimestamp()
+                    )
+                )
+            }
+        }
 
     private fun SyndFeed.getFeedUpdatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: Instant.now()
@@ -123,7 +129,4 @@ class RomeFeedFetcherServiceImpl(
     private fun SyndEntry.getFeedItemCreatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: this.updatedDate?.toInstant() ?: Instant.now()
 
-    companion object {
-        private val logger: Logger = LoggerFactory.getLogger(RomeFeedFetcherServiceImpl::class.java)
-    }
 }

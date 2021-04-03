@@ -1,14 +1,12 @@
 package sh.weller.feedsng.feed.impl.fetch.impl
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
-import sh.weller.feedsng.feed.FeedData
-import sh.weller.feedsng.feed.FeedItemData
+import sh.weller.feedsng.feed.impl.fetch.FeedDetails
 import strikt.api.expectThat
 import strikt.assertions.containsIgnoringCase
 import strikt.assertions.isA
@@ -21,20 +19,17 @@ internal class RomeFeedFetcherServiceImplTest {
     fun `get kotlin blog feed works`() {
         val cut = RomeFeedFetcherServiceImpl(WebClient.create())
         runBlocking {
-            val feedData = cut.getFeedData("https://blog.jetbrains.com/kotlin/feed/")
-            expectThat(feedData)
-                .isA<Success<FeedData>>()
+            val feedDetails = cut.fetchFeedDetails("https://blog.jetbrains.com/kotlin/feed/")
+            expectThat(feedDetails)
+                .isA<Success<FeedDetails>>()
                 .get { value }
                 .and {
-                    get { name }
+                    get { feedData.name }
                         .containsIgnoringCase("kotlin")
-                }
 
-            val feedItemDataList = cut.getFeedItemData("https://blog.jetbrains.com/kotlin/feed/")
-            expectThat(feedItemDataList)
-                .isA<Success<Flow<FeedItemData>>>()
-                .get { runBlocking { value.toList() } }
-                .isNotEmpty()
+                    get { runBlocking { feedItemData.toList() } }
+                        .isNotEmpty()
+                }
         }
     }
 
@@ -42,7 +37,7 @@ internal class RomeFeedFetcherServiceImplTest {
     fun `get invalid feed url returns error`() {
         val cut = RomeFeedFetcherServiceImpl(WebClient.create())
         runBlocking {
-            val feedData = cut.getFeedData("https://example.com")
+            val feedData = cut.fetchFeedDetails("https://example.com")
             expectThat(feedData)
                 .isA<Failure<String>>()
                 .get { reason }
@@ -54,7 +49,7 @@ internal class RomeFeedFetcherServiceImplTest {
     fun `get not existing feed url returns error`() {
         val cut = RomeFeedFetcherServiceImpl(WebClient.create())
         runBlocking {
-            val feedData = cut.getFeedData("https://127.0.0.1:9999/rss")
+            val feedData = cut.fetchFeedDetails("https://127.0.0.1:9999/rss")
             expectThat(feedData)
                 .isA<Failure<String>>()
                 .get { reason }

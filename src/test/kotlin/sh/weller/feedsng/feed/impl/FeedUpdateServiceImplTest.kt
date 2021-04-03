@@ -24,11 +24,11 @@ internal class FeedUpdateServiceImplTest {
         val (cut, repo, fetcher) = getTestSetup()
 
         runBlocking {
-            val feedData = fetcher.getFeedData("https://blog.jetbrains.com/kotlin/feed/")
+            val feedDetails = fetcher.fetchFeedDetails("https://blog.jetbrains.com/kotlin/feed/")
                 .valueOrNull()
-            assertNotNull(feedData)
+            assertNotNull(feedDetails)
 
-            val feedId = repo.insertFeed(feedData)
+            val feedId = repo.insertFeed(feedDetails.feedData)
             val insertedFeed = repo.getFeed(feedId)
             assertNotNull(insertedFeed)
 

@@ -133,16 +133,13 @@ class FeedControlServiceImpl(
             return feed.feedId.asSuccess()
         }
 
-        val feedData = feedFetcherService
-            .getFeedData(feedUrl)
+        val feedDetails = feedFetcherService
+            .fetchFeedDetails(feedUrl)
             .onFailure { failure -> return failure.map { "Failed to import $feedUrl: $it" } }
-        val feedId = feedRepository.insertFeed(feedData)
+        val feedId = feedRepository.insertFeed(feedDetails.feedData)
 
-        val feedItems = feedFetcherService
-            .getFeedItemData(feedUrl)
-            .onFailure { failure -> return failure.map { "Failed to import $feedUrl: $it" } }
         feedRepository
-            .insertFeedItemsIfNotExist(feedId, feedItems)
+            .insertFeedItemsIfNotExist(feedId, feedDetails.feedItemData)
             .collect()
 
         return feedId.asSuccess()

@@ -74,15 +74,15 @@ class FeedUpdateServiceImpl(
 
     private suspend fun updateFeed(feed: Feed) {
         logger.info("Updating Feed ${feed.feedId} - ${feed.feedData.name} - ${feed.feedData.feedUrl}")
-        val feedItemDataList = feedFetcherService
-            .getFeedItemData(feed.feedData.feedUrl)
+        val feedDetails = feedFetcherService
+            .fetchFeedDetails(feed.feedData.feedUrl)
             .onFailure {
                 // TODO: Store this error?
                 logger.error("Could not update feed ${feed.feedId} - ${feed.feedData.feedUrl}. Reason ${it.reason}")
                 return
             }
 
-        feedRepository.insertFeedItemsIfNotExist(feed.feedId, feedItemDataList).collect()
+        feedRepository.insertFeedItemsIfNotExist(feed.feedId, feedDetails.feedItemData).collect()
         feedRepository.setFeedLastRefreshedTimestamp(feed.feedId)
     }
 
