@@ -53,7 +53,7 @@ class FeverResponse private constructor(
             this.feedsGroups = feedsGroups.map { group ->
                 FeverFeedGroupMapping(
                     group.groupId.id,
-                    group.groupData.feeds.map(FeedId::id).joinToString("")
+                    group.groupData.feeds.map(FeedId::id).joinToString(",")
                 )
             }
         }
