@@ -18,12 +18,12 @@ interface FeedQueryService {
     /**
      * Fetches all [Feed]s of a user
      */
-    fun getFeeds(userId: UserId): Flow<Feed>
+    suspend fun getFeeds(userId: UserId): Flow<Feed>
 
     /**
      * Fetches all [UserFeedItem]s of a user for the given list of [FeedId]s that match the [FeedItemFilter].
      */
-    fun getFeedItems(
+    suspend fun getFeedItems(
         userId: UserId,
         feedIdList: Flow<FeedId>? = null,
         filter: FeedItemFilter? = null,
@@ -34,7 +34,7 @@ interface FeedQueryService {
     /**
      * Fetches all [FeedItemId]s of a user for the given list of [FeedId]s that match the [FeedItemFilter].
      */
-    fun getFeedItemsIds(
+    suspend fun getFeedItemsIds(
         userId: UserId,
         feedIdList: Flow<FeedId>? = null,
         filter: FeedItemFilter? = null,

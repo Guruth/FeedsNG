@@ -24,28 +24,27 @@ class FeverAPIHandler(
     fun getRouterFunction(): RouterFunction<ServerResponse> =
         coRouter {
             path("/api/fever.php") {
-                val result: ServerResponse
+                val response: ServerResponse
                 val duration = measureTime {
-                    result = feverHandler(it)
+                    response = feverHandler(it)
                 }
-                logger.info("Request took ${duration.inMilliseconds} ms")
-                return@path result
+                logger.debug("Request took ${duration.inMilliseconds} ms")
+                return@path response
             }
         }
 
     private suspend fun feverHandler(request: ServerRequest): ServerResponse {
-        val requestParameters = request.getFeverRequestParameter()
-        logger.info("Fever request parameters: $requestParameters ")
-
         // TODO: Fetch from request
         val userId = UserId(1)
 
+        val requestParameters = request.getFeverRequestParameters()
+        logger.debug("Fever request parameters: $requestParameters ")
+
         val responseBuilder = FeverResponse.Builder()
 
-        val groups = withContext(Dispatchers.IO) { feedQueryService.getGroups(userId).toList() }
-        val feeds = withContext(Dispatchers.IO) { feedQueryService.getFeeds(userId).toList() }
-        val feedItems = withContext(Dispatchers.IO) { feedQueryService.getFeedItems(userId = userId).toList() }
-
+        val groups = feedQueryService.getGroups(userId).toList()
+        val feeds = feedQueryService.getFeeds(userId).toList()
+        val feedItems = feedQueryService.getFeedItems(userId = userId).toList()
 
         responseBuilder.lastRefreshedOnTime(feeds.maxOf { it.feedData.lastUpdated })
 
@@ -127,27 +126,39 @@ class FeverAPIHandler(
         }
 
         if (requestParameters.contains("mark")) {
-            val target = requestParameters["mark"]
-            val action = requestParameters["as"]
-                .let {
-                    UpdateAction.fromStringOrNull(it)
-                }
+            val action = requestParameters["as"]?.toUpdateAction()
+            val id = requestParameters["id"]?.toIntOrNull()
 
-            val id = requestParameters["id"]
-                ?.toIntOrNull()
-
-            val before = requestParameters["before"]
-                ?.toInstant()
             if (id != null && action != null) {
-                when (target) {
-                    "item" -> feedControlService.updateFeedItem(userId, id.toFeedItemId(), action)
-                    "feed" -> feedControlService.updateFeed(userId, id.toFeedId(), action, before)
+                val before = requestParameters["before"]?.toInstant()
+
+                when (requestParameters["mark"]) {
+                    "item" ->
+                        feedControlService.updateFeedItem(
+                            userId,
+                            id.toFeedItemId(),
+                            action
+                        )
+
+                    "feed" ->
+                        feedControlService.updateFeed(
+                            userId,
+                            id.toFeedId(),
+                            action,
+                            before
+                        )
+
                     "group" -> {
                         if (id == 0) {
                             // 0 is the group with all feeds
                             feeds.updateAllFeeds(userId, action, before)
                         } else {
-                            feedControlService.updateGroup(userId, id.toGroupId(), action, before)
+                            feedControlService.updateGroup(
+                                userId,
+                                id.toGroupId(),
+                                action,
+                                before
+                            )
                         }
                     }
                 }
@@ -166,6 +177,7 @@ class FeverAPIHandler(
         }
 
         val response = responseBuilder.build()
+        logger.trace("Fever Response: $response")
 
         return ServerResponse.ok().json().bodyValueAndAwait(response)
     }
@@ -194,9 +206,7 @@ class FeverAPIHandler(
     private suspend fun List<Feed>.updateAllFeeds(userId: UserId, action: UpdateAction, before: Instant?) {
         coroutineScope {
             this@updateAllFeeds
-                .map {
-                    launch { feedControlService.updateFeed(userId, it.feedId, action, before) }
-                }
+                .map { launch { feedControlService.updateFeed(userId, it.feedId, action, before) } }
                 .joinAll()
         }
     }
@@ -208,7 +218,7 @@ class FeverAPIHandler(
 
 }
 
-private suspend fun ServerRequest.getFeverRequestParameter(): Map<String, String> {
+private suspend fun ServerRequest.getFeverRequestParameters(): Map<String, String> {
     val requestParameters: MutableMap<String, String> = this.queryParams().toSingleValueMap()
     val bodyMap = this.awaitBodyOrNull<String>()
         ?.split("&")

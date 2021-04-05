@@ -71,7 +71,9 @@ enum class UpdateAction {
                 "unsave" -> UNSAVE
                 else -> null
             }
-
     }
 }
+
+fun String?.toUpdateAction(): UpdateAction? = UpdateAction.fromStringOrNull(this)
+
 

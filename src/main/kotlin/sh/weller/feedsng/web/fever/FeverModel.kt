@@ -10,7 +10,7 @@ import java.time.Instant
 
 
 @Serializable
-class FeverResponse private constructor(
+data class FeverResponse(
     @SerialName("api_version")
     val apiVersion: Int,
     val auth: Int,
@@ -123,9 +123,10 @@ class FeverResponse private constructor(
             savedItemIds = savedItemIds
         )
 
-        companion object {
-            private val logger: Logger = LoggerFactory.getLogger(Builder::class.java)
-        }
+    }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger(FeverResponse::class.java)
     }
 }
 

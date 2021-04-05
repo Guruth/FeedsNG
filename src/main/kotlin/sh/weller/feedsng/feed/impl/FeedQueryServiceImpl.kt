@@ -20,11 +20,11 @@ class FeedQueryServiceImpl(
     override suspend fun getGroups(userId: UserId): Flow<Group> =
         feedRepository.getAllUserGroups(userId)
 
-    override fun getFeeds(userId: UserId): Flow<Feed> =
+    override suspend fun getFeeds(userId: UserId): Flow<Feed> =
         feedRepository.getAllUserFeeds(userId)
 
     @OptIn(FlowPreview::class)
-    override fun getFeedItems(
+    override suspend fun getFeedItems(
         userId: UserId,
         feedIdList: Flow<FeedId>?,
         filter: FeedItemFilter?,
@@ -45,7 +45,7 @@ class FeedQueryServiceImpl(
     }
 
     @OptIn(FlowPreview::class)
-    override fun getFeedItemsIds(
+    override suspend fun getFeedItemsIds(
         userId: UserId,
         feedIdList: Flow<FeedId>?,
         filter: FeedItemFilter?,
