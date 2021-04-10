@@ -1,14 +1,16 @@
 package sh.weller.feedsng.web.fever
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
-import sh.weller.feedsng.feed.*
+import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 import kotlin.time.ExperimentalTime
@@ -222,10 +224,10 @@ private suspend fun ServerRequest.getFeverRequestParameters(): Map<String, Strin
     val requestParameters: MutableMap<String, String> = this.queryParams().toSingleValueMap()
     val bodyMap = this.awaitBodyOrNull<String>()
         ?.split("&")
-        ?.map {
+        ?.associate {
             val values = it.split("=")
             values.first() to values.last()
-        }?.toMap()
+        }
     if (bodyMap != null) {
         requestParameters.putAll(bodyMap)
     }
@@ -233,7 +235,7 @@ private suspend fun ServerRequest.getFeverRequestParameters(): Map<String, Strin
 }
 
 private fun Map<String, String>.queryIntListOrNull(parameterName: String): List<Int>? =
-    this.get(parameterName)?.toIntegerList()
+    this[parameterName]?.toIntegerList()
 
 private fun String.toIntegerList(): List<Int> =
     this.split(",").mapNotNull { it.toIntOrNull() }

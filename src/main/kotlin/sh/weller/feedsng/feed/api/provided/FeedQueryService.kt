@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed
+package sh.weller.feedsng.feed.api.provided
 
 import kotlinx.coroutines.flow.Flow
 import sh.weller.feedsng.user.UserId

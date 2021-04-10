@@ -1,9 +1,9 @@
-package sh.weller.feedsng.feed.impl.fetch
+package sh.weller.feedsng.feed.api.required
 
 import kotlinx.coroutines.flow.Flow
 import sh.weller.feedsng.common.Result
-import sh.weller.feedsng.feed.FeedData
-import sh.weller.feedsng.feed.FeedItemData
+import sh.weller.feedsng.feed.api.provided.FeedData
+import sh.weller.feedsng.feed.api.provided.FeedItemData
 
 // TODO: Return typed error -> XML Parse Error / HTTP Error
 interface FeedFetcherService {

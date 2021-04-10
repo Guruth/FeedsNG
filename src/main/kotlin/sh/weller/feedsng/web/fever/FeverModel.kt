@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import sh.weller.feedsng.feed.*
+import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.web.fever.FeverAPIHandler.Companion.FEVER_API_VERSION
 import java.time.Instant
 

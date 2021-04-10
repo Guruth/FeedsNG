@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.import.impl
+package sh.weller.feedsng.feed.rome
 
 import com.rometools.opml.feed.opml.Opml
 import com.rometools.rome.io.ParsingFeedException
@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Result
 import sh.weller.feedsng.common.Success
-import sh.weller.feedsng.feed.impl.import.FeedGroupImport
-import sh.weller.feedsng.feed.impl.import.FeedImport
-import sh.weller.feedsng.feed.impl.import.FeedImportService
+import sh.weller.feedsng.feed.api.required.FeedGroupImport
+import sh.weller.feedsng.feed.api.required.FeedImport
+import sh.weller.feedsng.feed.api.required.FeedImportService
 import java.io.Reader
 
 @Service

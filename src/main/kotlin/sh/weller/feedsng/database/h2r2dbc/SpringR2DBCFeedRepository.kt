@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.database.impl
+package sh.weller.feedsng.database.h2r2dbc
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -8,8 +8,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
-import sh.weller.feedsng.feed.*
-import sh.weller.feedsng.feed.impl.database.FeedRepository
+import sh.weller.feedsng.feed.api.provided.*
+import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 

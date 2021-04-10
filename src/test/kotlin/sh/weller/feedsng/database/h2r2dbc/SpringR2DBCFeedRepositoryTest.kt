@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.database.impl
+package sh.weller.feedsng.database.h2r2dbc
 
 import io.r2dbc.h2.H2ConnectionFactory
 import io.r2dbc.spi.Row
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.flow
-import sh.weller.feedsng.feed.*
+import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.UserId
 import strikt.api.expectThat
 import strikt.assertions.*

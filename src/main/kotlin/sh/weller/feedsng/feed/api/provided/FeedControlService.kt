@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed
+package sh.weller.feedsng.feed.api.provided
 
 import sh.weller.feedsng.common.Result
 import sh.weller.feedsng.user.UserId

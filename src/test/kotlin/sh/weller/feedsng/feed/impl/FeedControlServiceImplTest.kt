@@ -8,11 +8,11 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
-import sh.weller.feedsng.feed.UpdateAction
-import sh.weller.feedsng.feed.impl.database.FeedRepository
-import sh.weller.feedsng.feed.impl.database.impl.SpringR2DBCFeedRepository
-import sh.weller.feedsng.feed.impl.fetch.impl.RomeFeedFetcherServiceImpl
-import sh.weller.feedsng.feed.impl.import.impl.RomeOPMLFeedImportServiceImpl
+import sh.weller.feedsng.database.h2r2dbc.SpringR2DBCFeedRepository
+import sh.weller.feedsng.feed.api.provided.UpdateAction
+import sh.weller.feedsng.feed.api.required.FeedRepository
+import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
+import sh.weller.feedsng.feed.rome.RomeOPMLFeedImportServiceImpl
 import sh.weller.feedsng.user.UserId
 import strikt.api.expectThat
 import strikt.assertions.*

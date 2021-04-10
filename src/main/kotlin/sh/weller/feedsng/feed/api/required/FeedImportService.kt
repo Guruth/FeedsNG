@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.import
+package sh.weller.feedsng.feed.api.required
 
 import sh.weller.feedsng.common.Result
 

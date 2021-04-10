@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.fetch.impl
+package sh.weller.feedsng.feed.rome
 
 import com.rometools.rome.feed.synd.SyndEntry
 import com.rometools.rome.feed.synd.SyndFeed
@@ -15,12 +15,16 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitExchange
 import reactor.netty.http.client.HttpClient
-import sh.weller.feedsng.common.*
-import sh.weller.feedsng.feed.FeedData
-import sh.weller.feedsng.feed.FeedItemData
-import sh.weller.feedsng.feed.impl.fetch.FeedDetails
-import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
-import java.io.*
+import sh.weller.feedsng.common.Failure
+import sh.weller.feedsng.common.Result
+import sh.weller.feedsng.common.asSuccess
+import sh.weller.feedsng.common.onFailure
+import sh.weller.feedsng.feed.api.provided.FeedData
+import sh.weller.feedsng.feed.api.provided.FeedItemData
+import sh.weller.feedsng.feed.api.required.FeedDetails
+import sh.weller.feedsng.feed.api.required.FeedFetcherService
+import java.io.ByteArrayInputStream
+import java.io.InputStreamReader
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit

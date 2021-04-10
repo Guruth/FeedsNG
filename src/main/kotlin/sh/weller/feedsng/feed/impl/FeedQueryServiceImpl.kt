@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
-import sh.weller.feedsng.feed.*
-import sh.weller.feedsng.feed.impl.database.FeedRepository
+import sh.weller.feedsng.feed.api.provided.*
+import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 

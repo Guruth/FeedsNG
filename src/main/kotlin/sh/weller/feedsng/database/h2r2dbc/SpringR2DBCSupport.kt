@@ -1,8 +1,9 @@
-package sh.weller.feedsng.feed.impl.database.impl
+package sh.weller.feedsng.database.h2r2dbc
 
 import io.r2dbc.spi.Row
 import org.springframework.r2dbc.core.DatabaseClient
-import sh.weller.feedsng.feed.*
+import org.springframework.r2dbc.core.RowsFetchSpec
+import sh.weller.feedsng.feed.api.provided.*
 
 internal inline fun <reified T> Row.getReified(columnName: String): T = this.get(columnName, T::class.java)!!
 internal inline fun <reified T> Row.getReifiedOrNull(columnName: String): T? = this.get(columnName, T::class.java)
@@ -27,7 +28,7 @@ internal fun DatabaseClient.GenericExecuteSpec.bindIfNotNull(
         this
     }
 
-fun DatabaseClient.GenericExecuteSpec.mapToUserFeedItem() =
+fun DatabaseClient.GenericExecuteSpec.mapToUserFeedItem(): RowsFetchSpec<UserFeedItem> =
     this.map { row ->
         UserFeedItem(
             isSaved = row.getReifiedOrNull("saved") ?: false,
@@ -46,7 +47,7 @@ fun DatabaseClient.GenericExecuteSpec.mapToUserFeedItem() =
         )
     }
 
-fun DatabaseClient.GenericExecuteSpec.mapToFeedItem() =
+fun DatabaseClient.GenericExecuteSpec.mapToFeedItem(): RowsFetchSpec<FeedItem> =
     this.map { row ->
         FeedItem(
             feedItemId = row.getInt("id").toFeedItemId(),
@@ -61,7 +62,7 @@ fun DatabaseClient.GenericExecuteSpec.mapToFeedItem() =
         )
     }
 
-fun DatabaseClient.GenericExecuteSpec.mapToFeed() =
+fun DatabaseClient.GenericExecuteSpec.mapToFeed(): RowsFetchSpec<Feed> =
     this.map { row ->
         Feed(
             feedId = row.getInt("id").toFeedId(),

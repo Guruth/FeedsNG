@@ -9,10 +9,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.common.*
-import sh.weller.feedsng.feed.*
-import sh.weller.feedsng.feed.impl.database.FeedRepository
-import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
-import sh.weller.feedsng.feed.impl.import.FeedImportService
+import sh.weller.feedsng.feed.api.provided.*
+import sh.weller.feedsng.feed.api.required.FeedFetcherService
+import sh.weller.feedsng.feed.api.required.FeedImportService
+import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 

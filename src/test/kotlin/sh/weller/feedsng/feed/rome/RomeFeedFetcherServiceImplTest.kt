@@ -1,4 +1,4 @@
-package sh.weller.feedsng.feed.impl.fetch.impl
+package sh.weller.feedsng.feed.rome
 
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
-import sh.weller.feedsng.feed.impl.fetch.FeedDetails
+import sh.weller.feedsng.feed.api.required.FeedDetails
 import strikt.api.expectThat
 import strikt.assertions.containsIgnoringCase
 import strikt.assertions.isA

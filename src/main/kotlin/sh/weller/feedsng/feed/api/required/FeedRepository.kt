@@ -1,7 +1,7 @@
-package sh.weller.feedsng.feed.impl.database
+package sh.weller.feedsng.feed.api.required
 
 import kotlinx.coroutines.flow.Flow
-import sh.weller.feedsng.feed.*
+import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.UserId
 import java.time.Instant
 

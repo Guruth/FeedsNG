@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.common.onFailure
-import sh.weller.feedsng.feed.Feed
-import sh.weller.feedsng.feed.impl.database.FeedRepository
-import sh.weller.feedsng.feed.impl.fetch.FeedFetcherService
+import sh.weller.feedsng.feed.api.provided.Feed
+import sh.weller.feedsng.feed.api.required.FeedFetcherService
+import sh.weller.feedsng.feed.api.required.FeedRepository
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
