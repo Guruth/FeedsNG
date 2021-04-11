@@ -26,7 +26,7 @@ dependencies {
         exclude(group = "com.fasterxml.jackson.module")
     }
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    //implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 
