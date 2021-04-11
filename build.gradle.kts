@@ -25,6 +25,7 @@ dependencies {
         exclude(group = "com.fasterxml.jackson.datatype")
         exclude(group = "com.fasterxml.jackson.module")
     }
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     //implementation("org.springframework.boot:spring-boot-starter-security")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
@@ -44,8 +45,8 @@ dependencies {
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
 
-//    testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+  //    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test-common"))
     testImplementation(kotlin("test-annotations-common"))
