@@ -9,7 +9,6 @@ import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
 import sh.weller.feedsng.web.fever.FeverAPIHandler
 
-
 @Configuration
 class WebConfiguration : WebFluxConfigurer {
 
