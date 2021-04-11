@@ -45,8 +45,11 @@ data class FeverResponse(
         private var unreadItemIds: String? = null
         private var savedItemIds: String? = null
 
-        fun lastRefreshedOnTime(lastRefreshedOnTime: Instant) =
-            apply { this.lastRefreshedOnTime = lastRefreshedOnTime.epochSecond.toString() }
+        fun lastRefreshedOnTime(lastRefreshedOnTime: Instant?) {
+            if (lastRefreshedOnTime != null) {
+                this.lastRefreshedOnTime = lastRefreshedOnTime.epochSecond.toString()
+            }
+        }
 
         fun feedGroupMappings(feedsGroups: List<Group>) {
             this.feedsGroups = feedsGroups.map { group ->

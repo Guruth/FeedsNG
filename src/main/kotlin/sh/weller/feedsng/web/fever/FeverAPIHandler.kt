@@ -48,7 +48,7 @@ class FeverAPIHandler(
         val feeds = feedQueryService.getFeeds(userId).toList()
         val feedItems = feedQueryService.getFeedItems(userId = userId).toList()
 
-        responseBuilder.lastRefreshedOnTime(feeds.maxOf { it.feedData.lastUpdated })
+        responseBuilder.lastRefreshedOnTime(feeds.maxOfOrNull { it.feedData.lastUpdated })
 
         if (requestParameters.containsKey("groups") || requestParameters.containsKey("feeds")) {
             responseBuilder.feedGroupMappings(groups)
