@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.map
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
-import sh.weller.feedsng.user.UserId
+import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
 @Service

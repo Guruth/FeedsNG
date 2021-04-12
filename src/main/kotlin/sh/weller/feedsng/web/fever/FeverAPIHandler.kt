@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.feed.api.provided.*
-import sh.weller.feedsng.user.UserId
+import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -36,11 +36,12 @@ class FeverAPIHandler(
         }
 
     private suspend fun feverHandler(request: ServerRequest): ServerResponse {
-        // TODO: Fetch from request
-        val userId = UserId(1)
-
         val requestParameters = request.getFeverRequestParameters()
         logger.debug("Fever request parameters: $requestParameters ")
+
+        // TODO: Fetch from request - Validate api_key against md5("$username:$password")
+        val userId = UserId(1)
+
 
         val responseBuilder = FeverResponse.Builder()
 

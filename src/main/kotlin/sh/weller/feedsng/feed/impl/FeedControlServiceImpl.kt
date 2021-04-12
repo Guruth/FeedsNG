@@ -13,7 +13,7 @@ import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.api.required.FeedImportService
 import sh.weller.feedsng.feed.api.required.FeedRepository
-import sh.weller.feedsng.user.UserId
+import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
 @OptIn(FlowPreview::class)

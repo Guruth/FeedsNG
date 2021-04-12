@@ -2,7 +2,7 @@ package sh.weller.feedsng.feed.api.required
 
 import kotlinx.coroutines.flow.Flow
 import sh.weller.feedsng.feed.api.provided.*
-import sh.weller.feedsng.user.UserId
+import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
 interface FeedRepository {
