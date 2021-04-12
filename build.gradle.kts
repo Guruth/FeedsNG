@@ -55,7 +55,7 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
-    testImplementation("io.strikt:strikt-core:0.30.0")
+    testImplementation("io.strikt:strikt-core:0.30.1")
     testImplementation("io.strikt:strikt-jvm:0.30.1")
     testImplementation("io.strikt:strikt-spring:0.30.1")
 }
