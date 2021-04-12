@@ -4,6 +4,9 @@ import io.r2dbc.spi.Row
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.RowsFetchSpec
 import sh.weller.feedsng.feed.api.provided.*
+import sh.weller.feedsng.user.api.provided.User
+import sh.weller.feedsng.user.api.provided.UserData
+import sh.weller.feedsng.user.api.provided.toUserId
 
 internal inline fun <reified T> Row.getReified(columnName: String): T = this.get(columnName, T::class.java)!!
 internal inline fun <reified T> Row.getReifiedOrNull(columnName: String): T? = this.get(columnName, T::class.java)
@@ -76,3 +79,14 @@ fun DatabaseClient.GenericExecuteSpec.mapToFeed(): RowsFetchSpec<Feed> =
         )
     }
 
+fun DatabaseClient.GenericExecuteSpec.mapToUser(): RowsFetchSpec<User> =
+    this.map { row ->
+        User(
+            userId = row.getInt("id").toUserId(),
+            userData = UserData(
+                username = row.getReified("username"),
+                passwordHash = row.getReified("password_hash"),
+                feverAPIKeyHash = row.getReifiedOrNull("fever_api_key_hash")
+            )
+        )
+    }

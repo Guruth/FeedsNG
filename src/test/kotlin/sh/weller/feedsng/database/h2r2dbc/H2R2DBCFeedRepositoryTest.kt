@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.flow
 import sh.weller.feedsng.feed.api.provided.*
-import sh.weller.feedsng.user.UserId
+import sh.weller.feedsng.user.api.provided.UserId
 import strikt.api.expectThat
 import strikt.assertions.*
 import strikt.java.time.isAfter
@@ -18,7 +18,7 @@ import java.time.Instant
 import java.util.*
 import kotlin.test.Test
 
-internal class SpringR2DBCFeedRepositoryTest {
+internal class H2R2DBCFeedRepositoryTest {
 
     @Test
     fun `init`() {
@@ -248,10 +248,10 @@ internal class SpringR2DBCFeedRepositoryTest {
         }
     }
 
-    private fun getTestSetup(): Pair<DatabaseClient, SpringR2DBCFeedRepository> {
+    private fun getTestSetup(): Pair<DatabaseClient, H2R2DBCFeedRepository> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repo = SpringR2DBCFeedRepository(client)
+        val repo = H2R2DBCFeedRepository(client)
         return Pair(client, repo)
     }
 

@@ -10,95 +10,65 @@ import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
-import sh.weller.feedsng.user.UserId
+import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
+@Suppress("SqlResolve")
 @OptIn(FlowPreview::class)
 @Repository
-class SpringR2DBCFeedRepository(
+class H2R2DBCFeedRepository(
     private val client: DatabaseClient
 ) : FeedRepository {
 
     init {
         runBlocking {
-            client
-                .sql(
-                    """
-                CREATE TABLE IF NOT EXISTS feed(  
-                    id INTEGER AUTO_INCREMENT PRIMARY KEY, 
-                    name VARCHAR(256), 
-                    description VARCHAR(2048), 
-                    feed_url VARCHAR(2048), 
-                    site_url VARCHAR(2048), 
-                    last_updated TIMESTAMP WITH TIME ZONE
-                )
-            """.trimMargin()
-                )
-                .await()
+            client.sql(
+                """CREATE TABLE IF NOT EXISTS feed( 
+                    |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                    |name VARCHAR(256), 
+                    |description VARCHAR(2048), 
+                    |feed_url VARCHAR(2048), 
+                    |site_url VARCHAR(2048), 
+                    |last_updated TIMESTAMP WITH TIME ZONE)""".trimMargin()
+            ).await()
 
-            client
-                .sql(
-                    """
-                CREATE TABLE IF NOT EXISTS feed_item(  
-                    id INTEGER AUTO_INCREMENT PRIMARY KEY, 
-                    feed_id INTEGER,
-                    title VARCHAR(2048), 
-                    author VARCHAR(256),
-                    html TEXT, 
-                    item_url VARCHAR(2048), 
-                    created TIMESTAMP WITH TIME ZONE 
-                )
-            """.trimMargin()
-                )
-                .await()
+            client.sql(
+                """CREATE TABLE IF NOT EXISTS feed_item( 
+                    |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                    |feed_id INTEGER, 
+                    |title VARCHAR(2048), 
+                    |author VARCHAR(256), 
+                    |html TEXT, 
+                    |item_url VARCHAR(2048), 
+                    |created TIMESTAMP WITH TIME ZONE) """.trimMargin()
+            ).await()
 
-            client
-                .sql(
-                    """
-                CREATE TABLE IF NOT EXISTS user_group(  
-                    id INTEGER AUTO_INCREMENT PRIMARY KEY, 
-                    user_id INTEGER,
-                    name VARCHAR(256)
-                )
-            """.trimMargin()
-                )
-                .await()
+            client.sql(
+                """CREATE TABLE IF NOT EXISTS user_group( 
+                    |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                    |user_id INTEGER, 
+                    |name VARCHAR(256))""".trimMargin()
+            ).await()
 
-            client
-                .sql(
-                    """
-                CREATE TABLE IF NOT EXISTS user_group_feed(  
-                    group_id INTEGER, 
-                    feed_id INTEGER
-                )
-            """.trimMargin()
-                )
-                .await()
+            client.sql(
+                """CREATE TABLE IF NOT EXISTS user_group_feed( 
+                    |group_id INTEGER, 
+                    |feed_id INTEGER)""".trimMargin()
+            ).await()
 
-            client
-                .sql(
-                    """
-                CREATE TABLE IF NOT EXISTS user_feed(
-                    user_id INTEGER,
-                    feed_id INTEGER
-                )
-                """.trimIndent()
-                )
-                .await()
+            client.sql(
+                """CREATE TABLE IF NOT EXISTS user_feed( 
+                    |user_id INTEGER, 
+                    |feed_id INTEGER)""".trimMargin()
+            ).await()
 
-            client
-                .sql(
-                    """
-                    CREATE TABLE IF NOT EXISTS user_feed_item(  
-                        feed_item_id INTEGER,
-                        user_id INTEGER,
-                        saved BOOLEAN DEFAULT FALSE,
-                        read BOOLEAN DEFAULT FALSE
-                    )
-                    """.trimMargin()
-                )
-                .await()
-
+            client.sql(
+                """CREATE TABLE IF NOT EXISTS user_feed_item( 
+                    |feed_item_id INTEGER, 
+                    |user_id INTEGER, 
+                    |saved BOOLEAN DEFAULT FALSE, 
+                    |read BOOLEAN DEFAULT FALSE)""".trimMargin()
+            ).await()
         }
     }
 
