@@ -19,8 +19,7 @@ interface FeedControlService {
     suspend fun updateFeedItem(userId: UserId, feedItemId: FeedItemId, action: UpdateAction)
 }
 
-@JvmInline
-value class GroupId(val id: Int) {
+inline class GroupId(val id: Int) {
     init {
         require(id > 0)
     }
@@ -29,8 +28,7 @@ value class GroupId(val id: Int) {
 fun Int.toGroupId(): GroupId = GroupId(this)
 fun Int?.toGroupId(): GroupId? = this?.toGroupId()
 
-@JvmInline
-value class FeedId(val id: Int) {
+inline class FeedId(val id: Int) {
     init {
         require(id > 0)
     }
@@ -39,8 +37,7 @@ value class FeedId(val id: Int) {
 fun Int.toFeedId(): FeedId = FeedId(this)
 fun Int?.toFeedId(): FeedId? = this?.toFeedId()
 
-@JvmInline
-value class FeedItemId(val id: Int) {
+inline class FeedItemId(val id: Int) {
     init {
         require(id > 0)
     }
