@@ -100,7 +100,7 @@ class FeedControlServiceImpl(
         return feedId.asSuccess()
     }
 
-    override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: UpdateAction, before: Instant?) {
+    override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: FeedUpdateAction, before: Instant?) {
         logger.info("Updating $groupId with $action for $userId")
         feedRepository.getAllUserGroups(userId)
             .filter { it.groupId == groupId }
@@ -112,7 +112,7 @@ class FeedControlServiceImpl(
             .collect()
     }
 
-    override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: UpdateAction, before: Instant?) {
+    override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: FeedUpdateAction, before: Instant?) {
         logger.info("Updating $feedId with $action for $userId")
         val feedItemFlow = feedRepository.getAllFeedItemIds(feedId = feedId, before = before)
         feedRepository.updateUserFeedItem(userId, feedItemFlow, action)
@@ -121,7 +121,7 @@ class FeedControlServiceImpl(
     override suspend fun updateFeedItem(
         userId: UserId,
         feedItemId: FeedItemId,
-        action: UpdateAction
+        action: FeedUpdateAction
     ) {
         logger.info("Updating $feedItemId with $action for $userId")
         feedRepository.updateUserFeedItem(userId, flowOf(feedItemId), action)

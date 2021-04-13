@@ -2,7 +2,6 @@ package sh.weller.feedsng.feed.rome
 
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
@@ -12,6 +11,7 @@ import strikt.assertions.containsIgnoringCase
 import strikt.assertions.isA
 import strikt.assertions.isNotBlank
 import strikt.assertions.isNotEmpty
+import kotlin.test.Test
 
 internal class RomeFeedFetcherServiceImplTest {
 

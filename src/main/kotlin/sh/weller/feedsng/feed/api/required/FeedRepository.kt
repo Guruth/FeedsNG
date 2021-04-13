@@ -22,7 +22,7 @@ interface FeedRepository {
     suspend fun addFeedToUser(userId: UserId, feedId: FeedId)
     suspend fun getAllUserFeeds(userId: UserId): Flow<Feed>
 
-    suspend fun updateUserFeedItem(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: UpdateAction)
+    suspend fun updateUserFeedItem(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: FeedUpdateAction)
     suspend fun getAllUserFeedItemsOfFeed(
         userId: UserId,
         feedId: FeedId,

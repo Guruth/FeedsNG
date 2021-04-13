@@ -295,7 +295,7 @@ class H2R2DBCFeedRepository(
     override suspend fun updateUserFeedItem(
         userId: UserId,
         feedItemIdFlow: Flow<FeedItemId>,
-        updateAction: UpdateAction
+        updateAction: FeedUpdateAction
     ) {
         val columnToUpdate = updateAction.getUpdateColumnName()
         val updateValue = updateAction.getUpdateValue()

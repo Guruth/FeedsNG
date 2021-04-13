@@ -4,7 +4,6 @@ import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.valueOrNull
@@ -13,6 +12,7 @@ import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import java.util.*
+import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 

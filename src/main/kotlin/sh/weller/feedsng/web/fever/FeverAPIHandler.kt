@@ -124,7 +124,7 @@ class FeverAPIHandler(
                     since = Instant.now().minusSeconds(30)
                 )
                 .onEach {
-                    feedControlService.updateFeedItem(userId, it, UpdateAction.UNREAD)
+                    feedControlService.updateFeedItem(userId, it, FeedUpdateAction.UNREAD)
                 }
         }
 
@@ -168,11 +168,11 @@ class FeverAPIHandler(
             }
 
             when (action) {
-                UpdateAction.READ, UpdateAction.UNREAD -> {
+                FeedUpdateAction.READ, FeedUpdateAction.UNREAD -> {
                     val unreadIds = getUnreadItemIds(userId)
                     responseBuilder.unreadItemIds(unreadIds)
                 }
-                UpdateAction.SAVE, UpdateAction.UNSAVE -> {
+                FeedUpdateAction.SAVE, FeedUpdateAction.UNSAVE -> {
                     val savedIds = getSavedItemIds(userId)
                     responseBuilder.savedItemIds(savedIds)
                 }
@@ -206,7 +206,7 @@ class FeverAPIHandler(
             .toList()
 
 
-    private suspend fun List<Feed>.updateAllFeeds(userId: UserId, action: UpdateAction, before: Instant?) {
+    private suspend fun List<Feed>.updateAllFeeds(userId: UserId, action: FeedUpdateAction, before: Instant?) {
         coroutineScope {
             this@updateAllFeeds
                 .map { launch { feedControlService.updateFeed(userId, it.feedId, action, before) } }

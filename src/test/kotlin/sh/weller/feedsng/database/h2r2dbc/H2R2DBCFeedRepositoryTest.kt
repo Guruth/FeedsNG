@@ -213,7 +213,7 @@ internal class H2R2DBCFeedRepositoryTest {
             )
 
             cut.addFeedToUser(user, firstFeedId)
-            cut.updateUserFeedItem(user, flowOf(feedItemIds.first()), UpdateAction.READ)
+            cut.updateUserFeedItem(user, flowOf(feedItemIds.first()), FeedUpdateAction.READ)
 
             val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeedId).toList()
             expectThat(userFeedItems)

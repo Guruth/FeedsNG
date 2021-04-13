@@ -1,12 +1,12 @@
 package sh.weller.feedsng.feed.rome
 
-import org.junit.jupiter.api.Test
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.api.required.FeedImport
 import strikt.api.expectThat
 import strikt.assertions.*
 import java.io.File
+import kotlin.test.Test
 
 class RomeOPMLFeedImportServiceImplTest {
 

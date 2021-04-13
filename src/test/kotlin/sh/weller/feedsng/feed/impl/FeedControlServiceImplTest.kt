@@ -3,13 +3,12 @@ package sh.weller.feedsng.feed.impl
 import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.database.h2r2dbc.H2R2DBCFeedRepository
-import sh.weller.feedsng.feed.api.provided.UpdateAction
+import sh.weller.feedsng.feed.api.provided.FeedUpdateAction
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import sh.weller.feedsng.feed.rome.RomeOPMLFeedImportServiceImpl
@@ -18,6 +17,7 @@ import strikt.api.expectThat
 import strikt.assertions.*
 import java.io.File
 import java.util.*
+import kotlin.test.Test
 import kotlin.test.assertNotNull
 
 internal class FeedControlServiceImplTest {
@@ -80,22 +80,22 @@ internal class FeedControlServiceImplTest {
             val feedIdWithGroup = cut.addFeedToGroup(userId, groupId, "https://blog.jetbrains.com/feed/").valueOrNull()
             assertNotNull(feedIdWithGroup)
 
-            cut.updateGroup(userId, groupId, UpdateAction.SAVE)
+            cut.updateGroup(userId, groupId, FeedUpdateAction.SAVE)
             val savedItems = repo.getAllUserFeedItemsOfFeed(userId, feedIdWithGroup).toList()
             expectThat(savedItems)
                 .isNotEmpty()
                 .map { it.isSaved }
                 .doesNotContain(false)
 
-            cut.updateFeed(userId, feedIdWithoutGroup, UpdateAction.READ)
+            cut.updateFeed(userId, feedIdWithoutGroup, FeedUpdateAction.READ)
             val readItems = repo.getAllUserFeedItemsOfFeed(userId, feedIdWithoutGroup).toList()
             expectThat(readItems)
                 .isNotEmpty()
                 .map { it.isRead }
                 .doesNotContain(false)
 
-            cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, UpdateAction.UNREAD)
-            cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, UpdateAction.SAVE)
+            cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, FeedUpdateAction.UNREAD)
+            cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, FeedUpdateAction.SAVE)
             val unreadItem =
                 repo.getUserFeedItem(userId, readItems.first().feedItem.feedId, readItems.first().feedItem.feedItemId)
             expectThat(unreadItem)
