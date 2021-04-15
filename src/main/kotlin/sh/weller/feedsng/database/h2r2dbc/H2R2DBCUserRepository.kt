@@ -7,6 +7,7 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
 import org.springframework.r2dbc.core.awaitOne
 import org.springframework.r2dbc.core.awaitOneOrNull
+import org.springframework.stereotype.Repository
 import sh.weller.feedsng.user.api.provided.User
 import sh.weller.feedsng.user.api.provided.UserData
 import sh.weller.feedsng.user.api.provided.UserId
@@ -14,6 +15,7 @@ import sh.weller.feedsng.user.api.provided.toUserId
 import sh.weller.feedsng.user.api.required.UserRepository
 
 @Suppress("SqlResolve")
+@Repository
 class H2R2DBCUserRepository(
     private val client: DatabaseClient
 ) : UserRepository {
@@ -23,26 +25,34 @@ class H2R2DBCUserRepository(
             client.sql(
                 """CREATE TABLE IF NOT EXISTS user ( 
                     |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
-                    |name VARCHAR(256), 
+                    |username VARCHAR(256), 
                     |password_hash VARCHAR(256),
-                    |fever_api_key_hash VARCHAR(2048),
+                    |fever_api_key_hash VARCHAR(2048)
                     |)""".trimMargin()
             ).await()
         }
     }
 
+    override suspend fun getByUserId(userId: UserId): User? =
+        withContext(Dispatchers.IO) {
+            client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM user WHERE id = :id")
+                .bind("id", userId.id)
+                .mapToUser()
+                .awaitOneOrNull()
+        }
+
     override suspend fun getByUsername(username: String): User? =
         withContext(Dispatchers.IO) {
-            client.sql("SELECT id, name, password_hash, fever_api_key_hash FROM user WHERE username = :username")
+            client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM user WHERE username = :username")
                 .bind("username", username)
                 .mapToUser()
                 .awaitOneOrNull()
         }
 
 
-    override suspend fun getByFeverAPIKey(feverAPIKeyHash: String): User? =
+    override suspend fun getFeverAPIAuthentication(feverAPIKeyHash: String): User? =
         withContext(Dispatchers.IO) {
-            client.sql("SELECT id, name, password_hash, fever_api_key_hash FROM user WHERE fever_api_key_hash = :feverAPIKeyHash")
+            client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM user WHERE fever_api_key_hash = :feverAPIKeyHash")
                 .bind("feverAPIKeyHash", feverAPIKeyHash)
                 .mapToUser()
                 .awaitOneOrNull()
@@ -57,5 +67,13 @@ class H2R2DBCUserRepository(
                 .map { row -> row.get("id", Integer::class.java)!!.toInt() }
                 .awaitOne()
                 .toUserId()
+        }
+
+    override suspend fun setFeverAPIAuthentication(userId: UserId, feverAPIKeyHash: String) =
+        withContext(Dispatchers.IO) {
+            client.sql("UPDATE user SET fever_api_key_hash = :feverApiKeyHash WHERE id = :id")
+                .bind("id", userId.id)
+                .bind("feverApiKeyHash", feverAPIKeyHash)
+                .await()
         }
 }

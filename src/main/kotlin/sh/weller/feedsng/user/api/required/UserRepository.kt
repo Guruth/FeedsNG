@@ -5,8 +5,11 @@ import sh.weller.feedsng.user.api.provided.UserData
 import sh.weller.feedsng.user.api.provided.UserId
 
 interface UserRepository {
-    suspend fun getByUsername(username: String): User?
-    suspend fun getByFeverAPIKey(feverAPIKeyHash: String): User?
-
     suspend fun insertUser(userData: UserData): UserId
+
+    suspend fun getByUserId(userId: UserId): User?
+    suspend fun getByUsername(username: String): User?
+
+    suspend fun getFeverAPIAuthentication(feverAPIKeyHash: String): User?
+    suspend fun setFeverAPIAuthentication(userId: UserId, feverAPIKeyHash: String)
 }
