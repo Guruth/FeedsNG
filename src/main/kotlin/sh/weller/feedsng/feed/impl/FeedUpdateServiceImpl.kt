@@ -21,9 +21,10 @@ import kotlin.time.minutes
 class FeedUpdateServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,
-    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val feedUpdateConfiguration: FeedUpdateConfiguration = FeedUpdateConfiguration()
 ) : SmartLifecycle {
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     // This will change in future: https://github.com/Kotlin/kotlinx.coroutines/issues/540
     private var updateTicker: ReceiveChannel<Unit>? = null
@@ -42,9 +43,11 @@ class FeedUpdateServiceImpl(
     }
 
     override fun stop() {
-        updateTicker?.cancel()
-        updateTicker = null
-        isStarted = false
+        runBlocking {
+            updateTicker?.cancel()
+            updateTicker = null
+            isStarted = false
+        }
     }
 
     override fun isRunning(): Boolean = isStarted
@@ -65,7 +68,7 @@ class FeedUpdateServiceImpl(
             feedRepository
                 .getAllFeeds()
                 .toList().map {
-                    async(Dispatchers.IO) {
+                    async {
                         updateFeed(it)
                     }
                 }
