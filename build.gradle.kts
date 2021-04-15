@@ -20,11 +20,7 @@ repositories {
 
 dependencies {
 
-    implementation("org.springframework.boot:spring-boot-starter-webflux") {
-        exclude(group = "com.fasterxml.jackson.core")
-        exclude(group = "com.fasterxml.jackson.datatype")
-        exclude(group = "com.fasterxml.jackson.module")
-    }
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
 
@@ -42,11 +38,12 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     implementation("org.springframework:spring-r2dbc")
+    implementation("io.r2dbc:r2dbc-pool")
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-  //    testImplementation("org.springframework.security:spring-security-test")
+    //    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test-common"))
     testImplementation(kotlin("test-annotations-common"))
