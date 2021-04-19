@@ -19,7 +19,7 @@ class FeverAPITest(
             .uri("/api/fever.php?api")
             .exchange()
             .expectStatus()
-            .is2xxSuccessful
+            .isUnauthorized
     }
 
 }
