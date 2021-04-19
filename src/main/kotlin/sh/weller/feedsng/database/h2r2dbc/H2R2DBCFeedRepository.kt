@@ -1,11 +1,9 @@
 package sh.weller.feedsng.database.h2r2dbc
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
 import sh.weller.feedsng.feed.api.provided.*
@@ -73,10 +71,9 @@ class H2R2DBCFeedRepository(
     }
 
     override suspend fun insertFeed(feedData: FeedData): FeedId =
-        withContext(Dispatchers.IO) {
-            client
-                .sql(
-                    """
+        client
+            .sql(
+                """
            INSERT INTO feed(
                 name,
                 description,
@@ -91,53 +88,46 @@ class H2R2DBCFeedRepository(
                 :last_updated
             )
         """.trimMargin()
-                )
-                .bind("name", feedData.name)
-                .bind("description", feedData.description)
-                .bind("feed_url", feedData.feedUrl)
-                .bind("site_url", feedData.siteUrl)
-                .bind("last_updated", feedData.lastUpdated)
-                .filter { s -> s.returnGeneratedValues() }
-                .map { row -> row.get("id", Integer::class.java)!!.toInt() }
-                .awaitOne()
-                .toFeedId()
-        }
-
+            )
+            .bind("name", feedData.name)
+            .bind("description", feedData.description)
+            .bind("feed_url", feedData.feedUrl)
+            .bind("site_url", feedData.siteUrl)
+            .bind("last_updated", feedData.lastUpdated)
+            .filter { s -> s.returnGeneratedValues() }
+            .map { row -> row.get("id", Integer::class.java)!!.toInt() }
+            .awaitOne()
+            .toFeedId()
 
     override suspend fun setFeedLastRefreshedTimestamp(feedId: FeedId) =
-        withContext(Dispatchers.IO) {
-            client
-                .sql("UPDATE feed SET last_updated = CURRENT_TIMESTAMP WHERE id = :id")
-                .bind("id", feedId.id)
-                .await()
-        }
+        client
+            .sql("UPDATE feed SET last_updated = CURRENT_TIMESTAMP WHERE id = :id")
+            .bind("id", feedId.id)
+            .await()
 
 
     override suspend fun getFeedWithFeedURL(feedUrl: String): Feed? =
-        withContext(Dispatchers.IO) {
-            client
-                .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE feed_url = :feed_url")
-                .bind("feed_url", feedUrl)
-                .mapToFeed()
-                .awaitOneOrNull()
-        }
+        client
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE feed_url = :feed_url")
+            .bind("feed_url", feedUrl)
+            .mapToFeed()
+            .awaitOneOrNull()
+
 
     override suspend fun getFeed(feedId: FeedId): Feed? =
-        withContext(Dispatchers.IO) {
-            client
-                .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE id = :id")
-                .bind("id", feedId.id)
-                .mapToFeed()
-                .awaitOneOrNull()
-        }
+        client
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE id = :id")
+            .bind("id", feedId.id)
+            .mapToFeed()
+            .awaitOneOrNull()
+
 
     override suspend fun getAllFeeds(): Flow<Feed> =
-        withContext(Dispatchers.IO) {
-            client
-                .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed")
-                .mapToFeed()
-                .flow()
-        }
+        client
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed")
+            .mapToFeed()
+            .flow()
+
 
     override fun insertFeedItemsIfNotExist(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId> =
         feedItemDataFlow
@@ -160,65 +150,60 @@ class H2R2DBCFeedRepository(
                     .awaitSingle()
                 emit(feedItemId)
             }
-            .flowOn(Dispatchers.IO)
 
     override suspend fun getAllFeedItemIds(feedId: FeedId, before: Instant?): Flow<FeedItemId> =
-        withContext(Dispatchers.IO) {
-            client
-                .sql(
-                    """
+        client
+            .sql(
+                """
                 |SELECT id FROM feed_item 
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", "createdBefore", "<", before)} 
                 |ORDER BY created 
             """.trimMargin()
-                )
-                .bind("feed_id", feedId.id)
-                .bindIfNotNull("createdBefore", before)
-                .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
-                .flow()
-        }
+            )
+            .bind("feed_id", feedId.id)
+            .bindIfNotNull("createdBefore", before)
+            .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
+            .flow()
 
 
     override suspend fun insertUserGroup(userId: UserId, groupData: GroupData): GroupId =
-        withContext(Dispatchers.IO) {
-            client
-                .sql(
-                    """
+        client
+            .sql(
+                """
                 |INSERT INTO user_group (user_id, name)
                 |VALUES (:user_id, :name)
             """.trimMargin()
-                )
-                .bind("user_id", userId.id)
-                .bind("name", groupData.name)
-                .filter { s -> s.returnGeneratedValues() }
-                .map { row -> row.get("id", Integer::class.java)!!.toInt().toGroupId() }
-                .awaitOne()
-        }
+            )
+            .bind("user_id", userId.id)
+            .bind("name", groupData.name)
+            .filter { s -> s.returnGeneratedValues() }
+            .map { row -> row.get("id", Integer::class.java)!!.toInt().toGroupId() }
+            .awaitOne()
+
 
     override suspend fun getAllUserGroups(userId: UserId): Flow<Group> =
-        withContext(Dispatchers.IO) {
-            client
-                .sql(
-                    """
+        client
+            .sql(
+                """
                 |SELECT 
                 |UG.id, UG.name, UGF.feed_id
                 |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
                 |WHERE UG.user_id = :user_id 
                 |ORDER BY UG.id
                 |""".trimMargin()
+            )
+            .bind("user_id", userId.id)
+            .map { row ->
+                Triple<GroupId, String, FeedId?>(
+                    row.getInt("id").toGroupId(),
+                    row.getReified("name"),
+                    row.getIntOrNull("feed_id").toFeedId()
                 )
-                .bind("user_id", userId.id)
-                .map { row ->
-                    Triple<GroupId, String, FeedId?>(
-                        row.getInt("id").toGroupId(),
-                        row.getReified("name"),
-                        row.getIntOrNull("feed_id").toFeedId()
-                    )
-                }
-                .flow()
-                .toGroupFlow()
-        }
+            }
+            .flow()
+            .toGroupFlow()
+
 
     private fun Flow<Triple<GroupId, String, FeedId?>>.toGroupFlow(): Flow<Group> = flow {
         val groupNameMap = mutableMapOf<GroupId, String>()
@@ -243,24 +228,22 @@ class H2R2DBCFeedRepository(
     }
 
     override suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId) =
-        withContext(Dispatchers.IO) {
-            client
-                .sql("INSERT INTO user_group_feed (group_id, feed_id) VALUES (:group_id, :feed_id)")
-                .bind("group_id", groupId.id)
-                .bind("feed_id", feedId.id)
-                .await()
-        }
+        client
+            .sql("INSERT INTO user_group_feed (group_id, feed_id) VALUES (:group_id, :feed_id)")
+            .bind("group_id", groupId.id)
+            .bind("feed_id", feedId.id)
+            .await()
+
 
     override suspend fun addFeedToUser(userId: UserId, feedId: FeedId) =
-        withContext(Dispatchers.IO) {
-            client
-                .sql("INSERT INTO user_feed (user_id, feed_id) VALUES (:user_id, :feed_id)")
-                .bind("user_id", userId.id)
-                .bind("feed_id", feedId.id)
-                .await()
-        }
+        client
+            .sql("INSERT INTO user_feed (user_id, feed_id) VALUES (:user_id, :feed_id)")
+            .bind("user_id", userId.id)
+            .bind("feed_id", feedId.id)
+            .await()
 
-    override suspend fun getAllUserFeeds(userId: UserId): Flow<Feed> = withContext(Dispatchers.IO) {
+
+    override suspend fun getAllUserFeeds(userId: UserId): Flow<Feed> {
         val groupFeedFlow = client
             .sql(
                 """
@@ -289,7 +272,7 @@ class H2R2DBCFeedRepository(
             .mapToFeed()
             .flow()
 
-        return@withContext flowOf(groupFeedFlow, userFeedFlow).flattenConcat()
+        return flowOf(groupFeedFlow, userFeedFlow).flattenConcat()
     }
 
     override suspend fun updateUserFeedItem(
@@ -317,7 +300,6 @@ class H2R2DBCFeedRepository(
                     .rowsUpdated()
                     .awaitSingle()
             }
-            .flowOn(Dispatchers.IO)
             .collect()
     }
 
@@ -326,13 +308,12 @@ class H2R2DBCFeedRepository(
         feedId: FeedId,
         filter: FeedItemFilter?,
         since: Instant?
-    ): Flow<UserFeedItem> =
-        withContext(Dispatchers.IO) {
-            val filterQuery = filter.toWhereClause()
+    ): Flow<UserFeedItem> {
+        val filterQuery = filter.toWhereClause()
 
-            return@withContext client
-                .sql(
-                    """
+        return client
+            .sql(
+                """
                 |SELECT 
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
@@ -342,23 +323,23 @@ class H2R2DBCFeedRepository(
                 |$filterQuery 
                 |ORDER BY created 
             """.trimMargin()
-                )
-                .bind("feed_id", feedId.id)
-                .bind("user_id", userId.id)
-                .bindIfNotNull("createdSince", since)
-                .mapToUserFeedItem()
-                .flow()
-        }
+            )
+            .bind("feed_id", feedId.id)
+            .bind("user_id", userId.id)
+            .bindIfNotNull("createdSince", since)
+            .mapToUserFeedItem()
+            .flow()
+    }
 
     override suspend fun getAllUserFeedItemIdsOfFeed(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter?,
         since: Instant?
-    ): Flow<FeedItemId> = withContext(Dispatchers.IO) {
+    ): Flow<FeedItemId> {
         val filterQuery = filter.toWhereClause()
 
-        return@withContext client
+        return client
             .sql(
                 """
                 |SELECT FI.id 
@@ -375,7 +356,6 @@ class H2R2DBCFeedRepository(
             .bindIfNotNull("createdSince", since)
             .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
             .flow()
-            .flowOn(Dispatchers.IO)
     }
 
     private fun FeedItemFilter?.toWhereClause(): String =
@@ -387,10 +367,9 @@ class H2R2DBCFeedRepository(
         }
 
     override suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem? =
-        withContext(Dispatchers.IO) {
-            client
-                .sql(
-                    """
+        client
+            .sql(
+                """
                 |SELECT
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id
@@ -399,11 +378,11 @@ class H2R2DBCFeedRepository(
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
                 |ORDER BY created
             """.trimMargin()
-                )
-                .bind("feed_id", feedId.id)
-                .bind("feed_item_id", feedItemId.id)
-                .bind("user_id", userId.id)
-                .mapToUserFeedItem()
-                .awaitSingleOrNull()
-        }
+            )
+            .bind("feed_id", feedId.id)
+            .bind("feed_item_id", feedItemId.id)
+            .bind("user_id", userId.id)
+            .mapToUserFeedItem()
+            .awaitSingleOrNull()
+
 }

@@ -3,10 +3,8 @@ package sh.weller.feedsng.feed.rome
 import com.rometools.rome.feed.synd.SyndEntry
 import com.rometools.rome.feed.synd.SyndFeed
 import com.rometools.rome.io.SyndFeedInput
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
@@ -55,18 +53,16 @@ class RomeFeedFetcherServiceImpl(
 
     suspend fun getFeedBytes(feedUrl: String): Result<ByteArray, String> {
         return try {
-            withContext(Dispatchers.IO) {
-                client
-                    .get()
-                    .uri(feedUrl)
-                    .awaitExchange {
-                        if (it.statusCode().isError) {
-                            logger.error("Could not fetch feed at $feedUrl: ${it.statusCode().reasonPhrase}")
-                            return@awaitExchange Failure(it.statusCode().reasonPhrase)
-                        }
-                        return@awaitExchange it.awaitBody<ByteArray>().asSuccess()
+            client
+                .get()
+                .uri(feedUrl)
+                .awaitExchange {
+                    if (it.statusCode().isError) {
+                        logger.error("Could not fetch feed at $feedUrl: ${it.statusCode().reasonPhrase}")
+                        return@awaitExchange Failure(it.statusCode().reasonPhrase)
                     }
-            }
+                    return@awaitExchange it.awaitBody<ByteArray>().asSuccess()
+                }
         } catch (e: Exception) {
             logger.error("Could not fetch feed $feedUrl: ${e.message}")
             Failure(e.message ?: "Unknown Error")
