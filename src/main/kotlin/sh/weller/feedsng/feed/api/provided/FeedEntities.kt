@@ -2,7 +2,8 @@ package sh.weller.feedsng.feed.api.provided
 
 import java.time.Instant
 
-inline class GroupId(val id: Int) {
+@JvmInline
+value class GroupId(val id: Int) {
     init {
         require(id > 0)
     }
@@ -22,7 +23,8 @@ data class GroupData(
 )
 
 
-inline class FeedId(val id: Int) {
+@JvmInline
+value class FeedId(val id: Int) {
     init {
         require(id > 0)
     }
@@ -50,7 +52,8 @@ data class UserFeedItem(
     val isRead: Boolean,
 )
 
-inline class FeedItemId(val id: Int) {
+@JvmInline
+value class FeedItemId(val id: Int) {
     init {
         require(id > 0)
     }

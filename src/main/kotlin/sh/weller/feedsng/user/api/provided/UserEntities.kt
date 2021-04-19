@@ -1,6 +1,7 @@
 package sh.weller.feedsng.user.api.provided
 
-inline class UserId(val id: Int) {
+@JvmInline
+value class UserId(val id: Int) {
     init {
         require(id > 0)
     }
