@@ -27,7 +27,8 @@ class StartupService(
             val feverAPIKey = userControlService.enableFeverAPI(userId)
             logger.info("Created User FeedsNG - Fever API Key: $feverAPIKey")
 
-            when (val importResult = feedControlService.importFromOPML(userId, startupOPML.file.readText())) {
+            val startupOPMLContent = startupOPML.inputStream.reader().readText()
+            when (val importResult = feedControlService.importFromOPML(userId, startupOPMLContent)) {
                 is Failure -> logger.info("Error during import: ${importResult.reason}")
                 is Success -> logger.info("Successfully imported all feeds")
             }
