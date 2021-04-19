@@ -43,11 +43,10 @@ class FeedUpdateServiceImpl(
     }
 
     override fun stop() {
-        runBlocking {
-            updateTicker?.cancel()
-            updateTicker = null
-            isStarted = false
-        }
+        updateTicker?.cancel()
+        coroutineScope.cancel()
+        updateTicker = null
+        isStarted = false
     }
 
     override fun isRunning(): Boolean = isStarted
