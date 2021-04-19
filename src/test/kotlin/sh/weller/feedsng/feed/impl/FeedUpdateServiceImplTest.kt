@@ -1,7 +1,7 @@
 package sh.weller.feedsng.feed.impl
 
 import io.r2dbc.h2.H2ConnectionFactory
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
@@ -16,7 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ObsoleteCoroutinesApi::class)
 internal class FeedUpdateServiceImplTest {
 
     @Test
@@ -52,7 +52,7 @@ internal class FeedUpdateServiceImplTest {
         val updater = FeedUpdateServiceImpl(
             repo,
             fetcher,
-            feedUpdateConfiguration = FeedUpdateConfiguration(1000)
+            feedUpdateConfiguration = FeedUpdateConfiguration(1000, 5000)
         )
 
         return Triple(updater, repo, fetcher)
