@@ -13,15 +13,13 @@ import sh.weller.feedsng.common.onFailure
 import sh.weller.feedsng.feed.api.provided.Feed
 import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.api.required.FeedRepository
-import kotlin.time.ExperimentalTime
-import kotlin.time.minutes
 
-@OptIn(ObsoleteCoroutinesApi::class)
+@ObsoleteCoroutinesApi
 @Service
 class FeedUpdateServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,
-    private val feedUpdateConfiguration: FeedUpdateConfiguration = FeedUpdateConfiguration()
+    private val feedUpdateConfiguration: FeedUpdateConfiguration
 ) : SmartLifecycle {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
@@ -95,8 +93,7 @@ class FeedUpdateServiceImpl(
 
 }
 
-@OptIn(ExperimentalTime::class)
 data class FeedUpdateConfiguration(
-    val initialDelay: Long = 5.minutes.toLongMilliseconds(),
-    val updateInterval: Long = 10.minutes.toLongMilliseconds()
+    val initialDelay: Long,
+    val updateInterval: Long
 )
