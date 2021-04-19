@@ -22,7 +22,7 @@ class WebConfiguration : WebFluxConfigurer {
     fun springWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         return http {
             authorizeExchange {
-                authorize(anyExchange, permitAll)
+                authorize("/api/fever.php", permitAll)
             }
             cors { disable() }
             csrf { disable() }

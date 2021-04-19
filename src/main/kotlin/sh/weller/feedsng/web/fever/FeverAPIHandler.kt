@@ -8,18 +8,22 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.api.provided.UserId
+import sh.weller.feedsng.user.api.provided.UserQueryService
 import java.time.Instant
+import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @Controller
 class FeverAPIHandler(
     private val feedControlService: FeedControlService,
-    private val feedQueryService: FeedQueryService
+    private val feedQueryService: FeedQueryService,
+    private val userQueryService: UserQueryService
 ) {
 
     @OptIn(ExperimentalTime::class)
@@ -30,7 +34,7 @@ class FeverAPIHandler(
                 val duration = measureTime {
                     response = feverHandler(it)
                 }
-                logger.debug("Request took ${duration.inMilliseconds} ms")
+                logger.debug("Request took ${duration.toDouble(DurationUnit.MILLISECONDS)} ms")
                 return@path response
             }
         }
@@ -39,9 +43,10 @@ class FeverAPIHandler(
         val requestParameters = request.getFeverRequestParameters()
         logger.debug("Fever request parameters: $requestParameters ")
 
-        // TODO: Fetch from request - Validate api_key against md5("$username:$password")
-        val userId = UserId(1)
-
+        val apiKeyHash = requestParameters["api_key"]
+            ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
+        val userId = userQueryService.getUserByFeverAPIKey(apiKeyHash)?.userId
+            ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
 
         val responseBuilder = FeverResponse.Builder()
 
