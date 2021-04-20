@@ -1,6 +1,7 @@
 package sh.weller.feedsng.feed.impl
 
 import io.r2dbc.h2.H2ConnectionFactory
+import io.r2dbc.h2.H2ConnectionOption
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
@@ -107,7 +108,11 @@ internal class FeedControlServiceImplTest {
 
 
     private fun getTestSetup(): Pair<sh.weller.feedsng.feed.api.required.FeedRepository, FeedControlServiceImpl> {
-        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
+        val factory = H2ConnectionFactory.inMemory(
+            UUID.randomUUID().toString(),
+            "test", "test",
+            mapOf(Pair(H2ConnectionOption.MODE, "PostgreSQL"))
+        )
         val client = DatabaseClient.create(factory)
         val repo = sh.weller.feedsng.database.FeedRepository(client)
 

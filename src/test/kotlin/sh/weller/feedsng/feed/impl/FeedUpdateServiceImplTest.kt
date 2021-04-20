@@ -1,6 +1,7 @@
 package sh.weller.feedsng.feed.impl
 
 import io.r2dbc.h2.H2ConnectionFactory
+import io.r2dbc.h2.H2ConnectionOption
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -42,7 +43,11 @@ internal class FeedUpdateServiceImplTest {
 
 
     private fun getTestSetup(): Triple<FeedUpdateServiceImpl, sh.weller.feedsng.feed.api.required.FeedRepository, FeedFetcherService> {
-        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
+        val factory = H2ConnectionFactory.inMemory(
+            UUID.randomUUID().toString(),
+            "test", "test",
+            mapOf(Pair(H2ConnectionOption.MODE, "PostgreSQL"))
+        )
         val client = DatabaseClient.create(factory)
         val repo = sh.weller.feedsng.database.FeedRepository(client)
 
