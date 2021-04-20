@@ -7,9 +7,7 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
-import sh.weller.feedsng.database.h2r2dbc.H2R2DBCFeedRepository
 import sh.weller.feedsng.feed.api.provided.FeedUpdateAction
-import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import sh.weller.feedsng.feed.rome.RomeOPMLFeedImportServiceImpl
 import sh.weller.feedsng.user.api.provided.UserId
@@ -108,10 +106,10 @@ internal class FeedControlServiceImplTest {
     }
 
 
-    private fun getTestSetup(): Pair<FeedRepository, FeedControlServiceImpl> {
+    private fun getTestSetup(): Pair<sh.weller.feedsng.feed.api.required.FeedRepository, FeedControlServiceImpl> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repo = H2R2DBCFeedRepository(client)
+        val repo = sh.weller.feedsng.database.FeedRepository(client)
 
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
 

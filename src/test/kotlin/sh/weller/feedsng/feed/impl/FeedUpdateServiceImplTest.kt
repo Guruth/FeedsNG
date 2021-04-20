@@ -7,9 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.valueOrNull
-import sh.weller.feedsng.database.h2r2dbc.H2R2DBCFeedRepository
 import sh.weller.feedsng.feed.api.required.FeedFetcherService
-import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import java.util.*
 import kotlin.test.Test
@@ -43,10 +41,10 @@ internal class FeedUpdateServiceImplTest {
     }
 
 
-    private fun getTestSetup(): Triple<FeedUpdateServiceImpl, FeedRepository, FeedFetcherService> {
+    private fun getTestSetup(): Triple<FeedUpdateServiceImpl, sh.weller.feedsng.feed.api.required.FeedRepository, FeedFetcherService> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repo = H2R2DBCFeedRepository(client)
+        val repo = sh.weller.feedsng.database.FeedRepository(client)
 
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
         val updater = FeedUpdateServiceImpl(

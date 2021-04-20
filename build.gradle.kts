@@ -41,6 +41,7 @@ dependencies {
     implementation("io.r2dbc:r2dbc-pool")
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
+    implementation("io.r2dbc:r2dbc-postgresql")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     //    testImplementation("org.springframework.security:spring-security-test")

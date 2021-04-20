@@ -4,9 +4,7 @@ import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.security.crypto.codec.Hex
-import sh.weller.feedsng.database.h2r2dbc.H2R2DBCUserRepository
 import sh.weller.feedsng.user.UserConfiguration
-import sh.weller.feedsng.user.api.required.UserRepository
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEqualTo
@@ -58,10 +56,10 @@ internal class UserControlServiceImplTest {
         return Hex.encode(md5Bytes).concatToString()
     }
 
-    fun getTestSetup(): Pair<UserRepository, UserControlServiceImpl> {
+    fun getTestSetup(): Pair<sh.weller.feedsng.user.api.required.UserRepository, UserControlServiceImpl> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repo = H2R2DBCUserRepository(client)
+        val repo = sh.weller.feedsng.database.UserRepository(client)
 
         val passwordEncoder = UserConfiguration().passwordEncoder()
 

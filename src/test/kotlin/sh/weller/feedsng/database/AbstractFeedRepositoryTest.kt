@@ -1,47 +1,19 @@
-package sh.weller.feedsng.database.h2r2dbc
+package sh.weller.feedsng.database
 
-import io.r2dbc.h2.H2ConnectionFactory
-import io.r2dbc.spi.Row
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
-import org.springframework.r2dbc.core.flow
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.api.provided.UserId
 import strikt.api.expectThat
 import strikt.assertions.*
 import strikt.java.time.isAfter
 import java.time.Instant
-import java.util.*
 import kotlin.test.Test
 
-internal class H2R2DBCFeedRepositoryTest {
-
-    @Test
-    fun `init`() {
-        val (client, _) = getTestSetup()
-
-        runBlocking {
-            val mappedList = mutableListOf<String>()
-            client
-                .sql("SHOW TABLES")
-                .map<String> { row: Row -> row.getReified("TABLE_NAME") }
-                .flow()
-                .toCollection(mappedList)
-
-            expectThat(mappedList)
-                .contains(
-                    "FEED",
-                    "FEED_ITEM",
-                    "USER_GROUP",
-                    "USER_GROUP_FEED",
-                    "USER_FEED_ITEM"
-                )
-        }
-    }
+internal abstract class AbstractFeedRepositoryTest {
 
     @Test
     fun `insertFeed, getFeed, getFeedWithFeedURL, getAllFeeds`() {
@@ -125,7 +97,7 @@ internal class H2R2DBCFeedRepositoryTest {
 
             val duplicatedItems = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(duplicatedItems)
-                .containsExactlyInAnyOrder(feedItemIds)
+                .isEmpty()
 
             val allFeedIds = cut.getAllFeedItemIds(feedId).toList()
             expectThat(allFeedIds)
@@ -248,12 +220,7 @@ internal class H2R2DBCFeedRepositoryTest {
         }
     }
 
-    private fun getTestSetup(): Pair<DatabaseClient, H2R2DBCFeedRepository> {
-        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
-        val client = DatabaseClient.create(factory)
-        val repo = H2R2DBCFeedRepository(client)
-        return Pair(client, repo)
-    }
+    abstract fun getTestSetup(): Pair<DatabaseClient, FeedRepository>
 
     private val firstTestFeed = FeedData(
         name = "Test",

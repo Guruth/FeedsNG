@@ -1,8 +1,7 @@
-package sh.weller.feedsng.database.h2r2dbc
+package sh.weller.feedsng.database
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
@@ -14,7 +13,7 @@ import java.time.Instant
 @Suppress("SqlResolve")
 @OptIn(FlowPreview::class)
 @Repository
-class H2R2DBCFeedRepository(
+class FeedRepository(
     private val client: DatabaseClient
 ) : FeedRepository {
 
@@ -22,28 +21,28 @@ class H2R2DBCFeedRepository(
         runBlocking {
             client.sql(
                 """CREATE TABLE IF NOT EXISTS feed( 
-                    |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                    |id SERIAL PRIMARY KEY, 
                     |name VARCHAR(256), 
                     |description VARCHAR(2048), 
-                    |feed_url VARCHAR(2048), 
+                    |feed_url VARCHAR(2048) UNIQUE, 
                     |site_url VARCHAR(2048), 
                     |last_updated TIMESTAMP WITH TIME ZONE)""".trimMargin()
             ).await()
 
             client.sql(
                 """CREATE TABLE IF NOT EXISTS feed_item( 
-                    |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                    |id SERIAL PRIMARY KEY, 
                     |feed_id INTEGER, 
                     |title VARCHAR(2048), 
                     |author VARCHAR(256), 
                     |html TEXT, 
-                    |item_url VARCHAR(2048), 
+                    |item_url VARCHAR(2048) UNIQUE, 
                     |created TIMESTAMP WITH TIME ZONE) """.trimMargin()
             ).await()
 
             client.sql(
                 """CREATE TABLE IF NOT EXISTS user_group( 
-                    |id INTEGER AUTO_INCREMENT PRIMARY KEY, 
+                    |id SERIAL PRIMARY KEY, 
                     |user_id INTEGER, 
                     |name VARCHAR(256))""".trimMargin()
             ).await()
@@ -65,7 +64,8 @@ class H2R2DBCFeedRepository(
                     |feed_item_id INTEGER, 
                     |user_id INTEGER, 
                     |saved BOOLEAN DEFAULT FALSE, 
-                    |read BOOLEAN DEFAULT FALSE)""".trimMargin()
+                    |read BOOLEAN DEFAULT FALSE,
+                    |UNIQUE (feed_item_id, user_id))""".trimMargin()
             ).await()
         }
     }
@@ -135,9 +135,9 @@ class H2R2DBCFeedRepository(
                 val feedItemId = client
                     .sql(
                         """
-                    |MERGE INTO feed_item (feed_id, title, author, html, item_url, created) 
-                    |KEY (feed_id, item_url)
-                    |VALUES (:feed_id, :title, :author, :html, :item_url, :created)""".trimMargin()
+                    |INSERT INTO feed_item (feed_id, title, author, html, item_url, created) 
+                    |VALUES (:feed_id, :title, :author, :html, :item_url, :created) 
+                    |ON CONFLICT DO NOTHING""".trimMargin()
                     )
                     .bind("feed_id", feedId.id)
                     .bind("title", it.title)
@@ -147,8 +147,10 @@ class H2R2DBCFeedRepository(
                     .bind("created", it.created)
                     .filter { s -> s.returnGeneratedValues() }
                     .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
-                    .awaitSingle()
-                emit(feedItemId)
+                    .awaitSingleOrNull()
+                if (feedItemId != null) {
+                    emit(feedItemId)
+                }
             }
 
     override suspend fun getAllFeedItemIds(feedId: FeedId, before: Instant?): Flow<FeedItemId> =
@@ -288,17 +290,24 @@ class H2R2DBCFeedRepository(
                 client
                     .sql(
                         """
-                |MERGE INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
-                |KEY (feed_item_id, user_id) 
-                |VALUES (:feed_item_id, :user_id, :updateValue) 
-            """.trimMargin()
+                |INSERT INTO user_feed_item (feed_item_id, user_id)
+                |VALUES (:feed_item_id, :user_id) 
+                |ON CONFLICT DO NOTHING""".trimMargin()
                     )
                     .bind("feed_item_id", it.id)
                     .bind("user_id", userId.id)
-                    .bind("updateValue", updateValue)
-                    .fetch()
-                    .rowsUpdated()
-                    .awaitSingle()
+                    .await()
+                client.sql(
+                    """
+                    |UPDATE user_feed_item 
+                    |SET $columnToUpdate = :update_value
+                    |WHERE feed_item_id = :feed_item_id AND user_id = :user_id
+                    |""".trimMargin()
+                )
+                    .bind("feed_item_id", it.id)
+                    .bind("user_id", userId.id)
+                    .bind("update_value", updateValue)
+                    .await()
             }
             .collect()
     }
