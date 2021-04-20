@@ -26,7 +26,7 @@ class StartupService(
         logger.info("Starting Startup Service")
         runBlocking {
             val userName = "FeedsNG"
-            if (userQueryService.getUserByUsername(userName) != null) {
+            if (userQueryService.getUserByUsername(userName) == null) {
                 val userId = userControlService.createUser(userName, "Some.Random.Password!")
                 val feverAPIKey = userControlService.enableFeverAPI(userId)
                 logger.info("Created User $userName - Fever API Key: $feverAPIKey")
