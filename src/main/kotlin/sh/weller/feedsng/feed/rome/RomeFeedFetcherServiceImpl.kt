@@ -45,7 +45,7 @@ class RomeFeedFetcherServiceImpl(
         .build()
 ) : FeedFetcherService {
 
-    private val scope = CoroutineScope(Dispatchers.Default)
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val feedBuilder = SyndFeedInput()
         .apply {
@@ -57,7 +57,7 @@ class RomeFeedFetcherServiceImpl(
     override suspend fun fetchFeedDetails(feedUrl: String): Result<FeedDetails, String> {
         val flow = getFeedBytes(feedUrl)
             .onFailure { return it }
-        val syndFeed = withContext(Dispatchers.Default) { toSyndFeedBuffers(flow, feedUrl) }
+        val syndFeed = withContext(Dispatchers.IO) { toSyndFeedBuffers(flow, feedUrl) }
             .onFailure { return it }
 
         return RomeFeedDetails(feedUrl, syndFeed).asSuccess()
@@ -89,7 +89,7 @@ class RomeFeedFetcherServiceImpl(
                     DataBufferUtils.release(it)
                 }
             }
-            .catch { /** Do nothing **/ }
+            .catch { logger.error("Error during databuffer copy: ${it.message}") }
             .onCompletion { pipedOutputStream.close() }
             .launchIn(scope)
 
