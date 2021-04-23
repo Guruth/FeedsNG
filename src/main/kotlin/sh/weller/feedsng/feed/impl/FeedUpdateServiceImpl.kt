@@ -18,10 +18,12 @@ import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 @Service
 @EnableConfigurationProperties(value = [FeedUpdateConfiguration::class])
 @ObsoleteCoroutinesApi
+@ExperimentalTime
 class FeedUpdateServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,
@@ -59,9 +61,11 @@ class FeedUpdateServiceImpl(
         tickerChannel
             .receiveAsFlow()
             .onEach {
-                logger.info("Starting to update all Feeds.")
-                updateFeeds()
-                logger.info("Finished all Feeds Update.")
+                logger.info("Starting to update all feeds.")
+                val updateDuration = measureTime {
+                    updateFeeds()
+                }
+                logger.info("Finished all updating all feeds in took: ${updateDuration.inWholeSeconds}")
             }
             .launchIn(coroutineScope)
     }
