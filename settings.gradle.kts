@@ -1,1 +1,1 @@
-rootProject.name = "feeds-ng"
+rootProject.name = "feedsng"
