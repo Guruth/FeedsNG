@@ -7,6 +7,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
     kotlin("jvm") version "1.5.0-RC"
+    kotlin("kapt") version "1.5.0-RC"
     kotlin("plugin.spring") version "1.5.0-RC"
     kotlin("plugin.serialization") version "1.5.0-RC"
 }
@@ -20,14 +21,21 @@ repositories {
 
 dependencies {
 
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
+
+    implementation("org.springframework.boot:spring-boot-starter-webflux") {
+        exclude("com.fasterxml.jackson.core")
+        exclude("com.fasterxml.jackson.datatype")
+        exclude("com.fasterxml.jackson.module")
+    }
+//    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-logging")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 
     implementation(kotlin("reflect"))
-    implementation(kotlin("stdlib-jdk8"))
+//    implementation(kotlin("stdlib-jdk8"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -35,7 +43,7 @@ dependencies {
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
+//    developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     implementation("org.springframework:spring-r2dbc")
     implementation("io.r2dbc:r2dbc-pool")
@@ -43,11 +51,10 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.boot:spring-boot-starter-test")
     //    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test-common"))
-    testImplementation(kotlin("test-annotations-common"))
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
 
@@ -55,7 +62,6 @@ dependencies {
 
     testImplementation("io.strikt:strikt-core:0.30.1")
     testImplementation("io.strikt:strikt-jvm:0.30.1")
-    testImplementation("io.strikt:strikt-spring:0.30.1")
 }
 
 tasks.withType<KotlinCompile> {

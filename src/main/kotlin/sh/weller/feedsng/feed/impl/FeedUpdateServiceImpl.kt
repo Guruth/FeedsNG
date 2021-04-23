@@ -7,15 +7,21 @@ import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.common.onFailure
 import sh.weller.feedsng.feed.api.provided.Feed
 import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.api.required.FeedRepository
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
-@ObsoleteCoroutinesApi
 @Service
+@EnableConfigurationProperties(value = [FeedUpdateConfiguration::class])
+@ObsoleteCoroutinesApi
 class FeedUpdateServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,
@@ -77,7 +83,6 @@ class FeedUpdateServiceImpl(
         val feedDetails = feedFetcherService
             .fetchFeedDetails(feed.feedData.feedUrl)
             .onFailure {
-                // TODO: Store this error?
                 logger.error("Could not update feed ${feed.feedId} - ${feed.feedData.feedUrl}. Reason ${it.reason}")
                 return
             }
@@ -93,7 +98,10 @@ class FeedUpdateServiceImpl(
 
 }
 
+@ConfigurationProperties("feedsng.update")
+@ConstructorBinding
+@OptIn(ExperimentalTime::class)
 data class FeedUpdateConfiguration(
-    val initialDelay: Long,
-    val updateInterval: Long
+    val initialDelay: Long = Duration.minutes(5).inWholeMilliseconds,
+    val updateInterval: Long = Duration.minutes(10).inWholeMilliseconds
 )
