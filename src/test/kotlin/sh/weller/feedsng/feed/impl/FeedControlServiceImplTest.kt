@@ -8,6 +8,7 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
+import sh.weller.feedsng.database.FeedRepository
 import sh.weller.feedsng.feed.api.provided.FeedUpdateAction
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import sh.weller.feedsng.feed.rome.RomeOPMLFeedImportServiceImpl
@@ -114,7 +115,7 @@ internal class FeedControlServiceImplTest {
             mapOf(Pair(H2ConnectionOption.MODE, "PostgreSQL"))
         )
         val client = DatabaseClient.create(factory)
-        val repo = sh.weller.feedsng.database.FeedRepository(client)
+        val repo = FeedRepository(client)
 
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
 

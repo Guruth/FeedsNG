@@ -52,7 +52,6 @@ class FeverAPIHandler(
 
         val groups = feedQueryService.getGroups(userId).toList()
         val feeds = feedQueryService.getFeeds(userId).toList()
-        val feedItems = feedQueryService.getFeedItems(userId = userId).toList()
 
         responseBuilder.lastRefreshedOnTime(feeds.maxOfOrNull { it.feedData.lastUpdated })
 
@@ -68,6 +67,9 @@ class FeverAPIHandler(
         }
 
         if (requestParameters.containsKey("items")) {
+            val feedItems = feedQueryService.getFeedItems(userId = userId).toList()
+
+            // TODO: Instead of fetching all feed items, query only the needed ones
             val feedIdsToFilter = mutableListOf<FeedId>()
 
             requestParameters.queryIntListOrNull("feed_ids")

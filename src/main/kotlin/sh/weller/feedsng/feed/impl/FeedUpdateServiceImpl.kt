@@ -23,7 +23,7 @@ import kotlin.time.measureTime
 @Service
 @EnableConfigurationProperties(value = [FeedUpdateConfiguration::class])
 @ObsoleteCoroutinesApi
-@ExperimentalTime
+@OptIn(ExperimentalTime::class)
 class FeedUpdateServiceImpl(
     private val feedRepository: FeedRepository,
     private val feedFetcherService: FeedFetcherService,

@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.valueOrNull
+import sh.weller.feedsng.database.FeedRepository
 import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import java.util.*
@@ -31,8 +32,10 @@ internal class FeedUpdateServiceImplTest {
             val insertedFeed = repo.getFeed(feedId)
             assertNotNull(insertedFeed)
 
+            delay(2000)
             cut.start()
             delay(2000)
+
             val updatedFeed = repo.getFeed(feedId)
             assertNotNull(updatedFeed)
             assertTrue { insertedFeed.feedData.lastUpdated.isBefore(updatedFeed.feedData.lastUpdated) }
@@ -49,13 +52,13 @@ internal class FeedUpdateServiceImplTest {
             mapOf(Pair(H2ConnectionOption.MODE, "PostgreSQL"))
         )
         val client = DatabaseClient.create(factory)
-        val repo = sh.weller.feedsng.database.FeedRepository(client)
+        val repo = FeedRepository(client)
 
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
         val updater = FeedUpdateServiceImpl(
             repo,
             fetcher,
-            feedUpdateConfiguration = FeedUpdateConfiguration(1000, 5000)
+            feedUpdateConfiguration = FeedUpdateConfiguration(500, 5000)
         )
 
         return Triple(updater, repo, fetcher)
