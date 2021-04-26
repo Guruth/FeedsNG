@@ -28,14 +28,16 @@ dependencies {
         exclude("com.fasterxml.jackson.datatype")
         exclude("com.fasterxml.jackson.module")
     }
-//    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    // implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
+
+    implementation("io.netty:netty-tcnative")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 
     implementation(kotlin("reflect"))
-//    implementation(kotlin("stdlib-jdk8"))
+    // implementation(kotlin("stdlib-jdk8"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
@@ -43,7 +45,7 @@ dependencies {
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
-//    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    // developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     implementation("org.springframework:spring-r2dbc")
     implementation("io.r2dbc:r2dbc-pool")
@@ -51,8 +53,8 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
-//    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    //    testImplementation("org.springframework.security:spring-security-test")
+    // testImplementation("org.springframework.boot:spring-boot-starter-test")
+    // testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test-common"))
     testImplementation(kotlin("test-junit5"))
