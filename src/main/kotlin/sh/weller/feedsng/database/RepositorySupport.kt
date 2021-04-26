@@ -1,4 +1,4 @@
-package sh.weller.feedsng.database
+package sh.weller.feedsng.database.h2
 
 import io.r2dbc.spi.Row
 import org.springframework.r2dbc.core.DatabaseClient

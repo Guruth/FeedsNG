@@ -6,12 +6,14 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import sh.weller.feedsng.feed.api.provided.*
+import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
 import strikt.api.expectThat
 import strikt.assertions.*
 import strikt.java.time.isAfter
 import java.time.Instant
 import kotlin.test.Test
+
 
 internal abstract class AbstractFeedRepositoryTest {
 
@@ -97,7 +99,8 @@ internal abstract class AbstractFeedRepositoryTest {
 
             val duplicatedItems = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(duplicatedItems)
-                .isEmpty()
+                .isNotEmpty()
+                .containsExactlyInAnyOrder(feedItemIds)
 
             val allFeedIds = cut.getAllFeedItemIds(feedId).toList()
             expectThat(allFeedIds)

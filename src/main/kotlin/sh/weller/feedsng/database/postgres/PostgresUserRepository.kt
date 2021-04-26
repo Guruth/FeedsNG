@@ -1,20 +1,22 @@
-package sh.weller.feedsng.database
+package sh.weller.feedsng.database.postgres
 
 import kotlinx.coroutines.runBlocking
+import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
 import org.springframework.r2dbc.core.awaitOne
 import org.springframework.r2dbc.core.awaitOneOrNull
 import org.springframework.stereotype.Repository
+import sh.weller.feedsng.database.h2.mapToUser
 import sh.weller.feedsng.user.api.provided.User
 import sh.weller.feedsng.user.api.provided.UserData
 import sh.weller.feedsng.user.api.provided.UserId
 import sh.weller.feedsng.user.api.provided.toUserId
 import sh.weller.feedsng.user.api.required.UserRepository
 
-@Suppress("SqlResolve")
+@Conditional(PostgresCondition::class)
 @Repository
-class UserRepository(
+class PostgresUserRepository(
     private val client: DatabaseClient
 ) : UserRepository {
 

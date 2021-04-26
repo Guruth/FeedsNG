@@ -1,19 +1,21 @@
-package sh.weller.feedsng.database
+package sh.weller.feedsng.database.postgres
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
+import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
+import sh.weller.feedsng.database.h2.*
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
-@Suppress("SqlResolve")
 @OptIn(FlowPreview::class)
+@Conditional(PostgresCondition::class)
 @Repository
-class FeedRepository(
+class PostgresFeedRepository(
     private val client: DatabaseClient
 ) : FeedRepository {
 
@@ -36,8 +38,9 @@ class FeedRepository(
                     |title VARCHAR(2048), 
                     |author VARCHAR(256), 
                     |html TEXT, 
-                    |item_url VARCHAR(2048) UNIQUE, 
-                    |created TIMESTAMP WITH TIME ZONE) """.trimMargin()
+                    |item_url VARCHAR(2048), 
+                    |created TIMESTAMP WITH TIME ZONE,
+                    |UNIQUE (feed_id, item_url)) """.trimMargin()
             ).await()
 
             client.sql(
@@ -132,11 +135,11 @@ class FeedRepository(
     override fun insertFeedItemsIfNotExist(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId> =
         feedItemDataFlow
             .transform {
-                val feedItemId = client
+                client
                     .sql(
                         """
                     |INSERT INTO feed_item (feed_id, title, author, html, item_url, created) 
-                    |VALUES (:feed_id, :title, :author, :html, :item_url, :created) 
+                    |VALUES (:feed_id, :title, :author, :html, :item_url, :created)
                     |ON CONFLICT DO NOTHING""".trimMargin()
                     )
                     .bind("feed_id", feedId.id)
@@ -145,12 +148,14 @@ class FeedRepository(
                     .bind("html", it.html)
                     .bind("item_url", it.url)
                     .bind("created", it.created)
-                    .filter { s -> s.returnGeneratedValues() }
+                    .await()
+
+                val feedItemId = client.sql("SELECT id FROM feed_item WHERE feed_id = :feedId and item_url = :itemURL")
+                    .bind("feedId", feedId.id)
+                    .bind("itemURL", it.url)
                     .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
-                    .awaitSingleOrNull()
-                if (feedItemId != null) {
-                    emit(feedItemId)
-                }
+                    .awaitSingle()
+                emit(feedItemId)
             }
 
     override suspend fun getAllFeedItemIds(feedId: FeedId, before: Instant?): Flow<FeedItemId> =
@@ -290,23 +295,14 @@ class FeedRepository(
                 client
                     .sql(
                         """
-                |INSERT INTO user_feed_item (feed_item_id, user_id)
-                |VALUES (:feed_item_id, :user_id) 
-                |ON CONFLICT DO NOTHING""".trimMargin()
+                |INSERT INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
+                |VALUES (:feed_item_id, :user_id, :updateValue) 
+                |ON CONFLICT (feed_item_id, user_id) DO UPDATE SET $columnToUpdate = :updateValue
+            """.trimMargin()
                     )
                     .bind("feed_item_id", it.id)
                     .bind("user_id", userId.id)
-                    .await()
-                client.sql(
-                    """
-                    |UPDATE user_feed_item 
-                    |SET $columnToUpdate = :update_value
-                    |WHERE feed_item_id = :feed_item_id AND user_id = :user_id
-                    |""".trimMargin()
-                )
-                    .bind("feed_item_id", it.id)
-                    .bind("user_id", userId.id)
-                    .bind("update_value", updateValue)
+                    .bind("updateValue", updateValue)
                     .await()
             }
             .collect()

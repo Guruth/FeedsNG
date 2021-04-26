@@ -1,14 +1,13 @@
 package sh.weller.feedsng.feed.impl
 
 import io.r2dbc.h2.H2ConnectionFactory
-import io.r2dbc.h2.H2ConnectionOption
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
-import sh.weller.feedsng.database.FeedRepository
+import sh.weller.feedsng.database.h2.H2FeedRepository
 import sh.weller.feedsng.feed.api.provided.FeedUpdateAction
 import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
 import sh.weller.feedsng.feed.rome.RomeOPMLFeedImportServiceImpl
@@ -109,13 +108,9 @@ internal class FeedControlServiceImplTest {
 
 
     private fun getTestSetup(): Pair<sh.weller.feedsng.feed.api.required.FeedRepository, FeedControlServiceImpl> {
-        val factory = H2ConnectionFactory.inMemory(
-            UUID.randomUUID().toString(),
-            "test", "test",
-            mapOf(Pair(H2ConnectionOption.MODE, "PostgreSQL"))
-        )
+        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
-        val repo = FeedRepository(client)
+        val repo = H2FeedRepository(client)
 
         val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
 

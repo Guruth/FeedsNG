@@ -3,6 +3,7 @@ package sh.weller.feedsng.database
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import sh.weller.feedsng.user.api.provided.UserData
+import sh.weller.feedsng.user.api.required.UserRepository
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
