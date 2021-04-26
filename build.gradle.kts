@@ -60,6 +60,9 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
 
+    testImplementation("org.testcontainers:testcontainers:1.15.3")
+    testImplementation("org.testcontainers:postgresql:1.15.3")
+
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 
     testImplementation("io.strikt:strikt-core:0.31.0")

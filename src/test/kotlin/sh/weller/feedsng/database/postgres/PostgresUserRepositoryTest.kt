@@ -6,17 +6,26 @@ import io.r2dbc.spi.ConnectionFactoryOptions
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
+import org.testcontainers.containers.PostgreSQLContainer
 import sh.weller.feedsng.database.AbstractUserRepositoryTest
-import kotlin.test.Ignore
 
-@Ignore("For local tests only")
 internal class PostgresUserRepositoryTest : AbstractUserRepositoryTest() {
     private val testSetup: Pair<DatabaseClient, PostgresUserRepository>
 
     init {
+        val postgresContainer = PostgreSQLContainer<Nothing>("postgres")
+        postgresContainer.start()
+
         val factory = PostgresqlConnectionFactory(
             PostgresqlConnectionFactoryProvider
-                .builder(ConnectionFactoryOptions.parse("r2dbc:postgresql://guruth@localhost:5432/feedsng"))
+                .builder(
+                    ConnectionFactoryOptions
+                        .parse(
+                            "r2dbc:postgresql://${postgresContainer.username}:${postgresContainer.password}@${postgresContainer.host}:${
+                                postgresContainer.getMappedPort(5432)
+                            }/${postgresContainer.databaseName}"
+                        )
+                )
                 .build()
         )
 
