@@ -25,7 +25,7 @@ interface FeedQueryService {
      */
     suspend fun getFeedItems(
         userId: UserId,
-        feedIdList: Flow<FeedId>? = null,
+        feedIdList: List<FeedId>? = null,
         filter: FeedItemFilter? = null,
         since: Instant? = null
     ): Flow<UserFeedItem>
@@ -36,7 +36,7 @@ interface FeedQueryService {
      */
     suspend fun getFeedItemsIds(
         userId: UserId,
-        feedIdList: Flow<FeedId>? = null,
+        feedIdList: List<FeedId>? = null,
         filter: FeedItemFilter? = null,
         since: Instant? = null
     ): Flow<FeedItemId>

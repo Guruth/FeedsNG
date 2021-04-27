@@ -2,9 +2,9 @@ package sh.weller.feedsng.feed.impl
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -35,17 +35,15 @@ class FeedQueryServiceImpl(
     @OptIn(FlowPreview::class)
     override suspend fun getFeedItems(
         userId: UserId,
-        feedIdList: Flow<FeedId>?,
+        feedIdList: List<FeedId>?,
         filter: FeedItemFilter?,
         since: Instant?
     ): Flow<UserFeedItem> {
-        val feedsToFetch: Flow<FeedId> = feedIdList
+        logger.info("Getting UserFeedItems of feeds $feedIdList with filter $filter, since $since of user $userId")
+        val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
             ?: getFeeds(userId).map { it.feedId }
 
         return feedsToFetch
-            .onEach { feedId ->
-                logger.info("Getting feed items of feed $feedId user $userId and filter $filter since $since of user $userId")
-            }
             .flatMapMerge { feedId ->
                 feedRepository.getAllUserFeedItemsOfFeed(
                     userId,
@@ -59,17 +57,15 @@ class FeedQueryServiceImpl(
     @OptIn(FlowPreview::class)
     override suspend fun getFeedItemsIds(
         userId: UserId,
-        feedIdList: Flow<FeedId>?,
+        feedIdList: List<FeedId>?,
         filter: FeedItemFilter?,
         since: Instant?
     ): Flow<FeedItemId> {
-        val feedsToFetch: Flow<FeedId> = feedIdList
+        logger.debug("Getting FeedItemIds of feeds $feedIdList with filter $filter, since $since of user $userId")
+        val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
             ?: getFeeds(userId).map { it.feedId }
 
         return feedsToFetch
-            .onEach { feedId ->
-                logger.info("Getting feed item ids of feed $feedId user $userId and filter $filter since $since of user $userId")
-            }
             .flatMapMerge { feedId ->
                 feedRepository.getAllUserFeedItemIdsOfFeed(
                     userId,

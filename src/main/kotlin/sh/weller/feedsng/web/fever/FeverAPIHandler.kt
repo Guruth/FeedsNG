@@ -1,7 +1,6 @@
 package sh.weller.feedsng.web.fever
 
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
@@ -87,7 +86,7 @@ class FeverAPIHandler(
             val feedItems = feedQueryService
                 .getFeedItems(
                     userId = userId,
-                    feedIdList = feedIdsToFilter.takeIf { it.isNotEmpty() }?.asFlow()
+                    feedIdList = feedIdsToFilter.takeIf { it.isNotEmpty() }
                 )
                 .toList()
                 .sortedBy { it.feedItem.feedItemId.id }
