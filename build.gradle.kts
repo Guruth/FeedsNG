@@ -36,11 +36,14 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
 
+    implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
-    // implementation(kotlin("stdlib-jdk8"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0-RC")
 
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
@@ -63,7 +66,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0-RC")
 
     testImplementation("io.strikt:strikt-core:0.31.0")
     testImplementation("io.strikt:strikt-jvm:0.31.0")
