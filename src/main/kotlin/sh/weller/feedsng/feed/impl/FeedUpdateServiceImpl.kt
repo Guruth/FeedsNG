@@ -4,7 +4,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.TickerMode
 import kotlinx.coroutines.channels.ticker
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.toList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -33,7 +34,7 @@ class FeedUpdateServiceImpl(
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     // This will change in future: https://github.com/Kotlin/kotlinx.coroutines/issues/540
-    private var updateTicker: ReceiveChannel<Unit>? = null
+    private lateinit var updateTicker: ReceiveChannel<Unit>
     private var isStarted = false
 
     override fun start() {
@@ -42,45 +43,37 @@ class FeedUpdateServiceImpl(
             delayMillis = feedUpdateConfiguration.updateInterval,
             initialDelayMillis = feedUpdateConfiguration.initialDelay,
             mode = TickerMode.FIXED_PERIOD
-        ).also {
-            startUpdate(it)
-            isStarted = true
-        }
+        )
+        startUpdatingFeeds()
+        isStarted = true
     }
 
     override fun stop() {
-        updateTicker?.cancel()
-        coroutineScope.cancel()
-        updateTicker = null
+        updateTicker.cancel()
+        coroutineScope.cancel("Stopping feed updates")
         isStarted = false
     }
 
     override fun isRunning(): Boolean = isStarted
 
-    private fun startUpdate(tickerChannel: ReceiveChannel<Unit>) {
-        tickerChannel
-            .receiveAsFlow()
-            .onEach {
+    private fun startUpdatingFeeds() {
+        coroutineScope.launch {
+            for (tick in updateTicker) {
                 logger.info("Starting to update all feeds.")
                 val updateDuration = measureTime {
-                    updateFeeds()
+                    feedRepository
+                        .getAllFeeds()
+                        .toList().map {
+                            async {
+                                updateFeed(it)
+                            }
+                        }
+                        .awaitAll()
                 }
-                logger.info("Finished all updating all feeds in took: ${updateDuration.inWholeSeconds}")
+                logger.info("Finished all updating all feeds in took: ${updateDuration.inWholeSeconds} seconds")
             }
-            .launchIn(coroutineScope)
-    }
-
-    private suspend fun updateFeeds() =
-        coroutineScope {
-            feedRepository
-                .getAllFeeds()
-                .toList().map {
-                    async {
-                        updateFeed(it)
-                    }
-                }
-                .awaitAll()
         }
+    }
 
     private suspend fun updateFeed(feed: Feed) {
         logger.info("Updating Feed ${feed.feedId} - ${feed.feedData.name} - ${feed.feedData.feedUrl}")
