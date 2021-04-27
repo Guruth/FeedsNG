@@ -165,3 +165,6 @@ gradle-app.setting
 **/build/
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,gradle,kotlin,intellij+all
+
+# H2 Databases
+*.mv.db
