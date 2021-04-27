@@ -172,7 +172,7 @@ internal abstract class AbstractFeedRepositoryTest {
     }
 
     @Test
-    fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItemForFeedItems`() {
+    fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItem`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {

@@ -113,9 +113,11 @@ class FeedControlServiceImpl(
     }
 
     override suspend fun updateFeed(userId: UserId, feedId: FeedId, action: FeedUpdateAction, before: Instant?) {
-        logger.info("Updating $feedId with $action for $userId")
+        logger.info("Updating $feedId with $action for $userId before $before")
         val feedItemFlow = feedRepository.getAllFeedItemIds(feedId = feedId, before = before)
+        logger.debug("Fetched all feedIds of $feedId to update them with $action for $userId before $before")
         feedRepository.updateUserFeedItem(userId, feedItemFlow, action)
+        logger.debug("Finished updating $feedId with $action for $userId before $before")
     }
 
     override suspend fun updateFeedItem(

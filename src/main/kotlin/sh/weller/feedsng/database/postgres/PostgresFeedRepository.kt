@@ -1,8 +1,7 @@
 package sh.weller.feedsng.database.postgres
 
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
@@ -18,6 +17,8 @@ import java.time.Instant
 class PostgresFeedRepository(
     private val client: DatabaseClient
 ) : FeedRepository {
+
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     init {
         runBlocking {
@@ -286,26 +287,29 @@ class PostgresFeedRepository(
         userId: UserId,
         feedItemIdFlow: Flow<FeedItemId>,
         updateAction: FeedUpdateAction
-    ) {
+    ): Unit = coroutineScope {
         val columnToUpdate = updateAction.getUpdateColumnName()
         val updateValue = updateAction.getUpdateValue()
 
         feedItemIdFlow
-            .onEach {
-                client
-                    .sql(
-                        """
+            .toList()
+            .map {
+                async {
+                    client
+                        .sql(
+                            """
                 |INSERT INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
                 |VALUES (:feed_item_id, :user_id, :updateValue) 
                 |ON CONFLICT (feed_item_id, user_id) DO UPDATE SET $columnToUpdate = :updateValue
             """.trimMargin()
-                    )
-                    .bind("feed_item_id", it.id)
-                    .bind("user_id", userId.id)
-                    .bind("updateValue", updateValue)
-                    .await()
+                        )
+                        .bind("feed_item_id", it.id)
+                        .bind("user_id", userId.id)
+                        .bind("updateValue", updateValue)
+                        .await()
+                }
             }
-            .collect()
+            .awaitAll()
     }
 
     override suspend fun getAllUserFeedItemsOfFeed(

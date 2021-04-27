@@ -1,8 +1,7 @@
 package sh.weller.feedsng.database.h2
 
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
@@ -281,26 +280,28 @@ class H2FeedRepository(
         userId: UserId,
         feedItemIdFlow: Flow<FeedItemId>,
         updateAction: FeedUpdateAction
-    ) {
+    ): Unit = coroutineScope {
         val columnToUpdate = updateAction.getUpdateColumnName()
         val updateValue = updateAction.getUpdateValue()
 
         feedItemIdFlow
-            .onEach {
-                client
-                    .sql(
-                        """
+            .toList()
+            .map {
+                async {
+                    client
+                        .sql(
+                            """
                 |MERGE INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
                 |KEY (feed_item_id, user_id) 
                 |VALUES (:feed_item_id, :user_id, :updateValue) 
             """.trimMargin()
-                    )
-                    .bind("feed_item_id", it.id)
-                    .bind("user_id", userId.id)
-                    .bind("updateValue", updateValue)
-                    .await()
-            }
-            .collect()
+                        )
+                        .bind("feed_item_id", it.id)
+                        .bind("user_id", userId.id)
+                        .bind("updateValue", updateValue)
+                        .await()
+                }
+            }.awaitAll()
     }
 
     override suspend fun getAllUserFeedItemsOfFeed(
