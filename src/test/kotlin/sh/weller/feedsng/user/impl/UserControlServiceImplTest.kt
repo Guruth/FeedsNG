@@ -50,14 +50,14 @@ internal class UserControlServiceImplTest {
         }
     }
 
-    fun calcMD5Hash(value: String): String {
+    private fun calcMD5Hash(value: String): String {
         val md5Digest = MessageDigest.getInstance("MD5")
         md5Digest.update(value.toByteArray())
         val md5Bytes = md5Digest.digest()
         return Hex.encode(md5Bytes).concatToString()
     }
 
-    fun getTestSetup(): Pair<sh.weller.feedsng.user.api.required.UserRepository, UserControlServiceImpl> {
+    private fun getTestSetup(): Pair<sh.weller.feedsng.user.api.required.UserRepository, UserControlServiceImpl> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
         val repo = H2UserRepository(client)
