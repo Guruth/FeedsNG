@@ -28,7 +28,7 @@ class FeedControlServiceImpl(
         userId: UserId,
         fileContent: String
     ): Result<Unit, List<String>> = coroutineScope {
-        logger.info("Importing feeds from file for $userId")
+        logger.info("Importing feeds for $userId")
         val importData = feedImportService
             .importFrom(fileContent)
             .onFailure { failure -> return@coroutineScope failure.map { listOf(it) } }
@@ -37,6 +37,8 @@ class FeedControlServiceImpl(
             .allDistinctFeedURLs()
             .map { async { getFeedByURLOrFetchAndInsert(it) } }
             .awaitAll()
+
+        logger.debug("Added ${feedImports.size} feeds for $userId.")
 
         importData
             .feedUrls
@@ -50,7 +52,10 @@ class FeedControlServiceImpl(
             }
             .awaitAll()
 
-        importData.feedGroupImport
+        logger.debug("Added imported feeds to $userId.")
+
+        importData
+            .feedGroupImport
             .flatMap {
                 val groupId = feedRepository
                     .insertUserGroup(userId, GroupData(it.name, emptyList()))
@@ -64,11 +69,14 @@ class FeedControlServiceImpl(
                         }
                     }
             }.awaitAll()
-
+        logger.debug("Added imported feeds to groups of $userId.")
 
         val failedImports = feedImports
             .filterIsInstance<Failure<String>>()
-            .map { it.reason }
+            .map {
+                logger.info("Failed to import feed for user $userId: ${it.reason}")
+                it.reason
+            }
 
         if (failedImports.isEmpty()) {
             return@coroutineScope Success(Unit)
