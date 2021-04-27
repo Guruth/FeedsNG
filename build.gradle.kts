@@ -32,7 +32,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
 
-    implementation("io.netty:netty-tcnative")
+    implementation("io.netty:netty-tcnative-boringssl-static")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
 
