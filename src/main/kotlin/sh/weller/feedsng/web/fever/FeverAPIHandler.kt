@@ -40,13 +40,14 @@ class FeverAPIHandler(
         }
 
     private suspend fun feverHandler(request: ServerRequest): ServerResponse {
-        val requestParameters = request.getFeverRequestParameters()
-        logger.debug("Fever request parameters: $requestParameters ")
-
+        val requestParameters = request.getFeverRequestParameters().toMutableMap()
         val apiKeyHash = requestParameters["api_key"]
             ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
         val userId = userQueryService.getUserByFeverAPIKey(apiKeyHash)?.userId
             ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
+
+        requestParameters.remove("api_key")
+        logger.debug("Fever request parameters: $requestParameters. ")
 
         val responseBuilder = FeverResponse.Builder()
 
