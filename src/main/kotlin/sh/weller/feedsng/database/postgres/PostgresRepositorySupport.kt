@@ -6,5 +6,5 @@ import org.springframework.core.type.AnnotatedTypeMetadata
 
 class PostgresCondition : Condition {
     override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean =
-        context.environment.getProperty("spring.r2dbc.url")?.startsWith("r2dbc:postgres:") ?: false
+        context.environment.getProperty("spring.r2dbc.url")?.startsWith("r2dbc:postgresql:") ?: false
 }
