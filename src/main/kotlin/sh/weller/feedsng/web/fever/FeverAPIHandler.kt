@@ -1,6 +1,7 @@
 package sh.weller.feedsng.web.fever
 
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
@@ -67,8 +68,6 @@ class FeverAPIHandler(
         }
 
         if (requestParameters.containsKey("items")) {
-            val feedItems = feedQueryService.getFeedItems(userId = userId).toList()
-
             // TODO: Instead of fetching all feed items, query only the needed ones
             val feedIdsToFilter = mutableListOf<FeedId>()
 
@@ -85,25 +84,26 @@ class FeverAPIHandler(
                 }
                 ?.also { feedIdsToFilter.addAll(it) }
 
-
-            val filteredFeedItemFlow = if (feedIdsToFilter.isNotEmpty()) {
-                feedItems
-                    .filter { it.feedItem.feedId in feedIdsToFilter }
-            } else feedItems
-
+            val feedItems = feedQueryService
+                .getFeedItems(
+                    userId = userId,
+                    feedIdList = feedIdsToFilter.takeIf { it.isNotEmpty() }?.asFlow()
+                )
+                .toList()
+                .sortedBy { it.feedItem.feedItemId.id }
 
             val itemIdFilter = requestParameters.queryIntListOrNull("with_ids")
                 ?.map { it.toFeedItemId() }
             val itemIdFiltered = if (itemIdFilter != null) {
-                filteredFeedItemFlow
+                feedItems
                     .filter { it.feedItem.feedItemId in itemIdFilter }
-            } else filteredFeedItemFlow
+            } else feedItems
 
             val sinceFilter = request.queryParamOrNull("since_id")?.toIntOrNull()
             val sinceFilteredItems = if (sinceFilter != null) {
                 itemIdFiltered
                     .filter { it.feedItem.feedItemId.id > sinceFilter }
-            } else filteredFeedItemFlow
+            } else itemIdFiltered
 
             val maxIdFilter = request.queryParamOrNull("max_id")?.toIntOrNull()
             val maxIdFilteredItems = if (maxIdFilter != null) {

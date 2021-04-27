@@ -165,7 +165,7 @@ class PostgresFeedRepository(
                 |SELECT id FROM feed_item 
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", "createdBefore", "<", before)} 
-                |ORDER BY created 
+                |ORDER BY id 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -326,7 +326,7 @@ class PostgresFeedRepository(
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
-                |ORDER BY created 
+                |ORDER BY FI.id 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -353,7 +353,7 @@ class PostgresFeedRepository(
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
-                |ORDER BY created 
+                |ORDER BY FI.id 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -381,7 +381,6 @@ class PostgresFeedRepository(
                 |WHERE FI.ID = :feed_item_id
                 |AND FI.feed_id = :feed_id
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
-                |ORDER BY created
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
