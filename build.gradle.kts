@@ -9,7 +9,7 @@ plugins {
     kotlin("jvm") version "1.5.0"
     kotlin("kapt") version "1.5.0"
     kotlin("plugin.spring") version "1.5.0-RC"
-    kotlin("plugin.serialization") version "1.5.0-RC"
+    kotlin("plugin.serialization") version "1.5.0"
 }
 
 group = "sh.weller"
