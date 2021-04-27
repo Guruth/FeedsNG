@@ -32,7 +32,9 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 @Service
-class RomeFeedFetcherServiceImpl(
+class RomeFeedFetcherServiceImpl : FeedFetcherService {
+    private val scope = CoroutineScope(Dispatchers.IO)
+
     private val client: WebClient = WebClient
         .builder()
         .clientConnector(
@@ -43,9 +45,7 @@ class RomeFeedFetcherServiceImpl(
             )
         )
         .build()
-) : FeedFetcherService {
 
-    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val feedBuilder = SyndFeedInput()
         .apply {

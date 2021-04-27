@@ -3,9 +3,9 @@ package sh.weller.feedsng.feed.impl
 import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
-import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.database.h2.H2FeedRepository
 import sh.weller.feedsng.feed.api.required.FeedFetcherService
@@ -23,7 +23,8 @@ internal class FeedUpdateServiceImplTest {
         val (cut, repo, fetcher) = getTestSetup()
 
         runBlocking {
-            val feedDetails = fetcher.fetchFeedDetails("https://blog.jetbrains.com/kotlin/feed/")
+            val feedDetails = fetcher
+                .fetchFeedDetails("https://blog.jetbrains.com/kotlin/feed/")
                 .valueOrNull()
             assertNotNull(feedDetails)
 
@@ -32,7 +33,7 @@ internal class FeedUpdateServiceImplTest {
             assertNotNull(insertedFeed)
 
             delay(2000)
-            cut.start()
+            launch { cut.start() }
             delay(2000)
 
             val updatedFeed = repo.getFeed(feedId)
@@ -49,11 +50,11 @@ internal class FeedUpdateServiceImplTest {
         val client = DatabaseClient.create(factory)
         val repo = H2FeedRepository(client)
 
-        val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
+        val fetcher = RomeFeedFetcherServiceImpl()
         val updater = FeedUpdateServiceImpl(
             repo,
             fetcher,
-            feedUpdateConfiguration = FeedUpdateConfiguration(500, 5000)
+            feedUpdateConfiguration = FeedUpdateConfiguration(100, 100)
         )
 
         return Triple(updater, repo, fetcher)

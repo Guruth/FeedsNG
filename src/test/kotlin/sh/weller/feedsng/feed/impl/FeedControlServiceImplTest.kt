@@ -4,7 +4,6 @@ import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
-import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.database.h2.H2FeedRepository
@@ -112,7 +111,7 @@ internal class FeedControlServiceImplTest {
         val client = DatabaseClient.create(factory)
         val repo = H2FeedRepository(client)
 
-        val fetcher = RomeFeedFetcherServiceImpl(WebClient.create())
+        val fetcher = RomeFeedFetcherServiceImpl()
 
         val importer = RomeOPMLFeedImportServiceImpl()
 

@@ -2,7 +2,6 @@ package sh.weller.feedsng.feed.rome
 
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.springframework.web.reactive.function.client.WebClient
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.api.required.FeedDetails
@@ -17,7 +16,7 @@ internal class RomeFeedFetcherServiceImplTest {
 
     @Test
     fun `get kotlin blog feed works`() {
-        val cut = RomeFeedFetcherServiceImpl(WebClient.create())
+        val cut = RomeFeedFetcherServiceImpl()
         runBlocking {
             val feedDetails = cut.fetchFeedDetails("https://blog.jetbrains.com/kotlin/feed/")
             expectThat(feedDetails)
@@ -35,7 +34,7 @@ internal class RomeFeedFetcherServiceImplTest {
 
     @Test
     fun `get invalid feed url returns error`() {
-        val cut = RomeFeedFetcherServiceImpl(WebClient.create())
+        val cut = RomeFeedFetcherServiceImpl()
         runBlocking {
             val feedData = cut.fetchFeedDetails("https://example.com")
             expectThat(feedData)
@@ -47,7 +46,7 @@ internal class RomeFeedFetcherServiceImplTest {
 
     @Test
     fun `get not existing feed url returns error`() {
-        val cut = RomeFeedFetcherServiceImpl(WebClient.create())
+        val cut = RomeFeedFetcherServiceImpl()
         runBlocking {
             val feedData = cut.fetchFeedDetails("https://127.0.0.1:9999/rss")
             expectThat(feedData)
