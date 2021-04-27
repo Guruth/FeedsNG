@@ -3,16 +3,17 @@ package sh.weller.feedsng.database.h2
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
+import sh.weller.feedsng.database.*
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
 @OptIn(FlowPreview::class)
-@ConditionalOnMissingBean(FeedRepository::class)
+@Conditional(H2Condition::class)
 @Repository
 class H2FeedRepository(
     private val client: DatabaseClient

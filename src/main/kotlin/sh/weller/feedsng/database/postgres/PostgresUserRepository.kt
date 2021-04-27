@@ -7,7 +7,7 @@ import org.springframework.r2dbc.core.await
 import org.springframework.r2dbc.core.awaitOne
 import org.springframework.r2dbc.core.awaitOneOrNull
 import org.springframework.stereotype.Repository
-import sh.weller.feedsng.database.h2.mapToUser
+import sh.weller.feedsng.database.mapToUser
 import sh.weller.feedsng.user.api.provided.User
 import sh.weller.feedsng.user.api.provided.UserData
 import sh.weller.feedsng.user.api.provided.UserId

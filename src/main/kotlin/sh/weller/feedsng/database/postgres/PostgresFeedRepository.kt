@@ -6,7 +6,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
-import sh.weller.feedsng.database.h2.*
+import sh.weller.feedsng.database.*
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId

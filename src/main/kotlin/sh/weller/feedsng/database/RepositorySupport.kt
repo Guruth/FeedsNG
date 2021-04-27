@@ -1,4 +1,4 @@
-package sh.weller.feedsng.database.h2
+package sh.weller.feedsng.database
 
 import io.r2dbc.spi.Row
 import org.springframework.r2dbc.core.DatabaseClient
@@ -36,34 +36,22 @@ fun DatabaseClient.GenericExecuteSpec.mapToUserFeedItem(): RowsFetchSpec<UserFee
         UserFeedItem(
             isSaved = row.getReifiedOrNull("saved") ?: false,
             isRead = row.getReifiedOrNull("read") ?: false,
-            feedItem = FeedItem(
-                feedItemId = row.getInt("id").toFeedItemId(),
-                feedId = row.getInt("feed_id").toFeedId(),
-                feedItemData = FeedItemData(
-                    title = row.getReified("title"),
-                    author = row.getReified("author"),
-                    html = row.getReified("html"),
-                    url = row.getReified("item_url"),
-                    created = row.getReified("created")
-                )
-            )
+            feedItem = row.toFeedItem()
         )
     }
 
-fun DatabaseClient.GenericExecuteSpec.mapToFeedItem(): RowsFetchSpec<FeedItem> =
-    this.map { row ->
-        FeedItem(
-            feedItemId = row.getInt("id").toFeedItemId(),
-            feedId = row.getInt("feed_id").toFeedId(),
-            feedItemData = FeedItemData(
-                title = row.getReified("title"),
-                author = row.getReified("author"),
-                html = row.getReified("html"),
-                url = row.getReified("item_url"),
-                created = row.getReified("created")
-            )
+fun Row.toFeedItem(): FeedItem =
+    FeedItem(
+        feedItemId = this.getInt("id").toFeedItemId(),
+        feedId = this.getInt("feed_id").toFeedId(),
+        feedItemData = FeedItemData(
+            title = this.getReified("title"),
+            author = this.getReified("author"),
+            html = this.getReified("html"),
+            url = this.getReified("item_url"),
+            created = this.getReified("created")
         )
-    }
+    )
 
 fun DatabaseClient.GenericExecuteSpec.mapToFeed(): RowsFetchSpec<Feed> =
     this.map { row ->
