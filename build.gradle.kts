@@ -6,7 +6,7 @@ plugins {
     id("org.springframework.boot") version "2.4.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
-    kotlin("jvm") version "1.5.0-RC"
+    kotlin("jvm") version "1.5.0"
     kotlin("kapt") version "1.5.0-RC"
     kotlin("plugin.spring") version "1.5.0-RC"
     kotlin("plugin.serialization") version "1.5.0-RC"
