@@ -131,7 +131,7 @@ private class RomeFeedDetails(
                         title = entry.getFeedItemTitle(),
                         author = entry.author,
                         html = entry.getFeedItemDescription(),
-                        url = entry.uri,
+                        url = entry.link,
                         created = entry.getFeedItemCreatedTimestamp()
                     )
                 )
