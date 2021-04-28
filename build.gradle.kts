@@ -34,7 +34,7 @@ dependencies {
 
     implementation("io.netty:netty-tcnative-boringssl-static")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.0")
 
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
