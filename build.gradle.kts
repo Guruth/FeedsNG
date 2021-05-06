@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     idea
 
@@ -42,7 +40,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0-RC")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.5.0-RC")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0-RC")
 
     implementation("com.rometools:rome:1.15.0")
@@ -59,8 +56,7 @@ dependencies {
     // testImplementation("org.springframework.boot:spring-boot-starter-test")
     // testImplementation("org.springframework.security:spring-security-test")
 
-    testImplementation(kotlin("test-common"))
-    testImplementation(kotlin("test-junit5"))
+    testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
 
     testImplementation("org.testcontainers:testcontainers:1.15.3")
@@ -72,17 +68,18 @@ dependencies {
     testImplementation("io.strikt:strikt-jvm:0.31.0")
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict", "-Xinline-classes", "-Xopt-in=kotlin.RequiresOptIn")
-        jvmTarget = "11"
+tasks {
+    compileKotlin {
+        kotlinOptions {
+            freeCompilerArgs = listOf("-Xjsr305=strict", "-Xopt-in=kotlin.RequiresOptIn")
+            jvmTarget = "11"
+        }
     }
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 }
 
