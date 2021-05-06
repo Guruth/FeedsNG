@@ -1,7 +1,7 @@
 package sh.weller.feedsng.user.impl
 
 import org.springframework.security.crypto.codec.Hex
-import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.user.api.provided.UserControlService
 import sh.weller.feedsng.user.api.provided.UserData
@@ -11,9 +11,9 @@ import java.security.MessageDigest
 
 @Service
 class UserControlServiceImpl(
-    private val repository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val repository: UserRepository
 ) : UserControlService {
+    private val passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 
     override suspend fun createUser(username: String, password: String): UserId =
         repository.insertUser(UserData(username, passwordEncoder.encode(password)))

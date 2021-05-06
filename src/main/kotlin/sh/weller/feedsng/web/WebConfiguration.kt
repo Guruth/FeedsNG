@@ -13,7 +13,6 @@ import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
 import sh.weller.feedsng.web.fever.FeverAPIHandler
 
-
 @Configuration
 @EnableWebFluxSecurity
 class WebConfiguration : WebFluxConfigurer {
@@ -27,7 +26,7 @@ class WebConfiguration : WebFluxConfigurer {
             cors { disable() }
             csrf { disable() }
             httpBasic { disable() }
-            formLogin { disable() }
+            formLogin { }
         }
     }
 

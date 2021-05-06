@@ -21,12 +21,8 @@ dependencies {
 
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
-    implementation("org.springframework.boot:spring-boot-starter-webflux") {
-        exclude("com.fasterxml.jackson.core")
-        exclude("com.fasterxml.jackson.datatype")
-        exclude("com.fasterxml.jackson.module")
-    }
-    // implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
 

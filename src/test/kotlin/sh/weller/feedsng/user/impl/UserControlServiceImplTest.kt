@@ -5,7 +5,6 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.security.crypto.codec.Hex
 import sh.weller.feedsng.database.h2.H2UserRepository
-import sh.weller.feedsng.user.UserConfiguration
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEqualTo
@@ -62,9 +61,7 @@ internal class UserControlServiceImplTest {
         val client = DatabaseClient.create(factory)
         val repo = H2UserRepository(client)
 
-        val passwordEncoder = UserConfiguration().passwordEncoder()
-
-        val cut = UserControlServiceImpl(repo, passwordEncoder)
+        val cut = UserControlServiceImpl(repo)
         return repo to cut
     }
 }
