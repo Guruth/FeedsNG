@@ -12,6 +12,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
 import sh.weller.feedsng.web.fever.FeverAPIHandler
+import sh.weller.feedsng.web.ui.MustacheHandler
 
 @Configuration
 @EnableWebFluxSecurity
@@ -22,6 +23,7 @@ class WebConfiguration : WebFluxConfigurer {
         return http {
             authorizeExchange {
                 authorize("/api/fever.php", permitAll)
+                authorize("/index.html", permitAll)
             }
             cors { disable() }
             csrf { disable() }
@@ -40,4 +42,7 @@ class WebConfiguration : WebFluxConfigurer {
 
     @Bean
     fun feverAPIRouter(feverAPI: FeverAPIHandler): RouterFunction<*> = feverAPI.getRouterFunction()
+
+    @Bean
+    fun mustacheHandlerRoutee(mustacheHandler: MustacheHandler): RouterFunction<*> = mustacheHandler.getRouterFunction()
 }
