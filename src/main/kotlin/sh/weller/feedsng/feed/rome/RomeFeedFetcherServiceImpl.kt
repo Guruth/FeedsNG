@@ -6,6 +6,8 @@ import com.rometools.rome.io.SyndFeedInput
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -14,7 +16,7 @@ import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToFlow
+import org.springframework.web.reactive.function.client.toEntityFlux
 import reactor.netty.http.client.HttpClient
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Result
@@ -27,6 +29,7 @@ import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import java.io.InputStreamReader
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
+import java.nio.charset.Charset
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -55,53 +58,64 @@ class RomeFeedFetcherServiceImpl : FeedFetcherService {
         }
 
     override suspend fun fetchFeedDetails(feedUrl: String): Result<FeedDetails, String> {
-        val flow = getFeedBytes(feedUrl)
+        val syndFeed = getFeedBytes(feedUrl)
             .onFailure { return it }
-        val syndFeed = withContext(Dispatchers.IO) { toSyndFeedBuffers(flow, feedUrl) }
+            .toSyndFeed(feedUrl)
             .onFailure { return it }
 
         return RomeFeedDetails(feedUrl, syndFeed).asSuccess()
     }
 
-    suspend fun getFeedBytes(feedUrl: String): Result<Flow<DataBuffer>, String> {
+    private suspend fun getFeedBytes(feedUrl: String): Result<WebclientResponse, String> {
         return try {
-            client
+            val responseEntity = client
                 .get()
                 .uri(feedUrl)
                 .retrieve()
-                .bodyToFlow<DataBuffer>()
-                .asSuccess()
+                .toEntityFlux<DataBuffer>()
+                .awaitSingle()
+
+            if (responseEntity.statusCode.is2xxSuccessful) {
+                val body = responseEntity.body
+                    ?: return Failure("Empty response")
+                return WebclientResponse(
+                    body.asFlow(),
+                    responseEntity.headers.contentType?.charset
+                ).asSuccess()
+            }
+            return Failure("Could not fetch feed $feedUrl: ${responseEntity.statusCode}")
         } catch (e: Exception) {
             logger.error("Could not fetch feed $feedUrl: ${e.message}")
             Failure(e.message ?: "Unknown Error")
         }
     }
 
-    private fun toSyndFeedBuffers(buffers: Flow<DataBuffer>, feedUrl: String): Result<SyndFeed, String> {
-        val pipedInputStream = PipedInputStream()
-        val pipedOutputStream = PipedOutputStream(pipedInputStream)
-        buffers
-            .onEach {
-                try {
-                    it.asInputStream().copyTo(pipedOutputStream)
-                } finally {
-                    // Make sure the databuffer is released
-                    DataBufferUtils.release(it)
+    private suspend fun WebclientResponse.toSyndFeed(feedUrl: String): Result<SyndFeed, String> =
+        withContext(Dispatchers.IO) {
+            val pipedInputStream = PipedInputStream()
+            val pipedOutputStream = PipedOutputStream(pipedInputStream)
+            this@toSyndFeed.body
+                .onEach {
+                    try {
+                        it.asInputStream().copyTo(pipedOutputStream)
+                    } finally {
+                        // Make sure the databuffer is released
+                        DataBufferUtils.release(it)
+                    }
                 }
-            }
-            .catch { logger.error("Error during databuffer copy: ${it.message}") }
-            .onCompletion { pipedOutputStream.close() }
-            .launchIn(scope)
+                .catch { logger.error("Error during databuffer copy: ${it.message}") }
+                .onCompletion { pipedOutputStream.close() }
+                .launchIn(scope)
 
-        return try {
-            InputStreamReader(pipedInputStream).use {
-                feedBuilder.build(it).asSuccess()
+            return@withContext try {
+                InputStreamReader(pipedInputStream, this@toSyndFeed.charset ?: Charsets.UTF_8).use {
+                    feedBuilder.build(it).asSuccess()
+                }
+            } catch (e: Exception) {
+                logger.error("Could not parse feed of $feedUrl: ${e.message}")
+                Failure(e.message ?: "Unknown Error")
             }
-        } catch (e: Exception) {
-            logger.error("Could not parse feed of $feedUrl: ${e.message}")
-            Failure(e.message ?: "Unknown Error")
         }
-    }
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(RomeFeedFetcherServiceImpl::class.java)
@@ -155,3 +169,9 @@ private class RomeFeedDetails(
         this.publishedDate?.toInstant() ?: this.updatedDate?.toInstant() ?: Instant.now()
 
 }
+
+
+private data class WebclientResponse(
+    val body: Flow<DataBuffer>,
+    val charset: Charset?
+)
