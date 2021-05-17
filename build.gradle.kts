@@ -22,12 +22,17 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-mustache")
+    implementation("io.netty:netty-tcnative-boringssl-static")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-logging")
 
-    implementation("io.netty:netty-tcnative-boringssl-static")
+    // UI
+    implementation("org.springframework.boot:spring-boot-starter-mustache")
+    implementation("org.webjars:webjars-locator:0.40")
+    implementation("org.webjars.npm:bulma:0.9.2")
+    implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
+
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
 
@@ -42,7 +47,7 @@ dependencies {
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
-    // developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
 
     implementation("org.springframework:spring-r2dbc")
     implementation("io.r2dbc:r2dbc-pool")
