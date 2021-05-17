@@ -28,15 +28,15 @@ dependencies {
 
     implementation("io.netty:netty-tcnative-boringssl-static")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
 
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
@@ -53,7 +53,7 @@ dependencies {
     // testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
 
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
