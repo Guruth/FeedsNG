@@ -34,7 +34,7 @@ dependencies {
     implementation(kotlin("reflect"))
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0-native-mt")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0-RC")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0-RC")
 
