@@ -36,6 +36,9 @@ import java.time.temporal.ChronoUnit
 
 @Service
 class RomeFeedFetcherServiceImpl : FeedFetcherService {
+    // TODO: Some feeds link images relative to their origin, content references a xml:base="https://kottke.org/"
+
+
     private val scope = CoroutineScope(Dispatchers.IO)
 
     private val client: WebClient = WebClient
@@ -52,9 +55,9 @@ class RomeFeedFetcherServiceImpl : FeedFetcherService {
 
     private val feedBuilder = SyndFeedInput()
         .apply {
-            isAllowDoctypes = true
+            isAllowDoctypes = false
             xmlHealerOn = true
-            isPreserveWireFeed = false
+            isPreserveWireFeed = true
         }
 
     override suspend fun fetchFeedDetails(feedUrl: String): Result<FeedDetails, String> {
@@ -144,7 +147,7 @@ private class RomeFeedDetails(
                     FeedItemData(
                         title = entry.getFeedItemTitle(),
                         author = entry.author,
-                        html = entry.getFeedItemDescription(),
+                        html = entry.getFeedItemContent(),
                         url = entry.link,
                         created = entry.getFeedItemCreatedTimestamp()
                     )
@@ -162,8 +165,8 @@ private class RomeFeedDetails(
             this.title
         }
 
-    private fun SyndEntry.getFeedItemDescription(): String =
-        this.description?.value ?: ""
+    private fun SyndEntry.getFeedItemContent(): String =
+        this.contents.firstOrNull()?.value ?: this.description?.value ?: ""
 
     private fun SyndEntry.getFeedItemCreatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: this.updatedDate?.toInstant() ?: Instant.now()
