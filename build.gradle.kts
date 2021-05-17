@@ -53,12 +53,12 @@ dependencies {
     // testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
 
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0-RC")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
 
     testImplementation("io.strikt:strikt-core:0.31.0")
     testImplementation("io.strikt:strikt-jvm:0.31.0")
