@@ -9,25 +9,31 @@ import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.security.config.web.server.AuthorizeExchangeDsl
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.api.provided.UserId
 import sh.weller.feedsng.user.api.provided.UserQueryService
+import sh.weller.feedsng.web.support.WebRequestHandler
 import java.time.Instant
 import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
+@OptIn(ExperimentalTime::class)
 @Controller
 class FeverAPIHandler(
     private val feedControlService: FeedControlService,
     private val feedQueryService: FeedQueryService,
     private val userQueryService: UserQueryService
-) {
+) : WebRequestHandler {
 
-    @OptIn(ExperimentalTime::class)
-    fun getRouterFunction(): RouterFunction<ServerResponse> =
+    override fun AuthorizeExchangeDsl.addAuthorization() {
+        authorize("/api/fever.php", permitAll)
+    }
+
+    override fun getRouterFunction(): RouterFunction<ServerResponse> =
         coRouter {
             path("/api/fever.php") {
                 val response: ServerResponse
