@@ -32,6 +32,7 @@ value class FeedId(val id: Int) {
 
 fun Int.toFeedId(): FeedId = FeedId(this)
 fun Int?.toFeedId(): FeedId? = this?.toFeedId()
+fun String?.toFeedIdOrNull(): FeedId? = this?.toIntOrNull()?.toFeedId()
 
 data class Feed(
     val feedId: FeedId,
