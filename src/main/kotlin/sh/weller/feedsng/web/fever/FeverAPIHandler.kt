@@ -10,6 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Controller
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.user.api.provided.UserId
@@ -29,7 +30,7 @@ class FeverAPIHandler(
     @OptIn(ExperimentalTime::class)
     fun getRouterFunction(): RouterFunction<ServerResponse> =
         coRouter {
-            path("/api/fever.php") {
+            path(feverAPIPath) {
                 val response: ServerResponse
                 val duration = measureTime {
                     response = feverHandler(it)
@@ -43,16 +44,19 @@ class FeverAPIHandler(
         val requestParameters = request.getFeverRequestParameters().toMutableMap()
         val apiKeyHash = requestParameters["api_key"]
             ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
-        val userId = userQueryService.getUserByFeverAPIKey(apiKeyHash)?.userId
+        val user = userQueryService.getUserByFeverAPIKey(apiKeyHash)
             ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
+        if (user.isDisabled()) {
+            return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
+        }
 
         requestParameters.remove("api_key")
         logger.debug("Fever request parameters: $requestParameters. ")
 
         val responseBuilder = FeverResponse.Builder()
 
-        val groups = feedQueryService.getGroups(userId).toList()
-        val feeds = feedQueryService.getFeeds(userId).toList()
+        val groups = feedQueryService.getGroups(user.userId).toList()
+        val feeds = feedQueryService.getFeeds(user.userId).toList()
 
         responseBuilder.lastRefreshedOnTime(feeds.maxOfOrNull { it.feedData.lastUpdated })
 
@@ -86,7 +90,7 @@ class FeverAPIHandler(
 
             val feedItems = feedQueryService
                 .getFeedItems(
-                    userId = userId,
+                    userId = user.userId,
                     feedIdList = feedIdsToFilter.takeIf { it.isNotEmpty() }
                 )
                 .toList()
@@ -114,24 +118,24 @@ class FeverAPIHandler(
         }
 
         if (requestParameters.contains("unread_item_ids")) {
-            val unreadIds = getUnreadItemIds(userId)
+            val unreadIds = getUnreadItemIds(user.userId)
             responseBuilder.unreadItemIds(unreadIds)
         }
 
         if (requestParameters.contains("saved_item_ids")) {
-            val savedIds = getSavedItemIds(userId)
+            val savedIds = getSavedItemIds(user.userId)
             responseBuilder.savedItemIds(savedIds)
         }
 
         if (requestParameters["unread_recently_read"] == "1") {
             feedQueryService
                 .getFeedItemsIds(
-                    userId,
+                    user.userId,
                     filter = FeedItemFilter.READ,
                     since = Instant.now().minusSeconds(30)
                 )
                 .onEach {
-                    feedControlService.updateFeedItem(userId, it, FeedUpdateAction.UNREAD)
+                    feedControlService.updateFeedItem(user.userId, it, FeedUpdateAction.UNREAD)
                 }
         }
 
@@ -145,14 +149,14 @@ class FeverAPIHandler(
                 when (requestParameters["mark"]) {
                     "item" ->
                         feedControlService.updateFeedItem(
-                            userId,
+                            user.userId,
                             id.toFeedItemId(),
                             action
                         )
 
                     "feed" ->
                         feedControlService.updateFeed(
-                            userId,
+                            user.userId,
                             id.toFeedId(),
                             action,
                             before
@@ -161,10 +165,10 @@ class FeverAPIHandler(
                     "group" -> {
                         if (id == 0) {
                             // 0 is the group with all feeds
-                            feeds.updateAllFeeds(userId, action, before)
+                            feeds.updateAllFeeds(user.userId, action, before)
                         } else {
                             feedControlService.updateGroup(
-                                userId,
+                                user.userId,
                                 id.toGroupId(),
                                 action,
                                 before
@@ -176,11 +180,11 @@ class FeverAPIHandler(
 
             when (action) {
                 FeedUpdateAction.READ, FeedUpdateAction.UNREAD -> {
-                    val unreadIds = getUnreadItemIds(userId)
+                    val unreadIds = getUnreadItemIds(user.userId)
                     responseBuilder.unreadItemIds(unreadIds)
                 }
                 FeedUpdateAction.SAVE, FeedUpdateAction.UNSAVE -> {
-                    val savedIds = getSavedItemIds(userId)
+                    val savedIds = getSavedItemIds(user.userId)
                     responseBuilder.savedItemIds(savedIds)
                 }
             }
@@ -223,23 +227,17 @@ class FeverAPIHandler(
 
     companion object {
         const val FEVER_API_VERSION = 3
+        const val feverAPIPath = "/api/fever.php"
         private val logger: Logger = LoggerFactory.getLogger(FeverAPIHandler::class.java)
     }
 
 }
 
 private suspend fun ServerRequest.getFeverRequestParameters(): Map<String, String> {
-    val requestParameters: MutableMap<String, String> = this.queryParams().toSingleValueMap()
-    val bodyMap = this.awaitBodyOrNull<String>()
-        ?.split("&")
-        ?.associate {
-            val values = it.split("=")
-            values.first() to values.last()
-        }
-    if (bodyMap != null) {
-        requestParameters.putAll(bodyMap)
-    }
-    return requestParameters
+    val feverParameters = LinkedMultiValueMap<String, String>()
+    feverParameters.addAll(this.queryParams())
+    feverParameters.addAll(this.awaitFormData())
+    return feverParameters.toSingleValueMap()
 }
 
 private fun Map<String, String>.queryIntListOrNull(parameterName: String): List<Int>? =

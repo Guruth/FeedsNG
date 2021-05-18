@@ -49,8 +49,8 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
-    // testImplementation("org.springframework.boot:spring-boot-starter-test")
-    // testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
@@ -71,7 +71,13 @@ tasks {
             jvmTarget = "11"
         }
     }
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
     test {
+
         useJUnitPlatform()
         testLogging {
             events("passed", "skipped", "failed")
