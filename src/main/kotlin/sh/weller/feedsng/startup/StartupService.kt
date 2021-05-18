@@ -28,8 +28,8 @@ class StartupService(
             val userName = "FeedsNG"
             if (userQueryService.getUserByUsername(userName) == null) {
                 val userId = userControlService.createUser(userName, "Some.Random.Password!")
-                val feverAPIKey = userControlService.enableFeverAPI(userId)
-                logger.info("Created User $userName - Fever API Key: $feverAPIKey")
+                val feverAPIKey = userControlService.enableFeverAPI(userId) as Success<String>
+                logger.info("Created User $userName - Fever API Key: ${feverAPIKey.value}")
 
                 val startupOPMLContent = startupOPML.inputStream.reader().readText()
                 when (val importResult = feedControlService.importFromOPML(userId, startupOPMLContent)) {

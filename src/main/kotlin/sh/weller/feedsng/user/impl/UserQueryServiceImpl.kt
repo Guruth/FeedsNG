@@ -2,6 +2,7 @@ package sh.weller.feedsng.user.impl
 
 import org.springframework.stereotype.Service
 import sh.weller.feedsng.user.api.provided.User
+import sh.weller.feedsng.user.api.provided.UserId
 import sh.weller.feedsng.user.api.provided.UserQueryService
 import sh.weller.feedsng.user.api.required.UserRepository
 
@@ -15,4 +16,7 @@ class UserQueryServiceImpl(
 
     override suspend fun getUserByUsername(username: String): User? =
         userRepository.getByUsername(username)
+
+    override suspend fun getUserByUserId(userId: UserId): User? =
+        userRepository.getByUserId(userId)
 }

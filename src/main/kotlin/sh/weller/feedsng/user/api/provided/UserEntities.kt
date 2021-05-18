@@ -13,7 +13,9 @@ fun Int?.toUserId() = this?.toUserId()
 data class User(
     val userId: UserId,
     val userData: UserData
-)
+) {
+    fun isDisabled(): Boolean = userData.isLocked || userData.isEnabled.not()
+}
 
 data class UserData(
     val username: String,
