@@ -6,6 +6,8 @@ import org.springframework.core.type.AnnotatedTypeMetadata
 
 
 class H2Condition : Condition {
-    override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean =
-        context.environment.getProperty("spring.r2dbc.url")?.startsWith("r2dbc:h2:") ?: false
+    override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean {
+        val r2dbcURL = context.environment.getProperty("spring.r2dbc.url")
+        return r2dbcURL == null || r2dbcURL.startsWith("r2dbc:h2:")
+    }
 }

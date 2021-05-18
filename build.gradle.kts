@@ -34,15 +34,15 @@ dependencies {
     implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
 
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0-RC")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
 
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
@@ -55,16 +55,16 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
-    // testImplementation("org.springframework.boot:spring-boot-starter-test")
-    // testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+//    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
 
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0-RC")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
 
     testImplementation("io.strikt:strikt-core:0.31.0")
     testImplementation("io.strikt:strikt-jvm:0.31.0")
@@ -77,7 +77,13 @@ tasks {
             jvmTarget = "11"
         }
     }
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
     test {
+
         useJUnitPlatform()
         testLogging {
             events("passed", "skipped", "failed")
