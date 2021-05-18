@@ -4,8 +4,11 @@ import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.security.crypto.codec.Hex
+import sh.weller.feedsng.common.Success
+import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.database.h2.H2UserRepository
 import strikt.api.expectThat
+import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEqualTo
 import strikt.assertions.isNotNull
@@ -36,7 +39,9 @@ internal class UserControlServiceImplTest {
                 }
 
             val generatedAPIKey = cut.enableFeverAPI(userId)
-            val feverApiAuth = calcMD5Hash("$testUsername:$generatedAPIKey")
+            expectThat(generatedAPIKey)
+                .isA<Success<String>>()
+            val feverApiAuth = calcMD5Hash("$testUsername:${generatedAPIKey.valueOrNull()}")
 
             val storedUser = repo.getFeverAPIAuthentication(feverApiAuth)
             expectThat(storedUser)
