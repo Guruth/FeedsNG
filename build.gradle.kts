@@ -33,7 +33,6 @@ dependencies {
     implementation("org.webjars.npm:bulma:0.9.2")
     implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
 
-
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
     implementation(kotlin("stdlib"))
@@ -59,7 +58,7 @@ dependencies {
 //    testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter")
 
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
