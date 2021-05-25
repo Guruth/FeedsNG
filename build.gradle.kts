@@ -5,7 +5,7 @@ plugins {
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
     kotlin("jvm") version "1.5.10"
-    kotlin("kapt") version "1.5.0"
+    kotlin("kapt") version "1.5.10"
     kotlin("plugin.spring") version "1.5.0"
     kotlin("plugin.serialization") version "1.5.0"
 }
