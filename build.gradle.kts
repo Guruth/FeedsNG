@@ -38,6 +38,8 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
 
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
+
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
