@@ -22,7 +22,6 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
 
@@ -43,7 +42,8 @@ dependencies {
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
-    // developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
 
     implementation("org.springframework:spring-r2dbc")
     implementation("io.r2dbc:r2dbc-pool")
