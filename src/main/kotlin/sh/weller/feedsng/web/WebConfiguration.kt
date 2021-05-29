@@ -9,9 +9,14 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity
 import org.springframework.security.config.web.server.invoke
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler
+import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler
+import org.springframework.security.web.server.authentication.logout.ServerLogoutSuccessHandler
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
 import sh.weller.feedsng.web.support.WebRequestHandler
+import java.net.URI
+
 
 @Configuration
 @EnableWebFluxSecurity
@@ -29,10 +34,24 @@ class WebConfiguration : WebFluxConfigurer {
                 }
             }
             cors { disable() }
-            csrf { disable() }
+            csrf {
+            }
             httpBasic { disable() }
-            formLogin { }
+            formLogin {
+                loginPage = "/login"
+                authenticationSuccessHandler = RedirectServerAuthenticationSuccessHandler("/reader")
+            }
+            logout {
+                logoutUrl = "/logout"
+                logoutSuccessHandler = logoutSuccessHandler("/")
+            }
         }
+    }
+
+    fun logoutSuccessHandler(uri: String): ServerLogoutSuccessHandler {
+        val successHandler = RedirectServerLogoutSuccessHandler()
+        successHandler.setLogoutSuccessUrl(URI.create(uri))
+        return successHandler
     }
 
     override fun configureHttpMessageCodecs(configurer: ServerCodecConfigurer) {
@@ -50,3 +69,4 @@ class WebConfiguration : WebFluxConfigurer {
             .reduce { acc, routerFunction -> acc.and(routerFunction) }
 
 }
+

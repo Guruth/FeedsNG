@@ -6,24 +6,24 @@
         <div class="navbar-start">
         </div>
         <div class="navbar-end">
-            <!--            <div class="navbar-item">-->
-                <!--                {{#isLoggedIn}}-->
-            <!--                    <div class="buttons">-->
-            <!--                        <a>Account</a>-->
-            <!--                        <a>Log out</a>-->
-            <!--                    </div>-->
-                <!--                {{/isLoggedIn}}-->
-                <!--                {{^isLoggedIn}}-->
-            <!--                    <div class="buttons">-->
-            <!--                        <a class="button is-primary">-->
-            <!--                            <strong>Sign up</strong>-->
-            <!--                        </a>-->
-            <!--                        <a class="button is-light">-->
-            <!--                            Log in-->
-            <!--                        </a>-->
-            <!--                    </div>-->
-                <!--                {{/isLoggedIn}}-->
-            <!--            </div>-->
+            <div class="navbar-item">
+                {{#username}}
+                    <div class="buttons">
+                        <a>{{username}}</a>
+                        <a>Log out</a>
+                    </div>
+                {{/username}}
+                {{^username}}
+                    <div class="buttons">
+                        <a class="button is-primary">
+                            <strong>Sign up</strong>
+                        </a>
+                        <a class="button is-light" href="/login">
+                            Log in
+                        </a>
+                    </div>
+                {{/username}}
+            </div>
         </div>
     </div>
 </nav>

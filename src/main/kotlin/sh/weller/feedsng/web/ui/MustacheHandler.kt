@@ -6,8 +6,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.serialization.Serializable
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.common.onFailure
@@ -25,6 +28,7 @@ class MustacheHandler(
 
     override fun AuthorizeExchangeDsl.addAuthorization() {
         authorize("/", permitAll)
+        authorize("/login", permitAll)
         authorize("/reader/**", authenticated)
         authorize("/feed", authenticated)
         authorize("/webjars/**", permitAll)
@@ -39,8 +43,12 @@ class MustacheHandler(
         }
 
     private suspend fun getWelcomePage(request: ServerRequest): ServerResponse {
-        return ServerResponse.ok().render("sites/welcome").awaitSingle()
+        return ServerResponse.ok()
+            .render("sites/welcome")
+            .awaitSingle()
     }
+
+
 
     private suspend fun getReaderPage(request: ServerRequest): ServerResponse = coroutineScope {
         val username = request.principal().awaitSingle().name
@@ -67,8 +75,13 @@ class MustacheHandler(
                 .toList()
         }
 
+        val model = mapOf(
+            "feeds" to feeds.await(),
+            "feedItems" to feedItems.await()
+        )
+
         return@coroutineScope ServerResponse.ok()
-            .render("sites/reader", mapOf("feeds" to feeds.await(), "feedItems" to feedItems.await())).awaitSingle()
+            .render("sites/reader", model).awaitSingle()
     }
 
     private suspend fun addFeed(request: ServerRequest): ServerResponse {
