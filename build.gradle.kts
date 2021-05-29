@@ -19,6 +19,19 @@ repositories {
 
 dependencies {
 
+    // Kotlin
+    implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
+
+
+    // General Spring & Web
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -26,38 +39,33 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("io.netty:netty-tcnative-boringssl-static")
 
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+
     // UI
     implementation("org.springframework.boot:spring-boot-starter-mustache")
     implementation("org.webjars:webjars-locator:0.40")
     implementation("org.webjars.npm:bulma:0.9.2")
     implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
-
-    implementation(kotlin("stdlib"))
-    implementation(kotlin("reflect"))
-
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
-
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
-
+    // RSS
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
-
+    // Database
     implementation("org.springframework:spring-r2dbc")
     implementation("io.r2dbc:r2dbc-pool")
     implementation("io.r2dbc:r2dbc-h2")
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
+    // Dev Dependencies
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
+
+
+    // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-//    testImplementation("org.springframework.security:spring-security-test")
+    // testImplementation("org.springframework.security:spring-security-test")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter")
