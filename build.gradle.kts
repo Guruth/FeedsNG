@@ -22,10 +22,9 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("io.netty:netty-tcnative-boringssl-static")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-logging")
+    implementation("io.netty:netty-tcnative-boringssl-static")
 
     // UI
     implementation("org.springframework.boot:spring-boot-starter-mustache")
@@ -43,10 +42,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
 
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
+
     implementation("com.rometools:rome:1.15.0")
     implementation("com.rometools:rome-opml:1.15.0")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
+    developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
 
     implementation("org.springframework:spring-r2dbc")
     implementation("io.r2dbc:r2dbc-pool")
