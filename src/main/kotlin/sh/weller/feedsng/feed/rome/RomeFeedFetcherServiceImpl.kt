@@ -90,32 +90,49 @@ class RomeFeedFetcherServiceImpl : FeedFetcherService {
         }
     }
 
-    private suspend fun WebclientResponse.toSyndFeed(feedUrl: String): Result<SyndFeed, String> =
-        withContext(Dispatchers.IO) {
-            val pipedInputStream = PipedInputStream()
-            val pipedOutputStream = PipedOutputStream(pipedInputStream)
-            this@toSyndFeed.body
-                .onEach {
-                    try {
-                        it.asInputStream().copyTo(pipedOutputStream)
-                    } finally {
-                        // Make sure the databuffer is released
-                        DataBufferUtils.release(it)
+    private suspend fun WebclientResponse.toSyndFeed(feedUrl: String): Result<SyndFeed, String> {
+        val pipedInputStream = PipedInputStream()
+        val pipedOutputStream: PipedOutputStream = withContext(Dispatchers.IO) {
+            runCatching {
+                PipedOutputStream(pipedInputStream)
+            }.getOrNull()
+        } ?: return Failure("Could not created PipedOutputStream for URL $feedUrl")
+
+        this@toSyndFeed.body
+            .onEach {
+                try {
+                    it.asInputStream().copyTo(pipedOutputStream)
+                } finally {
+                    // Make sure the databuffer is released
+                    DataBufferUtils.release(it)
+                }
+            }
+            .catch { logger.error("Error during databuffer copy for URL $feedUrl: ${it.message}") }
+            .onCompletion {
+                withContext(Dispatchers.IO) {
+                    runCatching {
+                        pipedOutputStream.close()
+                    }.onFailure {
+                        logger.error("Could not close PipedOutputStream for URL $feedUrl")
                     }
                 }
-                .catch { logger.error("Error during databuffer copy: ${it.message}") }
-                .onCompletion { pipedOutputStream.close() }
-                .launchIn(scope)
-
-            return@withContext try {
-                InputStreamReader(pipedInputStream, this@toSyndFeed.charset ?: Charsets.UTF_8).use {
-                    feedBuilder.build(it).asSuccess()
-                }
-            } catch (e: Exception) {
-                logger.error("Could not parse feed of $feedUrl: ${e.message}")
-                Failure(e.message ?: "Unknown Error")
             }
+            .launchIn(scope)
+
+        return try {
+            InputStreamReader(pipedInputStream, this@toSyndFeed.charset ?: Charsets.UTF_8)
+                .use {
+                    withContext(Dispatchers.IO) {
+                        feedBuilder.build(it).asSuccess()
+                    }
+                }
+
+        } catch (e: Exception) {
+            logger.error("Could not parse feed of $feedUrl: ${e.message}")
+            Failure(e.message ?: "Unknown Error")
         }
+    }
+
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(RomeFeedFetcherServiceImpl::class.java)

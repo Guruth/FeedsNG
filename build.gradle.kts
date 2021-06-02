@@ -32,6 +32,8 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 
+    implementation("io.projectreactor.tools:blockhound:1.0.6.RELEASE")
+
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
