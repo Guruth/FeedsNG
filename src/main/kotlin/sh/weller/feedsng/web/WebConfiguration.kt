@@ -3,6 +3,7 @@ package sh.weller.feedsng.web
 import kotlinx.serialization.json.Json
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.CacheControl
 import org.springframework.http.codec.ServerCodecConfigurer
 import org.springframework.http.codec.json.KotlinSerializationJsonEncoder
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
@@ -17,6 +18,7 @@ import org.springframework.security.web.server.authentication.logout.RedirectSer
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
 import org.springframework.security.web.server.csrf.CsrfToken
+import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
 import org.springframework.web.server.ServerWebExchange
@@ -26,6 +28,7 @@ import reactor.core.publisher.Mono
 import sh.weller.feedsng.web.support.WebRequestHandler
 import sh.weller.feedsng.web.ui.JsonAuthenticationWebFilter
 import java.net.URI
+import java.time.Duration
 
 
 @Configuration
@@ -92,6 +95,17 @@ class WebConfiguration : WebFluxConfigurer {
             .kotlinSerializationJsonEncoder(KotlinSerializationJsonEncoder(Json {
                 encodeDefaults = false
             }))
+    }
+
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        super.addResourceHandlers(registry)
+        registry.addResourceHandler("/webjars/**")
+            .addResourceLocations("classpath:/META-INF/resources/webjars/")
+            .setCacheControl(CacheControl.maxAge(Duration.ofDays(1)))
+
+        registry.addResourceHandler("/**")
+            .addResourceLocations("classpath:/static/")
+            .setCacheControl(CacheControl.maxAge(Duration.ofDays(1)))
     }
 
     @Bean
