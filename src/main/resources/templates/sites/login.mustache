@@ -1,36 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 {{>support/head}}
 <body>
 {{>support/nav-bar}}
-<section class="section">
-    <h1 class="title">Please log in</h1>
-    <form method="post" action="/login">
+{{#username}}
+    <section class="section">
+        <h1 class="title has-text-centered">You're already logged in</h1>
+    </section>
+{{/username}}
+{{^username}}
+    <section class="section">
+        <h1 class="title">Please log in</h1>
         <div class="field">
-            <label class="label">Name</label>
+            <label for="username" class="label">Name</label>
             <div class="control">
                 <input id="username" name="username" class="input" type="text" placeholder="Username">
             </div>
         </div>
 
         <div class="field">
-            <label class="label">Password</label>
+            <label for="password" class="label">Password</label>
             <div class="control">
-                <input id="password" name="password" class="input" type="password" placeholder="Password">
+                <input id="password" name="password" class="input" type="password" placeholder="Password"
+                       onkeyup="onEnter(event)">
             </div>
+            <p id="error-hint" class="help is-danger is-hidden">Credentials are invalid!</p>
         </div>
-
-        {{#csrfToken}}
-            <input type="hidden" name="{{parameterName}}" value="{{csrfToken}}"/>
-        {{/csrfToken}}
 
         <div class="field">
             <div class="control">
-                <button class="button" type="submit">Submit</button>
+                <button class="button" onclick="performLogin()">Submit</button>
             </div>
         </div>
-    </form>
-</section>
+    </section>
+{{/username}}
+<script>
+    function onEnter(event) {
+        if (event.keyCode === 13) {
+            this.performLogin()
+        }
+    }
+
+    async function performLogin() {
+        hideError()
+        let username = document.getElementById("username").value
+        let password = document.getElementById("password").value
+        let loginResult = await login(username, password)
+        if (!loginResult.ok) {
+            showError()
+        }
+    }
+
+    function showError() {
+        document.getElementById("error-hint").classList.remove("is-hidden")
+        document.getElementById("password").classList.add("is-danger")
+        document.getElementById("username").classList.add("is-danger")
+    }
+
+    function hideError() {
+        document.getElementById("error-hint").classList.add("is-hidden")
+        document.getElementById("password").classList.remove("is-danger")
+        document.getElementById("username").classList.remove("is-danger")
+    }
+</script>
 {{>support/footer}}
 {{>support/scripts}}
 </body>

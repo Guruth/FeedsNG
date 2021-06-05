@@ -1,0 +1,60 @@
+<script>
+
+    async function login(username, password) {
+        let result = await postJSON("/login", {"username": username, "password": password})
+        if (result.ok) {
+            window.location.replace("/reader")
+        }
+        return result
+    }
+
+    async function logout() {
+        let result = await post("/logout")
+        if (result.ok) {
+            window.location.replace("/")
+        }
+        return result
+    }
+
+    async function post(url) {
+        let xsrfToken = getCookie("XSRF-TOKEN")
+        return fetch(url, {
+            method: "POST",
+            headers: {
+                "X-XSRF-TOKEN": xsrfToken
+            }
+        })
+    }
+
+    async function postJSON(url, data) {
+        return makeFetch(url, JSON.stringify(data), "application/json; charset=UTF-8", "POST")
+    }
+
+    async function putJSON(url, data) {
+        return makeFetch(url, JSON.stringify(data), "application/json; charset=UTF-8", "PUT")
+    }
+
+    async function postFormData(url, data) {
+        return makeFetch(url, data, "multipart/form-data", "POST")
+    }
+
+    async function makeFetch(url, data, contentType, method) {
+        let xsrfToken = getCookie("XSRF-TOKEN")
+
+        return fetch(url, {
+            method: method,
+            body: data,
+            headers: {
+                "Content-type": contentType,
+                "X-XSRF-TOKEN": xsrfToken
+            }
+        })
+    }
+
+    function getCookie(name) {
+        return document.cookie.split('; ')
+                .find(row => row.startsWith(`${name}=`))
+                .split('=')[1];
+    }
+
+</script>
