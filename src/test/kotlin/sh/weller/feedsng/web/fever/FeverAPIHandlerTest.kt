@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.reactive.function.BodyInserters
@@ -17,14 +18,22 @@ import strikt.assertions.*
 import java.util.*
 import kotlin.test.Test
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 class FeverAPIHandlerTest(
     @Autowired private val feedControlService: FeedControlService,
     @Autowired private val userControlService: UserControlService,
     @Autowired private val userQueryService: UserQueryService,
-    @Autowired private val webTestClient: WebTestClient
+    @LocalServerPort private val serverPort: Int
 ) {
+
+    private val webTestClient = WebTestClient
+        .bindToServer()
+        .baseUrl("http://localhost:$serverPort")
+        .codecs {
+            it.defaultCodecs().maxInMemorySize(-1)
+        }
+        .build()
 
     private suspend fun getUserAndApiKey(): Pair<User, String> {
         val userId = userControlService.createUser(UUID.randomUUID().toString(), "TestPassword")
