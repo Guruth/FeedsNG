@@ -1,0 +1,53 @@
+<div class="column">
+    {{#feedItems}}
+        <div class="card mx-2 mb-2">
+            <header class="card-header" onclick="toggleVisibility({{-index}})">
+                <p class="card-header-title"><a href="{{url}}">{{title}}</a></p>
+                <span id="show-content-{{-index}}" class="card-header-icon">
+                  <span class="icon">
+                    <i class="fas fa-angle-down" aria-hidden="true"></i>
+                  </span>
+                </span>
+                <span id="hide-content-{{-index}}" class="card-header-icon is-hidden">
+                  <span class="icon">
+                    <i class="fas fa-angle-up" aria-hidden="true"></i>
+                  </span>
+                </span>
+            </header>
+            <div id="content-{{-index}}" class="is-hidden">
+                <div class="card-content">
+                    <div class="content">
+                        {{&html}}
+                    </div>
+                </div>
+                <!--                <footer class="card-footer">-->
+                <!--                    <a class="card-footer-item">Favorite</a>-->
+                <!--                    <a class="card-footer-item">Unread</a>-->
+                <!--                </footer>-->
+            </div>
+        </div>
+    {{/feedItems}}
+    {{^feedItems}}
+        <div class="card mx-2 mb-2">
+            <header class="card-header">
+                <p class="card-header-title">No articles!</p>
+            </header>
+        </div>
+    {{/feedItems}}
+</div>
+
+<script>
+
+    function toggleVisibility(index) {
+        if (document.getElementById("content-" + index).classList.contains("is-hidden")) {
+            document.getElementById("content-" + index).classList.remove("is-hidden")
+            document.getElementById("show-content-" + index).classList.add("is-hidden")
+            document.getElementById("hide-content-" + index).classList.remove("is-hidden")
+        } else {
+            document.getElementById("content-" + index).classList.add("is-hidden")
+            document.getElementById("show-content-" + index).classList.remove("is-hidden")
+            document.getElementById("hide-content-" + index).classList.add("is-hidden")
+        }
+    }
+</script>
+

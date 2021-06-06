@@ -10,7 +10,10 @@ suspend fun ServerRequest.getModelMap(): MutableMap<String, Any> {
 }
 
 private suspend fun ServerRequest.addUsernameIfPresent(modelMap: MutableMap<String, Any>) {
-    val principal = principal().awaitSingleOrNull()
+    val username = getUsernameOrNull()
         ?: return
-    modelMap["username"] = principal.name
+    modelMap["username"] = username
 }
+
+suspend fun ServerRequest.getUsernameOrNull(): String? =
+    principal().awaitSingleOrNull()?.name

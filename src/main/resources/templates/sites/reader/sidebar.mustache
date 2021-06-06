@@ -1,0 +1,16 @@
+<div class="column m-2 is-align-content-stretch is-one-fifth-desktop ">
+    <aside class="menu">
+        <p class="menu-label">Feeds
+            <!--            <span onclick="openAddFeedModal()" class="icon"><i class="fas fa-plus-circle"></i></span>-->
+        </p>
+        <ul class="menu-list">
+            {{#feeds}}
+                <li class="is-size-7">
+                    <a href="/reader/{{feedId}}"
+                        {{#isSelected}}class="is-active" {{/isSelected}}
+                    >{{name}}</a>
+                </li>
+            {{/feeds}}
+        </ul>
+    </aside>
+</div>

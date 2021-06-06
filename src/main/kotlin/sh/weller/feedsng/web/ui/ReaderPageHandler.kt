@@ -4,13 +4,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.serialization.Serializable
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers.pathMatchers
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.common.onFailure
@@ -42,12 +40,12 @@ class MustacheHandler(
 
 
     private suspend fun getReaderPage(request: ServerRequest): ServerResponse = coroutineScope {
-        val username = request.principal().awaitSingle().name
+        val username = request.getUsernameOrNull()
+            ?: return@coroutineScope ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
         val user = userQueryService.getUserByUsername(username)
             ?: return@coroutineScope ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
 
         val selectedFeedId = request.pathVariables()["feedId"].toFeedIdOrNull()
-
         val feeds = async {
             feedQueryService
                 .getFeeds(user.userId)
@@ -61,28 +59,29 @@ class MustacheHandler(
 
         val feedItems = async {
             feedQueryService
-                .getFeedItems(user.userId, selectedFeedId)
+                .getFeedItems(user.userId, selectedFeedId, limit = 10)
                 .map { it.toFeedItemModel() }
                 .toList()
         }
 
-        val model = mapOf(
-            "feeds" to feeds.await(),
-            "feedItems" to feedItems.await()
-        )
+        val modelMap = request.getModelMap()
+        modelMap["feeds"] = feeds.await()
+        modelMap["feedItems"] = feedItems.await()
 
         return@coroutineScope ServerResponse.ok()
-            .render("sites/reader", model).awaitSingle()
+            .renderAndAwait("sites/reader/reader", modelMap)
     }
 
     private suspend fun addFeed(request: ServerRequest): ServerResponse {
-        val username = request.principal().awaitSingle().name
+        val username = request.getUsernameOrNull()
+            ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
         val user = userQueryService.getUserByUsername(username)
             ?: return ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
 
-        val feedUrlModel = request.awaitBody<AddFeedModel>()
+        val addFeedModel = request.awaitBodyOrNull<AddFeedModel>()
+            ?: return ServerResponse.badRequest().buildAndAwait()
 
-        val result = feedControlService.addFeed(user.userId, feedUrlModel.feedUrl)
+        val result = feedControlService.addFeed(user.userId, addFeedModel.feedUrl)
             .onFailure {
                 return ServerResponse.badRequest().bodyValueAndAwait(it.reason)
             }
