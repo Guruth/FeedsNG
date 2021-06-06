@@ -159,7 +159,7 @@ class H2FeedRepository(
                 |SELECT id FROM feed_item 
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", "createdBefore", "<", before)} 
-                |ORDER BY id 
+                |ORDER BY id DESC
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -191,7 +191,7 @@ class H2FeedRepository(
                 |UG.id, UG.name, UGF.feed_id
                 |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
                 |WHERE UG.user_id = :user_id 
-                |ORDER BY UG.id
+                |ORDER BY UG.id DESC
                 |""".trimMargin()
             )
             .bind("user_id", userId.id)
@@ -323,7 +323,7 @@ class H2FeedRepository(
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
-                |ORDER BY FI.id
+                |ORDER BY FI.id DESC
                 |${limitIfNotNull(limit)}
             """.trimMargin()
             )
@@ -351,7 +351,7 @@ class H2FeedRepository(
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
-                |ORDER BY FI.id 
+                |ORDER BY FI.id DESC
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -379,7 +379,7 @@ class H2FeedRepository(
                 |WHERE FI.ID = :feed_item_id
                 |AND FI.feed_id = :feed_id
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
-                |ORDER BY FI.id
+                |ORDER BY FI.id DESC
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
