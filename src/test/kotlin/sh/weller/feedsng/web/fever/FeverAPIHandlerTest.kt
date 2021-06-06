@@ -47,7 +47,7 @@ class FeverAPIHandlerTest(
 
     @Test
     fun `Valid authorization required`(): Unit = runBlocking {
-        val (user, feverApiKey) = getUserAndApiKey()
+        val (_, feverApiKey) = getUserAndApiKey()
         webTestClient
             .post()
             .uri(FeverAPIHandler.feverAPIPath)
