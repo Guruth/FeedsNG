@@ -50,5 +50,4 @@ suspend fun FeedQueryService.getFeedItems(
     filter: FeedItemFilter? = null,
     since: Instant? = null,
     limit: Int? = null
-) =
-    this.getFeedItems(userId, listOfNotNull(feedId), filter, since)
+) = this.getFeedItems(userId, listOfNotNull(feedId), filter, since, limit)
