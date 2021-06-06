@@ -55,7 +55,7 @@ final class JsonAuthenticationWebFilter(
 
         if (contentType.isCompatibleWith(MediaType.APPLICATION_JSON)) {
             val reader = serverCodecConfigurer.readers
-                .firstOrNull() { it.canRead(usernamePassword, MediaType.APPLICATION_JSON) }
+                .firstOrNull { it.canRead(usernamePassword, MediaType.APPLICATION_JSON) }
                 ?: return Mono.error(IllegalStateException("No JSON reader for UsernamePassword"))
             return reader.readMono(this.usernamePassword, request, emptyMap())
                 .cast(UsernamePassword::class.java)

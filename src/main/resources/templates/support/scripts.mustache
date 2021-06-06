@@ -34,10 +34,6 @@
         return makeFetch(url, JSON.stringify(data), "application/json; charset=UTF-8", "PUT")
     }
 
-    async function postFormData(url, data) {
-        return makeFetch(url, data, "multipart/form-data", "POST")
-    }
-
     async function makeFetch(url, data, contentType, method) {
         let xsrfToken = getCookie("XSRF-TOKEN")
 

@@ -18,8 +18,6 @@ class PostgresFeedRepository(
     private val client: DatabaseClient
 ) : FeedRepository {
 
-    private val scope = CoroutineScope(Dispatchers.Default)
-
     init {
         runBlocking {
             client.sql(
