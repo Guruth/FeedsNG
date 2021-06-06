@@ -27,7 +27,8 @@ interface FeedQueryService {
         userId: UserId,
         feedIdList: List<FeedId>? = null,
         filter: FeedItemFilter? = null,
-        since: Instant? = null
+        since: Instant? = null,
+        limit: Int? = null
     ): Flow<UserFeedItem>
 
 
@@ -47,6 +48,7 @@ suspend fun FeedQueryService.getFeedItems(
     userId: UserId,
     feedId: FeedId?,
     filter: FeedItemFilter? = null,
-    since: Instant? = null
+    since: Instant? = null,
+    limit: Int? = null
 ) =
     this.getFeedItems(userId, listOfNotNull(feedId), filter, since)

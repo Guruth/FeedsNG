@@ -316,7 +316,8 @@ class PostgresFeedRepository(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter?,
-        since: Instant?
+        since: Instant?,
+        limit: Int?
     ): Flow<UserFeedItem> {
         val filterQuery = filter.toWhereClause()
 
@@ -331,6 +332,7 @@ class PostgresFeedRepository(
                 |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
                 |ORDER BY FI.id 
+                |${limitIfNotNull(limit)} 
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
@@ -392,5 +394,4 @@ class PostgresFeedRepository(
             .bind("user_id", userId.id)
             .mapToUserFeedItem()
             .awaitSingleOrNull()
-
 }

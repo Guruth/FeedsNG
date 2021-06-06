@@ -202,7 +202,6 @@ internal abstract class AbstractFeedRepositoryTest {
 
             val unreadUserFeedItems =
                 cut.getAllUserFeedItemsOfFeed(user, firstFeedId, filter = FeedItemFilter.UNREAD).toList()
-
             expectThat(unreadUserFeedItems)
                 .hasSize(2)
                 .and {
@@ -220,6 +219,15 @@ internal abstract class AbstractFeedRepositoryTest {
                 ).toList()
             expectThat(readUserFeedItemsBetween)
                 .hasSize(2)
+
+            val limitedUserFeedItems =
+                cut.getAllUserFeedItemsOfFeed(
+                    user,
+                    firstFeedId,
+                    limit = 1
+                ).toList()
+            expectThat(limitedUserFeedItems)
+                .hasSize(1)
         }
     }
 

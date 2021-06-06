@@ -308,7 +308,8 @@ class H2FeedRepository(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter?,
-        since: Instant?
+        since: Instant?,
+        limit: Int?
     ): Flow<UserFeedItem> {
         val filterQuery = filter.toWhereClause()
 
@@ -322,7 +323,8 @@ class H2FeedRepository(
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
-                |ORDER BY FI.id 
+                |ORDER BY FI.id
+                |${limitIfNotNull(limit)}
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)

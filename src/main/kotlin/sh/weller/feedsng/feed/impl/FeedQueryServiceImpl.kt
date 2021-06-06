@@ -37,7 +37,8 @@ class FeedQueryServiceImpl(
         userId: UserId,
         feedIdList: List<FeedId>?,
         filter: FeedItemFilter?,
-        since: Instant?
+        since: Instant?,
+        limit: Int?
     ): Flow<UserFeedItem> {
         logger.info("Getting UserFeedItems of feeds $feedIdList with filter $filter, since $since of user $userId")
         val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
