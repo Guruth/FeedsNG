@@ -1,6 +1,5 @@
 package sh.weller.feedsng.web.ui
 
-import org.springframework.http.HttpMethod
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
 import org.springframework.stereotype.Controller
@@ -8,22 +7,22 @@ import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.web.support.WebRequestHandler
 
 @Controller
-class LoginPageHandler : WebRequestHandler {
+class WelcomePageHandler : WebRequestHandler {
     override fun AuthorizeExchangeDsl.addAuthorization() {
-        authorize("/login", permitAll)
+        authorize("/", permitAll)
+        authorize("/favicon.ico", permitAll)
+        authorize("/webjars/**", permitAll)
     }
 
-    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? =
-        PathPatternParserServerWebExchangeMatcher("/login", HttpMethod.POST)
+    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? = null
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> = coRouter {
-        GET("/login", ::getLoginPage)
+        GET("/", ::getWelcomePage)
     }
 
-    private suspend fun getLoginPage(request: ServerRequest): ServerResponse {
+    private suspend fun getWelcomePage(request: ServerRequest): ServerResponse {
         val modelMap = request.getModelMap()
         return ServerResponse.ok()
-            .renderAndAwait("sites/login", modelMap)
+            .renderAndAwait("sites/welcome", modelMap)
     }
-
 }

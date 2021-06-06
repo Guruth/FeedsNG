@@ -10,6 +10,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
+import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
 import org.springframework.stereotype.Controller
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.server.*
@@ -33,6 +34,8 @@ class FeverAPIHandler(
     override fun AuthorizeExchangeDsl.addAuthorization() {
         authorize("/api/fever.php", permitAll)
     }
+
+    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? = null
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> =
         coRouter {

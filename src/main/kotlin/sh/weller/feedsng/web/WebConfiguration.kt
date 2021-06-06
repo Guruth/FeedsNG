@@ -18,6 +18,7 @@ import org.springframework.security.web.server.authentication.logout.RedirectSer
 import org.springframework.security.web.server.context.WebSessionServerSecurityContextRepository
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
 import org.springframework.security.web.server.csrf.CsrfToken
+import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
@@ -25,8 +26,8 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
+import sh.weller.feedsng.web.support.JsonAuthenticationWebFilter
 import sh.weller.feedsng.web.support.WebRequestHandler
-import sh.weller.feedsng.web.ui.JsonAuthenticationWebFilter
 import java.net.URI
 import java.time.Duration
 
@@ -50,6 +51,8 @@ class WebConfiguration : WebFluxConfigurer {
             cors { disable() }
             csrf {
                 csrfTokenRepository = CookieServerCsrfTokenRepository.withHttpOnlyFalse()
+                requireCsrfProtectionMatcher =
+                    AndServerWebExchangeMatcher(handlers.mapNotNull { it.getCSRFPathPatternMatcher() })
             }
             logout {
                 logoutUrl = "/logout"

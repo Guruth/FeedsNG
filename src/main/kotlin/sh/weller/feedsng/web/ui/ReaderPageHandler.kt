@@ -27,27 +27,18 @@ class MustacheHandler(
 ) : WebRequestHandler {
 
     override fun AuthorizeExchangeDsl.addAuthorization() {
-        authorize("/", permitAll)
-        authorize("/login", permitAll)
         authorize("/reader/**", authenticated)
-        authorize("/feed", authenticated)
-        authorize("/webjars/**", permitAll)
     }
+
+    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? =
+        PathPatternParserServerWebExchangeMatcher("/login", HttpMethod.PUT)
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> =
         coRouter {
-            GET("/", ::getWelcomePage)
             GET("/reader", ::getReaderPage)
             GET("/reader/{feedId}", ::getReaderPage)
-            PUT("/feed", ::addFeed)
+//            PUT("/reader/feed", ::addFeed)
         }
-
-    private suspend fun getWelcomePage(request: ServerRequest): ServerResponse {
-        return ServerResponse.ok()
-            .render("sites/welcome")
-            .awaitSingle()
-    }
-
 
 
     private suspend fun getReaderPage(request: ServerRequest): ServerResponse = coroutineScope {
@@ -111,7 +102,6 @@ private fun Feed.toFeedModel(isSelected: Boolean) =
         name = feedData.name,
         isSelected
     )
-
 
 private data class FeedItemModel(
     val feedItemId: Int,
