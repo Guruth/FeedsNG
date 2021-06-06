@@ -1,4 +1,4 @@
-package sh.weller.feedsng.web.spring
+package sh.weller.feedsng.web.support
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

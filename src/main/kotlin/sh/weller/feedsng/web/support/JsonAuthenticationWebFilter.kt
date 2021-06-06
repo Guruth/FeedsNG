@@ -1,4 +1,4 @@
-package sh.weller.feedsng.web.ui
+package sh.weller.feedsng.web.support
 
 import kotlinx.serialization.Serializable
 import org.springframework.core.ResolvableType
