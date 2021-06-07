@@ -50,7 +50,8 @@ class FeedQueryServiceImpl(
                     userId,
                     feedId,
                     filter,
-                    since
+                    since,
+                    limit
                 )
             }
     }
