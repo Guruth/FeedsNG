@@ -21,7 +21,7 @@ class SpringUserDetailsServiceWrapper(
     val scope = CoroutineScope(Dispatchers.Default)
 
     override fun findByUsername(username: String): Mono<UserDetails> =
-        scope.async { userQueryService.getUserByUsername(username)?.toSpringUserDetailsWrapper() as UserDetails? }
+        scope.async { userQueryService.getUserByUsername(username)?.toSpringUserDetailsWrapper() }
             .asMono(Dispatchers.Default)
             .switchIfEmpty(Mono.error(UsernameNotFoundException("A user with name $username does not exist.")))
 }
@@ -43,9 +43,10 @@ data class SpringUserDetailsWrapper(
     override fun isCredentialsNonExpired(): Boolean = true
 }
 
-private fun User.toSpringUserDetailsWrapper() = SpringUserDetailsWrapper(
-    username = userData.username,
-    password = userData.passwordHash,
-    isEnabled = userData.isEnabled,
-    isLocked = userData.isLocked
-).also { println(it) }
+private fun User.toSpringUserDetailsWrapper(): UserDetails =
+    SpringUserDetailsWrapper(
+        username = userData.username,
+        password = userData.passwordHash,
+        isEnabled = userData.isEnabled,
+        isLocked = userData.isLocked
+    )
