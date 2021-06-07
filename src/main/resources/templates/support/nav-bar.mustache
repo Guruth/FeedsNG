@@ -1,16 +1,21 @@
-<nav class="navbar" role="navigation" aria-label="main navigation">
+<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
         <a class="navbar-item" href="/">FeedsNG</a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" onclick="toggleNavbarActive()">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
     </div>
-    <div class="navbar-menu">
+    <div id="navbar-menu" class="navbar-menu">
         <div class="navbar-start">
             <a class="navbar-item" href="/reader">Reader</a>
         </div>
         <div class="navbar-end">
             {{#username}}
-                <span class="navbar-item">Hello {{username}}!</span>
+                <a class="navbar-item">{{username}}</a>
                 <div class="navbar-item">
-                    <button class="button is-info" onclick="logout()">Log out</button>
+                    <button class="button is-warning is-outlined" onclick="logout()">Log out</button>
                 </div>
             {{/username}}
             {{^username}}
@@ -23,3 +28,8 @@
         </div>
     </div>
 </nav>
+<script>
+    function toggleNavbarActive() {
+        document.getElementById("navbar-menu").classList.toggle("is-active")
+    }
+</script>

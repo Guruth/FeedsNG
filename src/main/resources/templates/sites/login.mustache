@@ -3,21 +3,18 @@
 {{>support/head}}
 <body>
 {{>support/nav-bar}}
-{{#username}}
-    <section class="section">
-        <h1 class="title has-text-centered">You're already logged in</h1>
-    </section>
-{{/username}}
-{{^username}}
-    <section class="section">
-        <h1 class="title">Please log in</h1>
+<div class="content-wrapper section">
+    {{#username}}
+        <h2 class="title has-text-centered">You're already logged in</h2>
+    {{/username}}
+    {{^username}}
+        <h2 class="title">Please log in</h2>
         <div class="field">
             <label for="username" class="label">Name</label>
             <div class="control">
                 <input id="username" name="username" class="input" type="text" placeholder="Username">
             </div>
         </div>
-
         <div class="field">
             <label for="password" class="label">Password</label>
             <div class="control">
@@ -32,8 +29,8 @@
                 <button class="button" onclick="performLogin()">Submit</button>
             </div>
         </div>
-    </section>
-{{/username}}
+    {{/username}}
+</div>
 <script>
     function onEnter(event) {
         if (event.keyCode === 13) {
