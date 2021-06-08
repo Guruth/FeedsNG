@@ -125,7 +125,7 @@ class FeverAPIHandler(
                 ).toList()
             }
 
-            responseBuilder.items(feedItems)
+            responseBuilder.items(feedItems.sortedBy { it.feedItem.feedItemId.id })
         }
 
         if (requestParameters.contains("unread_item_ids")) {
