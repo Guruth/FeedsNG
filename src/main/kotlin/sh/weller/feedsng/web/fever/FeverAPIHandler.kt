@@ -1,8 +1,6 @@
 package sh.weller.feedsng.web.fever
 
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -199,22 +197,20 @@ class FeverAPIHandler(
 
     suspend fun getSavedItemIds(userId: UserId): List<FeedItemId> =
         feedQueryService
-            .getFeedItems(
+            .getFeedItemsIds(
                 userId = userId,
                 feedIdList = null,
                 filter = FeedItemFilter.SAVED
             )
-            .map { it.feedItem.feedItemId }
             .toList()
 
     suspend fun getUnreadItemIds(userId: UserId): List<FeedItemId> =
         feedQueryService
-            .getFeedItems(
+            .getFeedItemsIds(
                 userId = userId,
                 feedIdList = null,
                 filter = FeedItemFilter.UNREAD
             )
-            .map { it.feedItem.feedItemId }
             .toList()
 
 
