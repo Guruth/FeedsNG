@@ -41,7 +41,25 @@ interface FeedQueryService {
         filter: FeedItemFilter? = null,
         since: Instant? = null
     ): Flow<FeedItemId>
+
+
+    /**
+     * Fetches the number of items matching the [FeedItemFilter]
+     */
+    suspend fun countFeedItems(
+        userId: UserId,
+        feedId: FeedId,
+        filter: FeedItemFilter? = null
+    ): Int
 }
+
+
+suspend fun FeedQueryService.getFeedItemsIds(
+    userId: UserId,
+    feedId: FeedId?,
+    filter: FeedItemFilter? = null,
+    since: Instant? = null
+) = this.getFeedItemsIds(userId, listOfNotNull(feedId), filter, since)
 
 
 suspend fun FeedQueryService.getFeedItems(

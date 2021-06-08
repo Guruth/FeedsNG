@@ -152,7 +152,7 @@ class H2FeedRepository(
 
             }
 
-    override suspend fun getAllFeedItemIds(feedId: FeedId, before: Instant?): Flow<FeedItemId> =
+    override suspend fun getAllFeedItemIdsOfFeed(feedId: FeedId, before: Instant?): Flow<FeedItemId> =
         client
             .sql(
                 """
@@ -244,7 +244,7 @@ class H2FeedRepository(
             .await()
 
 
-    override suspend fun getAllUserFeeds(userId: UserId): Flow<Feed> {
+    override suspend fun getAllFeedsOfUser(userId: UserId): Flow<Feed> {
         val groupFeedFlow = client
             .sql(
                 """
@@ -276,7 +276,7 @@ class H2FeedRepository(
         return flowOf(groupFeedFlow, userFeedFlow).flattenConcat()
     }
 
-    override suspend fun updateUserFeedItem(
+    override suspend fun updateFeedItemOfUser(
         userId: UserId,
         feedItemIdFlow: Flow<FeedItemId>,
         updateAction: FeedUpdateAction
@@ -304,7 +304,7 @@ class H2FeedRepository(
             }.awaitAll()
     }
 
-    override suspend fun getAllUserFeedItemsOfFeed(
+    override suspend fun getAllFeedItemsOfUser(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter?,
@@ -334,7 +334,24 @@ class H2FeedRepository(
             .flow()
     }
 
-    override suspend fun getAllUserFeedItemIdsOfFeed(
+    override suspend fun countFeedItemsOfFeedOfUser(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int {
+        return client
+            .sql(
+                """
+                |SELECT CAST(COUNT(FI.id) AS Int) as count
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |WHERE FI.feed_id = :feed_id 
+                |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
+                |${filter.toWhereClause()}
+            """.trimMargin()
+            )
+            .bind("feed_id", feedId.id)
+            .bind("user_id", userId.id)
+            .map { row -> row.getInt("count") }
+            .awaitOne()
+    }
+
+    override suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter?,
@@ -369,7 +386,7 @@ class H2FeedRepository(
             else -> ""
         }
 
-    override suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem? =
+    override suspend fun getFeedItemOfUser(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem? =
         client
             .sql(
                 """

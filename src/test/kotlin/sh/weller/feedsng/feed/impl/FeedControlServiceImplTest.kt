@@ -31,7 +31,7 @@ internal class FeedControlServiceImplTest {
             expectThat(importResult)
                 .isA<Success<Unit>>()
 
-            val importedFeeds = repo.getAllUserFeeds(userId).toList()
+            val importedFeeds = repo.getAllFeedsOfUser(userId).toList()
 
             expectThat(importedFeeds)
                 .isNotEmpty()
@@ -57,7 +57,7 @@ internal class FeedControlServiceImplTest {
             val feedIdWithGroup = cut.addFeedToGroup(userId, groupId, "https://blog.jetbrains.com/feed/").valueOrNull()
             assertNotNull(feedIdWithGroup)
 
-            val feeds = repo.getAllUserFeeds(userId).toList()
+            val feeds = repo.getAllFeedsOfUser(userId).toList()
             expectThat(feeds)
                 .hasSize(2)
                 .map { it.feedId }
@@ -79,14 +79,14 @@ internal class FeedControlServiceImplTest {
             assertNotNull(feedIdWithGroup)
 
             cut.updateGroup(userId, groupId, FeedUpdateAction.SAVE)
-            val savedItems = repo.getAllUserFeedItemsOfFeed(userId, feedIdWithGroup).toList()
+            val savedItems = repo.getAllFeedItemsOfUser(userId, feedIdWithGroup).toList()
             expectThat(savedItems)
                 .isNotEmpty()
                 .map { it.isSaved }
                 .doesNotContain(false)
 
             cut.updateFeed(userId, feedIdWithoutGroup, FeedUpdateAction.READ)
-            val readItems = repo.getAllUserFeedItemsOfFeed(userId, feedIdWithoutGroup).toList()
+            val readItems = repo.getAllFeedItemsOfUser(userId, feedIdWithoutGroup).toList()
             expectThat(readItems)
                 .isNotEmpty()
                 .map { it.isRead }
@@ -95,7 +95,7 @@ internal class FeedControlServiceImplTest {
             cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, FeedUpdateAction.UNREAD)
             cut.updateFeedItem(userId, readItems.first().feedItem.feedItemId, FeedUpdateAction.SAVE)
             val unreadItem =
-                repo.getUserFeedItem(userId, readItems.first().feedItem.feedId, readItems.first().feedItem.feedItemId)
+                repo.getFeedItemOfUser(userId, readItems.first().feedItem.feedId, readItems.first().feedItem.feedItemId)
             expectThat(unreadItem)
                 .isNotNull()
                 .and {

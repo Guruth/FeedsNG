@@ -87,7 +87,7 @@ internal abstract class AbstractFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeed, insertFeedItemsIfNotExist, getFeedItems, getFeedItem, getAllFeedItemIds`() {
+    fun `insertFeed, insertFeedItemsIfNotExist, getFeedItems, getFeedItem, getAllFeedItemIdsOfFeed`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
@@ -102,12 +102,12 @@ internal abstract class AbstractFeedRepositoryTest {
                 .isNotEmpty()
                 .containsExactlyInAnyOrder(feedItemIds)
 
-            val allFeedIds = cut.getAllFeedItemIds(feedId).toList()
+            val allFeedIds = cut.getAllFeedItemIdsOfFeed(feedId).toList()
             expectThat(allFeedIds)
                 .isNotEmpty()
                 .containsExactlyInAnyOrder(feedItemIds)
 
-            val feedIdsBefore = cut.getAllFeedItemIds(feedId, before = testFeedItems.last().created).toList()
+            val feedIdsBefore = cut.getAllFeedItemIdsOfFeed(feedId, before = testFeedItems.last().created).toList()
             expectThat(feedIdsBefore)
                 .isNotEmpty()
                 .hasSize(2)
@@ -148,7 +148,7 @@ internal abstract class AbstractFeedRepositoryTest {
     }
 
     @Test
-    fun `insertFeed, addFeedToUserGroup, addFeedToUser, getAllUserFeeds`() {
+    fun `insertFeed, addFeedToUserGroup, addFeedToUser, getAllFeedsOfUser`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
@@ -163,7 +163,7 @@ internal abstract class AbstractFeedRepositoryTest {
 
             cut.insertUserGroup(user, GroupData("emptyGroup", emptyList()))
 
-            val feeds = cut.getAllUserFeeds(user).toList()
+            val feeds = cut.getAllFeedsOfUser(user).toList()
             expectThat(feeds)
                 .hasSize(2)
                 .map { it.feedData.name }
@@ -172,7 +172,7 @@ internal abstract class AbstractFeedRepositoryTest {
     }
 
     @Test
-    fun `getAllUserFeedItemsOfFeed, insertFeed, insertFeedItem, updateUserFeedItem`() {
+    fun `getAllFeedItemsOfUser, insertFeed, insertFeedItem, updateUserFeedItem`() {
         val (_, cut) = getTestSetup()
 
         runBlocking {
@@ -188,9 +188,9 @@ internal abstract class AbstractFeedRepositoryTest {
             )
 
             cut.addFeedToUser(user, firstFeedId)
-            cut.updateUserFeedItem(user, flowOf(feedItemIds.first()), FeedUpdateAction.READ)
+            cut.updateFeedItemOfUser(user, flowOf(feedItemIds.first()), FeedUpdateAction.READ)
 
-            val userFeedItems = cut.getAllUserFeedItemsOfFeed(user, firstFeedId).toList()
+            val userFeedItems = cut.getAllFeedItemsOfUser(user, firstFeedId).toList()
             expectThat(userFeedItems)
                 .hasSize(3)
                 .and {
@@ -201,7 +201,7 @@ internal abstract class AbstractFeedRepositoryTest {
                 }
 
             val unreadUserFeedItems =
-                cut.getAllUserFeedItemsOfFeed(user, firstFeedId, filter = FeedItemFilter.UNREAD).toList()
+                cut.getAllFeedItemsOfUser(user, firstFeedId, filter = FeedItemFilter.UNREAD).toList()
             expectThat(unreadUserFeedItems)
                 .hasSize(2)
                 .and {
@@ -212,7 +212,7 @@ internal abstract class AbstractFeedRepositoryTest {
                 }
 
             val readUserFeedItemsBetween =
-                cut.getAllUserFeedItemsOfFeed(
+                cut.getAllFeedItemsOfUser(
                     user,
                     firstFeedId,
                     since = testFeedItems.first().created.plusMillis(100)
@@ -221,13 +221,21 @@ internal abstract class AbstractFeedRepositoryTest {
                 .hasSize(2)
 
             val limitedUserFeedItems =
-                cut.getAllUserFeedItemsOfFeed(
+                cut.getAllFeedItemsOfUser(
                     user,
                     firstFeedId,
                     limit = 1
                 ).toList()
             expectThat(limitedUserFeedItems)
                 .hasSize(1)
+
+            val countedFeedItems = cut.countFeedItemsOfFeedOfUser(user, firstFeedId, null)
+            expectThat(countedFeedItems)
+                .isEqualTo(3)
+
+            val countedFeedItemsWitFilter = cut.countFeedItemsOfFeedOfUser(user, firstFeedId, FeedItemFilter.UNREAD)
+            expectThat(countedFeedItemsWitFilter)
+                .isEqualTo(2)
         }
     }
 

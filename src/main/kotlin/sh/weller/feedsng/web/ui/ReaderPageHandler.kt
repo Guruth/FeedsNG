@@ -1,6 +1,7 @@
 package sh.weller.feedsng.web.ui
 
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -49,12 +50,17 @@ class MustacheHandler(
         val feeds = async {
             feedQueryService
                 .getFeeds(user.userId)
-                .map {
-                    val isSelected = (it.feedId == selectedFeedId)
-                    it.toFeedModel(isSelected)
-                }
                 .toList()
-                .sortedBy { it.name }
+                .map {
+                    async {
+                        val numberOfUnreadItems = feedQueryService
+                            .countFeedItems(user.userId, it.feedId, FeedItemFilter.UNREAD)
+                        val isSelected = (it.feedId == selectedFeedId)
+                        it.toFeedModel(isSelected, numberOfUnreadItems)
+                    }
+                }
+                .awaitAll()
+                .sortedByDescending { it.numberOfUnreadItems }
         }
 
         val feedItems = async {
@@ -92,14 +98,16 @@ class MustacheHandler(
 private data class FeedModel(
     val feedId: Int,
     val name: String,
-    var isSelected: Boolean
+    val isSelected: Boolean,
+    val numberOfUnreadItems: Int
 )
 
-private fun Feed.toFeedModel(isSelected: Boolean) =
+private fun Feed.toFeedModel(isSelected: Boolean, numberOfUnreadItems: Int) =
     FeedModel(
         feedId = feedId.id,
         name = feedData.name,
-        isSelected
+        isSelected = isSelected,
+        numberOfUnreadItems = numberOfUnreadItems
     )
 
 private data class FeedItemModel(

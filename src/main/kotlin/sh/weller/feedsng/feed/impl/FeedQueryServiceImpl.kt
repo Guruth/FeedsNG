@@ -29,7 +29,7 @@ class FeedQueryServiceImpl(
 
     override suspend fun getFeeds(userId: UserId): Flow<Feed> {
         logger.info("Getting feeds of  $userId")
-        return feedRepository.getAllUserFeeds(userId)
+        return feedRepository.getAllFeedsOfUser(userId)
     }
 
     @OptIn(FlowPreview::class)
@@ -46,7 +46,7 @@ class FeedQueryServiceImpl(
 
         return feedsToFetch
             .flatMapMerge { feedId ->
-                feedRepository.getAllUserFeedItemsOfFeed(
+                feedRepository.getAllFeedItemsOfUser(
                     userId,
                     feedId,
                     filter,
@@ -69,13 +69,18 @@ class FeedQueryServiceImpl(
 
         return feedsToFetch
             .flatMapMerge { feedId ->
-                feedRepository.getAllUserFeedItemIdsOfFeed(
+                feedRepository.getAllFeedItemIdsOfFeed(
                     userId,
                     feedId,
                     filter,
                     since
                 )
             }
+    }
+
+    override suspend fun countFeedItems(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int {
+        logger.debug("Counting FeedItems of user $userId and feed $feedId with filter $filter ")
+        return feedRepository.countFeedItemsOfFeedOfUser(userId, feedId, filter)
     }
 
     companion object {

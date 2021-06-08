@@ -8,7 +8,8 @@
                 <li class="is-size-7">
                     <a href="/reader/{{feedId}}"
                         {{#isSelected}}class="is-active" {{/isSelected}}
-                    >{{name}}</a>
+                    >{{name}} <span class="tag is-normal is-rounded">{{numberOfUnreadItems}}</span></a>
+
                 </li>
             {{/feeds}}
         </ul>

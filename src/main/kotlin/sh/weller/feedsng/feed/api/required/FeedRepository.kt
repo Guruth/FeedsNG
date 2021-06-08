@@ -13,17 +13,18 @@ interface FeedRepository {
     suspend fun getAllFeeds(): Flow<Feed>
 
     fun insertFeedItemsIfNotExist(feedId: FeedId, feedItemDataFlow: Flow<FeedItemData>): Flow<FeedItemId>
-    suspend fun getAllFeedItemIds(feedId: FeedId, before: Instant? = null): Flow<FeedItemId>
+    suspend fun getAllFeedItemIdsOfFeed(feedId: FeedId, before: Instant? = null): Flow<FeedItemId>
 
     suspend fun insertUserGroup(userId: UserId, groupData: GroupData): GroupId
     suspend fun getAllUserGroups(userId: UserId): Flow<Group>
 
     suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId)
     suspend fun addFeedToUser(userId: UserId, feedId: FeedId)
-    suspend fun getAllUserFeeds(userId: UserId): Flow<Feed>
+    suspend fun getAllFeedsOfUser(userId: UserId): Flow<Feed>
 
-    suspend fun updateUserFeedItem(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: FeedUpdateAction)
-    suspend fun getAllUserFeedItemsOfFeed(
+    suspend fun updateFeedItemOfUser(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: FeedUpdateAction)
+
+    suspend fun getAllFeedItemsOfUser(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter? = null,
@@ -31,12 +32,14 @@ interface FeedRepository {
         limit: Int? = null
     ): Flow<UserFeedItem>
 
-    suspend fun getAllUserFeedItemIdsOfFeed(
+    suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
         feedId: FeedId,
         filter: FeedItemFilter? = null,
         since: Instant? = null
     ): Flow<FeedItemId>
 
-    suspend fun getUserFeedItem(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem?
+    suspend fun countFeedItemsOfFeedOfUser(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int
+
+    suspend fun getFeedItemOfUser(userId: UserId, feedId: FeedId, feedItemId: FeedItemId): UserFeedItem?
 }
