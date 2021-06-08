@@ -137,15 +137,7 @@ class FeverAPIHandler(
         }
 
         if (requestParameters["unread_recently_read"] == "1") {
-            feedQueryService
-                .getFeedItemsIds(
-                    user.userId,
-                    filter = FeedItemFilter.READ,
-                    since = Instant.now().minusSeconds(30)
-                )
-                .onEach {
-                    feedControlService.updateFeedItem(user.userId, it, FeedUpdateAction.UNREAD)
-                }
+            logger.warn("Unread recently read is not supported currently")
         }
 
         if (requestParameters.contains("mark")) {

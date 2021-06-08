@@ -307,12 +307,8 @@ class H2FeedRepository(
     override suspend fun getAllFeedItemsOfUser(
         userId: UserId,
         feedId: FeedId,
-        filter: FeedItemFilter?,
-        since: Instant?,
         limit: Int?
     ): Flow<UserFeedItem> {
-        val filterQuery = filter.toWhereClause()
-
         return client
             .sql(
                 """
@@ -321,15 +317,12 @@ class H2FeedRepository(
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
-                |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
-                |$filterQuery 
                 |ORDER BY FI.id DESC
                 |${limitIfNotNull(limit)}
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
             .bind("user_id", userId.id)
-            .bindIfNotNull("createdSince", since)
             .mapToUserFeedItem()
             .flow()
     }
@@ -354,8 +347,7 @@ class H2FeedRepository(
     override suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
         feedId: FeedId,
-        filter: FeedItemFilter?,
-        since: Instant?
+        filter: FeedItemFilter?
     ): Flow<FeedItemId> {
         val filterQuery = filter.toWhereClause()
 
@@ -366,15 +358,13 @@ class H2FeedRepository(
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
-                |${andWhereIfNotNull("FI.created", "createdSince", ">=", since)}
                 |$filterQuery 
                 |ORDER BY FI.id DESC
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
             .bind("user_id", userId.id)
-            .bindIfNotNull("createdSince", since)
-            .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
+            .map { row -> row.getInt("id").toFeedItemId() }
             .flow()
     }
 
@@ -404,5 +394,4 @@ class H2FeedRepository(
             .bind("user_id", userId.id)
             .mapToUserFeedItem()
             .awaitSingleOrNull()
-
 }

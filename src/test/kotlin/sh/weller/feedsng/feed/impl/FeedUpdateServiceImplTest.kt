@@ -15,7 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-@OptIn(ObsoleteCoroutinesApi::class)
+@ObsoleteCoroutinesApi
 internal class FeedUpdateServiceImplTest {
 
     @Test

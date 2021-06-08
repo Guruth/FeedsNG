@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
-import java.time.Instant
 
 @Service
 class FeedQueryServiceImpl(
@@ -36,11 +35,9 @@ class FeedQueryServiceImpl(
     override suspend fun getFeedItems(
         userId: UserId,
         feedIdList: List<FeedId>?,
-        filter: FeedItemFilter?,
-        since: Instant?,
         limit: Int?
     ): Flow<UserFeedItem> {
-        logger.info("Getting UserFeedItems of feeds $feedIdList with filter $filter, since $since of user $userId")
+        logger.info("Getting UserFeedItems of feeds $feedIdList of user $userId")
         val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
             ?: getFeeds(userId).map { it.feedId }
 
@@ -49,8 +46,6 @@ class FeedQueryServiceImpl(
                 feedRepository.getAllFeedItemsOfUser(
                     userId,
                     feedId,
-                    filter,
-                    since,
                     limit
                 )
             }
@@ -60,10 +55,9 @@ class FeedQueryServiceImpl(
     override suspend fun getFeedItemsIds(
         userId: UserId,
         feedIdList: List<FeedId>?,
-        filter: FeedItemFilter?,
-        since: Instant?
+        filter: FeedItemFilter?
     ): Flow<FeedItemId> {
-        logger.debug("Getting FeedItemIds of feeds $feedIdList with filter $filter, since $since of user $userId")
+        logger.debug("Getting FeedItemIds of feeds $feedIdList with filter $filter of user $userId")
         val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
             ?: getFeeds(userId).map { it.feedId }
 
@@ -72,8 +66,7 @@ class FeedQueryServiceImpl(
                 feedRepository.getAllFeedItemIdsOfFeed(
                     userId,
                     feedId,
-                    filter,
-                    since
+                    filter
                 )
             }
     }

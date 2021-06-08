@@ -2,7 +2,6 @@ package sh.weller.feedsng.feed.api.provided
 
 import kotlinx.coroutines.flow.Flow
 import sh.weller.feedsng.user.api.provided.UserId
-import java.time.Instant
 
 interface FeedQueryService {
     /**
@@ -26,8 +25,6 @@ interface FeedQueryService {
     suspend fun getFeedItems(
         userId: UserId,
         feedIdList: List<FeedId>? = null,
-        filter: FeedItemFilter? = null,
-        since: Instant? = null,
         limit: Int? = null
     ): Flow<UserFeedItem>
 
@@ -39,7 +36,6 @@ interface FeedQueryService {
         userId: UserId,
         feedIdList: List<FeedId>? = null,
         filter: FeedItemFilter? = null,
-        since: Instant? = null
     ): Flow<FeedItemId>
 
 
@@ -58,14 +54,11 @@ suspend fun FeedQueryService.getFeedItemsIds(
     userId: UserId,
     feedId: FeedId?,
     filter: FeedItemFilter? = null,
-    since: Instant? = null
-) = this.getFeedItemsIds(userId, listOfNotNull(feedId), filter, since)
+) = this.getFeedItemsIds(userId, listOfNotNull(feedId), filter)
 
 
 suspend fun FeedQueryService.getFeedItems(
     userId: UserId,
     feedId: FeedId?,
-    filter: FeedItemFilter? = null,
-    since: Instant? = null,
     limit: Int? = null
-) = this.getFeedItems(userId, listOfNotNull(feedId), filter, since, limit)
+) = this.getFeedItems(userId, listOfNotNull(feedId), limit)

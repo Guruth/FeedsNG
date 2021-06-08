@@ -27,16 +27,13 @@ interface FeedRepository {
     suspend fun getAllFeedItemsOfUser(
         userId: UserId,
         feedId: FeedId,
-        filter: FeedItemFilter? = null,
-        since: Instant? = null,
         limit: Int? = null
     ): Flow<UserFeedItem>
 
     suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
         feedId: FeedId,
-        filter: FeedItemFilter? = null,
-        since: Instant? = null
+        filter: FeedItemFilter? = null
     ): Flow<FeedItemId>
 
     suspend fun countFeedItemsOfFeedOfUser(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int
