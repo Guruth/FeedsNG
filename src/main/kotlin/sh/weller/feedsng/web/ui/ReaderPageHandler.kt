@@ -64,10 +64,14 @@ class MustacheHandler(
         }
 
         val feedItems = async {
-            feedQueryService
-                .getFeedItems(user.userId, selectedFeedId, limit = 10)
-                .map { it.toFeedItemModel() }
-                .toList()
+            if (selectedFeedId != null) {
+                feedQueryService
+                    .getFeedItems(user.userId, selectedFeedId, limit = 10)
+                    .map { it.toFeedItemModel() }
+                    .toList()
+            } else {
+                emptyList()
+            }
         }
 
         val modelMap = request.getModelMap()

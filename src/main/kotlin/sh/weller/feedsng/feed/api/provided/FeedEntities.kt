@@ -81,6 +81,12 @@ enum class FeedItemFilter {
     READ, UNREAD, SAVED;
 }
 
+sealed class FeedItemIdFilter {
+    data class SinceIdFilter(val value: FeedItemId) : FeedItemIdFilter()
+    data class MaxIdFilter(val value: FeedItemId) : FeedItemIdFilter()
+    data class WithIdFilter(val value: List<FeedItemId>) : FeedItemIdFilter()
+}
+
 enum class FeedUpdateAction {
     READ, UNREAD, SAVE, UNSAVE;
 
