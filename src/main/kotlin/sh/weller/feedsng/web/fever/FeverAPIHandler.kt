@@ -1,8 +1,6 @@
 package sh.weller.feedsng.web.fever
 
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -81,49 +79,53 @@ class FeverAPIHandler(
         }
 
         if (requestParameters.containsKey("items")) {
-            // TODO: Instead of fetching all feed items, query only the needed ones
-            val feedIdsToFilter = mutableListOf<FeedId>()
+            val feedIdsToFilter = requestParameters.getFeedIds(groups)
 
-            requestParameters.queryIntListOrNull("feed_ids")
-                ?.map { it.toFeedId() }
-                ?.also { feedIdsToFilter.addAll(it) }
-
-            requestParameters.queryIntListOrNull("group_ids")
-                ?.run {
-                    return@run groups
-                        .filter { group -> group.groupId.id in this }
-                        .map { it.groupData.feeds }
-                        .toList().flatten()
-                }
-                ?.also { feedIdsToFilter.addAll(it) }
-
-            val feedItems = feedQueryService
-                .getFeedItems(
-                    userId = user.userId,
-                    feedIdList = feedIdsToFilter.takeIf { it.isNotEmpty() }
-                )
-                .toList()
-                .sortedBy { it.feedItem.feedItemId.id }
-
-            val itemIdFilter = requestParameters.queryIntListOrNull("with_ids")
+            val withFeedItemIdFilter = requestParameters
+                .queryIntListOrNull("with_ids")
                 ?.map { it.toFeedItemId() }
-            val itemIdFiltered = if (itemIdFilter != null) {
-                feedItems
-                    .filter { it.feedItem.feedItemId in itemIdFilter }
-            } else feedItems
 
-            val sinceFilter = request.queryParamOrNull("since_id")?.toIntOrNull()
-            val sinceFilteredItems = if (sinceFilter != null) {
-                itemIdFiltered
-                    .filter { it.feedItem.feedItemId.id > sinceFilter }
-            } else itemIdFiltered
+            val sinceFeedItemIdFilter = request
+                .queryParamOrNull("since_id")
+                ?.toIntOrNull()
+                ?.toFeedItemId()
 
-            val maxIdFilter = request.queryParamOrNull("max_id")?.toIntOrNull()
-            val maxIdFilteredItems = if (maxIdFilter != null) {
-                sinceFilteredItems.filter { it.feedItem.feedItemId.id <= maxIdFilter }
-            } else sinceFilteredItems
+            val maxFeedItemIdFilter = request
+                .queryParamOrNull("max_id")
+                ?.toIntOrNull()
+                ?.toFeedItemId()
 
-            responseBuilder.items(maxIdFilteredItems)
+            val feedItems: List<UserFeedItem> = when {
+                withFeedItemIdFilter != null -> feedQueryService
+                    .getFeedItems(
+                        user.userId,
+                        feedIdsToFilter,
+                        FeedItemIdFilter.WithIdFilter(withFeedItemIdFilter),
+                        limit = 50
+                    ).toList()
+
+                sinceFeedItemIdFilter != null -> feedQueryService.getFeedItems(
+                    user.userId,
+                    feedIdsToFilter,
+                    FeedItemIdFilter.SinceIdFilter(sinceFeedItemIdFilter),
+                    limit = 50
+                ).toList()
+
+                maxFeedItemIdFilter != null -> feedQueryService.getFeedItems(
+                    user.userId,
+                    feedIdsToFilter,
+                    FeedItemIdFilter.MaxIdFilter(maxFeedItemIdFilter),
+                    limit = 50
+                ).toList()
+
+                else -> feedQueryService.getFeedItems(
+                    user.userId,
+                    feedIdsToFilter,
+                    limit = 50
+                ).toList()
+            }
+
+            responseBuilder.items(feedItems)
         }
 
         if (requestParameters.contains("unread_item_ids")) {
@@ -197,24 +199,41 @@ class FeverAPIHandler(
         return ServerResponse.ok().json().bodyValueAndAwait(response)
     }
 
-    suspend fun getSavedItemIds(userId: UserId): List<FeedItemId> =
+    private fun Map<String, String>.getFeedIds(groups: List<Group>): List<FeedId> {
+        val feedIdsToFilter = mutableListOf<FeedId>()
+
+        queryIntListOrNull("feed_ids")
+            ?.map { it.toFeedId() }
+            ?.also { feedIdsToFilter.addAll(it) }
+
+        queryIntListOrNull("group_ids")
+            ?.run {
+                return@run groups
+                    .filter { group -> group.groupId.id in this }
+                    .map { it.groupData.feeds }
+                    .toList().flatten()
+            }
+            ?.also { feedIdsToFilter.addAll(it) }
+
+        return feedIdsToFilter
+    }
+
+    private suspend fun getSavedItemIds(userId: UserId): List<FeedItemId> =
         feedQueryService
-            .getFeedItems(
+            .getFeedItemsIds(
                 userId = userId,
                 feedIdList = null,
                 filter = FeedItemFilter.SAVED
             )
-            .map { it.feedItem.feedItemId }
             .toList()
 
-    suspend fun getUnreadItemIds(userId: UserId): List<FeedItemId> =
+    private suspend fun getUnreadItemIds(userId: UserId): List<FeedItemId> =
         feedQueryService
-            .getFeedItems(
+            .getFeedItemsIds(
                 userId = userId,
                 feedIdList = null,
                 filter = FeedItemFilter.UNREAD
             )
-            .map { it.feedItem.feedItemId }
             .toList()
 
 
@@ -226,6 +245,23 @@ class FeverAPIHandler(
         }
     }
 
+    private suspend fun ServerRequest.getFeverRequestParameters(): Map<String, String> {
+        val feverParameters = LinkedMultiValueMap<String, String>()
+        feverParameters.addAll(this.queryParams())
+        feverParameters.addAll(this.awaitFormData())
+        return feverParameters.toSingleValueMap()
+    }
+
+    private fun Map<String, String>.queryIntListOrNull(parameterName: String): List<Int>? =
+        this[parameterName]?.toIntegerList()
+
+    private fun String.toIntegerList(): List<Int> =
+        this.split(",").mapNotNull { it.toIntOrNull() }
+
+    private fun String?.toInstant(): Instant? =
+        this?.toLong()
+            ?.let { Instant.ofEpochSecond(it) }
+
     companion object {
         const val FEVER_API_VERSION = 3
         const val feverAPIPath = "/api/fever.php"
@@ -234,20 +270,3 @@ class FeverAPIHandler(
 
 }
 
-private suspend fun ServerRequest.getFeverRequestParameters(): Map<String, String> {
-    val feverParameters = LinkedMultiValueMap<String, String>()
-    feverParameters.addAll(this.queryParams())
-    feverParameters.addAll(this.awaitFormData())
-    return feverParameters.toSingleValueMap()
-}
-
-private fun Map<String, String>.queryIntListOrNull(parameterName: String): List<Int>? =
-    this[parameterName]?.toIntegerList()
-
-private fun String.toIntegerList(): List<Int> =
-    this.split(",").mapNotNull { it.toIntOrNull() }
-
-private fun String?.toInstant(): Instant? =
-    this
-        ?.toLong()
-        ?.let { Instant.ofEpochSecond(it) }

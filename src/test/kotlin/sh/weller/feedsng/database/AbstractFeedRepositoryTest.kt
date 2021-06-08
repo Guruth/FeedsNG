@@ -200,6 +200,30 @@ internal abstract class AbstractFeedRepositoryTest {
                         .containsExactly(false, false, false)
                 }
 
+            val sinceFilteredItems = cut.getAllFeedItemsOfUser(
+                user,
+                firstFeedId,
+                FeedItemIdFilter.SinceIdFilter(userFeedItems.last().feedItem.feedItemId)
+            ).toList()
+            expectThat(sinceFilteredItems)
+                .hasSize(2)
+
+            val maxFilteredItems = cut.getAllFeedItemsOfUser(
+                user,
+                firstFeedId,
+                FeedItemIdFilter.MaxIdFilter(userFeedItems.first().feedItem.feedItemId)
+            ).toList()
+            expectThat(maxFilteredItems)
+                .hasSize(3)
+
+            val withIdsFilteredItems = cut.getAllFeedItemsOfUser(
+                user,
+                firstFeedId,
+                FeedItemIdFilter.WithIdFilter(userFeedItems.drop(1).map { it.feedItem.feedItemId })
+            ).toList()
+            expectThat(withIdsFilteredItems)
+                .hasSize(2)
+
             val limitedUserFeedItems =
                 cut.getAllFeedItemsOfUser(
                     user,

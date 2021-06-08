@@ -17,17 +17,17 @@ class FeedQueryServiceImpl(
     private val feedRepository: FeedRepository
 ) : FeedQueryService {
     override suspend fun getFeed(feedId: FeedId): Feed? {
-        logger.info("Getting feed $feedId")
+        logger.debug("Getting feed $feedId")
         return feedRepository.getFeed(feedId)
     }
 
     override suspend fun getGroups(userId: UserId): Flow<Group> {
-        logger.info("Getting groups of  $userId")
+        logger.debug("Getting groups of  $userId")
         return feedRepository.getAllUserGroups(userId)
     }
 
     override suspend fun getFeeds(userId: UserId): Flow<Feed> {
-        logger.info("Getting feeds of  $userId")
+        logger.debug("Getting feeds of  $userId")
         return feedRepository.getAllFeedsOfUser(userId)
     }
 
@@ -35,17 +35,22 @@ class FeedQueryServiceImpl(
     override suspend fun getFeedItems(
         userId: UserId,
         feedIdList: List<FeedId>?,
+        feedItemIdFilter: FeedItemIdFilter?,
         limit: Int?
     ): Flow<UserFeedItem> {
-        logger.info("Getting UserFeedItems of feeds $feedIdList of user $userId")
-        val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
-            ?: getFeeds(userId).map { it.feedId }
+        logger.debug("Getting UserFeedItems of feeds $feedIdList with feedItemFilter $feedItemIdFilter of user $userId")
+        val feedsToFetch: Flow<FeedId> = if (feedIdList.isNullOrEmpty()) {
+            getFeeds(userId).map { it.feedId }
+        } else {
+            feedIdList.asFlow()
+        }
 
         return feedsToFetch
             .flatMapMerge { feedId ->
                 feedRepository.getAllFeedItemsOfUser(
                     userId,
                     feedId,
+                    feedItemIdFilter,
                     limit
                 )
             }

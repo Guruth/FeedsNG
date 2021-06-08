@@ -307,6 +307,7 @@ class H2FeedRepository(
     override suspend fun getAllFeedItemsOfUser(
         userId: UserId,
         feedId: FeedId,
+        feedItemIdFilter: FeedItemIdFilter?,
         limit: Int?
     ): Flow<UserFeedItem> {
         return client
@@ -317,15 +318,33 @@ class H2FeedRepository(
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
+                |${feedItemIdFilter.toWhereStatement()} 
                 |ORDER BY FI.id DESC
                 |${limitIfNotNull(limit)}
             """.trimMargin()
             )
             .bind("feed_id", feedId.id)
             .bind("user_id", userId.id)
+            .bindIfNotNull(feedItemIdFilter)
             .mapToUserFeedItem()
             .flow()
     }
+
+    private fun FeedItemIdFilter?.toWhereStatement(): String =
+        when (this) {
+            is FeedItemIdFilter.MaxIdFilter -> "AND FI.id  <= :max_feed_item_id "
+            is FeedItemIdFilter.SinceIdFilter -> "AND FI.id > :since_feed_item_id"
+            is FeedItemIdFilter.WithIdFilter -> "AND FI.id in (:with_feed_item_id)"
+            null -> ""
+        }
+
+    private fun DatabaseClient.GenericExecuteSpec.bindIfNotNull(feedItemIdFilter: FeedItemIdFilter?): DatabaseClient.GenericExecuteSpec =
+        when (feedItemIdFilter) {
+            is FeedItemIdFilter.MaxIdFilter -> this.bind("max_feed_item_id", feedItemIdFilter.value.id)
+            is FeedItemIdFilter.SinceIdFilter -> this.bind("since_feed_item_id", feedItemIdFilter.value.id)
+            is FeedItemIdFilter.WithIdFilter -> this.bind("with_feed_item_id", feedItemIdFilter.value.map { it.id })
+            null -> this
+        }
 
     override suspend fun countFeedItemsOfFeedOfUser(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int {
         return client
