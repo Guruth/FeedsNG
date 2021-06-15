@@ -27,7 +27,7 @@ final class JsonAuthenticationWebFilter(
     private val usernamePassword = ResolvableType.forClass(UsernamePassword::class.java)
 
     init {
-        // Session Storage
+        // Spring Security Repository
         setSecurityContextRepository(serverSecurityContextRepository)
 
         // URL where to reach this handler

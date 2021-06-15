@@ -1,6 +1,7 @@
 package sh.weller.feedsng.web
 
 import kotlinx.serialization.json.Json
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.CacheControl
@@ -19,6 +20,8 @@ import org.springframework.security.web.server.context.WebSessionServerSecurityC
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
 import org.springframework.security.web.server.csrf.CsrfToken
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher
+import org.springframework.session.ReactiveMapSessionRepository
+import org.springframework.session.config.annotation.web.server.EnableSpringWebSession
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
@@ -34,6 +37,7 @@ import java.time.Duration
 
 @Configuration
 @EnableWebFluxSecurity
+@EnableSpringWebSession
 class WebConfiguration : WebFluxConfigurer {
 
     @Bean
@@ -58,8 +62,8 @@ class WebConfiguration : WebFluxConfigurer {
                 logoutUrl = "/logout"
                 logoutSuccessHandler = RedirectServerLogoutSuccessHandler()
                     .apply { setLogoutSuccessUrl(URI("/")) }
+                // TODO: delete session cookie
             }
-
             // Disable others Authentication
             httpBasic { disable() }
             formLogin { disable() }
@@ -88,9 +92,16 @@ class WebConfiguration : WebFluxConfigurer {
         reactiveUserDetailsService: ReactiveUserDetailsService
     ) = UserDetailsRepositoryReactiveAuthenticationManager(reactiveUserDetailsService)
 
-
     @Bean
     fun serverSecurityContextRepository() = WebSessionServerSecurityContextRepository()
+
+    @Bean
+    fun reactiveMapSessionRepository(
+        @Value("\${spring.session.timeout}") sessionTimeout: Duration
+    ) = ReactiveMapSessionRepository(mutableMapOf())
+        .apply {
+            this.setDefaultMaxInactiveInterval(sessionTimeout.toSeconds().toInt())
+        }
 
     override fun configureHttpMessageCodecs(configurer: ServerCodecConfigurer) {
         configurer
@@ -112,7 +123,7 @@ class WebConfiguration : WebFluxConfigurer {
     }
 
     @Bean
-    fun feverAPIRouter(handlers: List<WebRequestHandler>): RouterFunction<*> =
+    fun routerFunction(handlers: List<WebRequestHandler>): RouterFunction<*> =
         handlers
             .map { it.getRouterFunction() }
             .reduce { acc, routerFunction -> acc.and(routerFunction) }

@@ -35,6 +35,7 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.session:spring-session-core")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("io.netty:netty-tcnative-boringssl-static")
@@ -59,7 +60,7 @@ dependencies {
     implementation("io.r2dbc:r2dbc-postgresql")
 
     // Dev Dependencies
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
+//    developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
 
 
