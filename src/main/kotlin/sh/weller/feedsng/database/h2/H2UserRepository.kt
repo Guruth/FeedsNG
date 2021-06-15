@@ -1,5 +1,6 @@
 package sh.weller.feedsng.database.h2
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.DatabaseClient
@@ -21,7 +22,7 @@ class H2UserRepository(
 ) : UserRepository {
 
     init {
-        runBlocking {
+        runBlocking(Dispatchers.Default) {
             client.sql(
                 """CREATE TABLE IF NOT EXISTS account ( 
                     |id SERIAL PRIMARY KEY, 

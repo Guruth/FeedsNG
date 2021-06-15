@@ -19,7 +19,7 @@ class PostgresFeedRepository(
 ) : FeedRepository {
 
     init {
-        runBlocking {
+        runBlocking(Dispatchers.Default) {
             client.sql(
                 """CREATE TABLE IF NOT EXISTS feed( 
                     |id SERIAL PRIMARY KEY, 
