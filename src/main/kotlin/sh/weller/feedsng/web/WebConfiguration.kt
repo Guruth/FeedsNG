@@ -97,7 +97,7 @@ class WebConfiguration : WebFluxConfigurer {
 
     @Bean
     fun reactiveMapSessionRepository(
-        @Value("\${spring.session.timeout}") sessionTimeout: Duration
+        @Value("\${spring.session.timeout:30m}") sessionTimeout: Duration
     ) = ReactiveMapSessionRepository(mutableMapOf())
         .apply {
             this.setDefaultMaxInactiveInterval(sessionTimeout.toSeconds().toInt())
