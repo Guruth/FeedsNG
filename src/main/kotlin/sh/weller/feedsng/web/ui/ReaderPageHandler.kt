@@ -118,14 +118,16 @@ private data class FeedItemModel(
     val feedItemId: Int,
     val title: String,
     val url: String,
-    val html: String
+    val html: String,
+    val isRead: Boolean
 )
 
 private fun UserFeedItem.toFeedItemModel() = FeedItemModel(
     feedItemId = feedItem.feedItemId.id,
     title = feedItem.feedItemData.title,
     url = feedItem.feedItemData.url,
-    html = feedItem.feedItemData.html
+    html = feedItem.feedItemData.html,
+    isRead = isRead
 )
 
 @Serializable

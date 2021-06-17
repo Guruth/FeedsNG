@@ -1,7 +1,8 @@
 <div class="column">
     {{#feedItems}}
         <div class="card my-2">
-            <header class="card-header" onclick="toggleReaderContentVisibility({{-index}})">
+            <header class="card-header {{#isRead}}has-background-grey-light{{/isRead}}"
+                    onclick="toggleReaderContentVisibility({{-index}})">
                 <p class="card-header-title"><a href="{{url}}">{{title}}</a></p>
                 <span id="show-content-{{-index}}" class="card-header-icon">
                   <span class="icon">
