@@ -24,17 +24,16 @@ interface FeedRepository {
 
     suspend fun updateFeedItemOfUser(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: FeedUpdateAction)
 
-    // Todo pass on the list of FeedIds otherwise the limit filter doesn't work
     suspend fun getAllFeedItemsOfUser(
         userId: UserId,
-        feedId: FeedId,
+        feedIds: List<FeedId>,
         feedItemIdFilter: FeedItemIdFilter? = null,
         limit: Int? = null
     ): Flow<UserFeedItem>
 
     suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
-        feedId: FeedId,
+        feedIds: List<FeedId>,
         filter: FeedItemFilter? = null
     ): Flow<FeedItemId>
 

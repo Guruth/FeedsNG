@@ -190,7 +190,10 @@ internal abstract class AbstractFeedRepositoryTest {
             cut.addFeedToUser(user, firstFeedId)
             cut.updateFeedItemOfUser(user, flowOf(feedItemIds.first()), FeedUpdateAction.READ)
 
-            val userFeedItems = cut.getAllFeedItemsOfUser(user, firstFeedId).toList()
+            val userFeedItems = cut.getAllFeedItemsOfUser(
+                user,
+                listOf(firstFeedId)
+            ).toList()
             expectThat(userFeedItems)
                 .hasSize(3)
                 .and {
@@ -202,7 +205,7 @@ internal abstract class AbstractFeedRepositoryTest {
 
             val sinceFilteredItems = cut.getAllFeedItemsOfUser(
                 user,
-                firstFeedId,
+                listOf(firstFeedId),
                 FeedItemIdFilter.SinceIdFilter(userFeedItems.last().feedItem.feedItemId)
             ).toList()
             expectThat(sinceFilteredItems)
@@ -210,7 +213,7 @@ internal abstract class AbstractFeedRepositoryTest {
 
             val maxFilteredItems = cut.getAllFeedItemsOfUser(
                 user,
-                firstFeedId,
+                listOf(firstFeedId),
                 FeedItemIdFilter.MaxIdFilter(userFeedItems.first().feedItem.feedItemId)
             ).toList()
             expectThat(maxFilteredItems)
@@ -218,7 +221,7 @@ internal abstract class AbstractFeedRepositoryTest {
 
             val withIdsFilteredItems = cut.getAllFeedItemsOfUser(
                 user,
-                firstFeedId,
+                listOf(firstFeedId),
                 FeedItemIdFilter.WithIdFilter(userFeedItems.drop(1).map { it.feedItem.feedItemId })
             ).toList()
             expectThat(withIdsFilteredItems)
@@ -227,7 +230,7 @@ internal abstract class AbstractFeedRepositoryTest {
             val limitedUserFeedItems =
                 cut.getAllFeedItemsOfUser(
                     user,
-                    firstFeedId,
+                    listOf(firstFeedId),
                     limit = 1
                 ).toList()
             expectThat(limitedUserFeedItems)

@@ -312,7 +312,7 @@ class PostgresFeedRepository(
 
     override suspend fun getAllFeedItemsOfUser(
         userId: UserId,
-        feedId: FeedId,
+        feedIds: List<FeedId>,
         feedItemIdFilter: FeedItemIdFilter?,
         limit: Int?
     ): Flow<UserFeedItem> {
@@ -322,14 +322,14 @@ class PostgresFeedRepository(
                 |SELECT 
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
-                |WHERE FI.feed_id = :feed_id 
+                |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${feedItemIdFilter.toWhereStatement()}
                 |ORDER BY FI.id DESC
                 |${limitIfNotNull(limit)} 
             """.trimMargin()
             )
-            .bind("feed_id", feedId.id)
+            .bind("feed_ids", feedIds.map { it.id })
             .bind("user_id", userId.id)
             .bindIfNotNull(feedItemIdFilter)
             .mapToUserFeedItem()
@@ -359,12 +359,12 @@ class PostgresFeedRepository(
                 """
                 |SELECT COUNT(FI.id) as count
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
-                |WHERE FI.feed_id = :feed_id 
+                |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${filter.toWhereClause()}
             """.trimMargin()
             )
-            .bind("feed_id", feedId.id)
+            .bind("feed_ids", feedId.id)
             .bind("user_id", userId.id)
             .map { row -> row.getInt("count") }
             .awaitOne()
@@ -372,7 +372,7 @@ class PostgresFeedRepository(
 
     override suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
-        feedId: FeedId,
+        feedIds: List<FeedId>,
         filter: FeedItemFilter?
     ): Flow<FeedItemId> {
         val filterQuery = filter.toWhereClause()
@@ -382,13 +382,13 @@ class PostgresFeedRepository(
                 """
                 |SELECT FI.id 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
-                |WHERE FI.feed_id = :feed_id 
+                |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |$filterQuery 
                 |ORDER BY FI.id DESC
             """.trimMargin()
             )
-            .bind("feed_id", feedId.id)
+            .bind("feed_ids", feedIds.map { it.id })
             .bind("user_id", userId.id)
             .map { row -> row.getInt("id").toFeedItemId() }
             .flow()

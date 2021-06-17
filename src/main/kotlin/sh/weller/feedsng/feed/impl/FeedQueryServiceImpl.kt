@@ -2,9 +2,8 @@ package sh.weller.feedsng.feed.impl
 
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -39,21 +38,18 @@ class FeedQueryServiceImpl(
         limit: Int?
     ): Flow<UserFeedItem> {
         logger.debug("Getting UserFeedItems of feeds $feedIdList with feedItemFilter $feedItemIdFilter of user $userId")
-        val feedsToFetch: Flow<FeedId> = if (feedIdList.isNullOrEmpty()) {
-            getFeeds(userId).map { it.feedId }
+        val feedsToFetch = if (feedIdList.isNullOrEmpty()) {
+            getFeeds(userId).map { it.feedId }.toList()
         } else {
-            feedIdList.asFlow()
+            feedIdList
         }
 
-        return feedsToFetch
-            .flatMapMerge { feedId ->
-                feedRepository.getAllFeedItemsOfUser(
-                    userId,
-                    feedId,
-                    feedItemIdFilter,
-                    limit
-                )
-            }
+        return feedRepository.getAllFeedItemsOfUser(
+            userId,
+            feedsToFetch,
+            feedItemIdFilter,
+            limit
+        )
     }
 
     @OptIn(FlowPreview::class)
@@ -63,17 +59,14 @@ class FeedQueryServiceImpl(
         filter: FeedItemFilter?
     ): Flow<FeedItemId> {
         logger.debug("Getting FeedItemIds of feeds $feedIdList with filter $filter of user $userId")
-        val feedsToFetch: Flow<FeedId> = feedIdList?.asFlow()
-            ?: getFeeds(userId).map { it.feedId }
+        val feedsToFetch: List<FeedId> = feedIdList
+            ?: getFeeds(userId).map { it.feedId }.toList()
 
-        return feedsToFetch
-            .flatMapMerge { feedId ->
-                feedRepository.getAllFeedItemIdsOfFeed(
-                    userId,
-                    feedId,
-                    filter
-                )
-            }
+        return feedRepository.getAllFeedItemIdsOfFeed(
+            userId,
+            feedsToFetch,
+            filter
+        )
     }
 
     override suspend fun countFeedItems(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int {

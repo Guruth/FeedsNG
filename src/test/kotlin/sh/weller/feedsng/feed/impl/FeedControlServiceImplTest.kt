@@ -79,14 +79,14 @@ internal class FeedControlServiceImplTest {
             assertNotNull(feedIdWithGroup)
 
             cut.updateGroup(userId, groupId, FeedUpdateAction.SAVE)
-            val savedItems = repo.getAllFeedItemsOfUser(userId, feedIdWithGroup).toList()
+            val savedItems = repo.getAllFeedItemsOfUser(userId, listOf(feedIdWithGroup)).toList()
             expectThat(savedItems)
                 .isNotEmpty()
                 .map { it.isSaved }
                 .doesNotContain(false)
 
             cut.updateFeed(userId, feedIdWithoutGroup, FeedUpdateAction.READ)
-            val readItems = repo.getAllFeedItemsOfUser(userId, feedIdWithoutGroup).toList()
+            val readItems = repo.getAllFeedItemsOfUser(userId, listOf(feedIdWithoutGroup)).toList()
             expectThat(readItems)
                 .isNotEmpty()
                 .map { it.isRead }

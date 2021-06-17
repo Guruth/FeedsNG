@@ -306,7 +306,7 @@ class H2FeedRepository(
 
     override suspend fun getAllFeedItemsOfUser(
         userId: UserId,
-        feedId: FeedId,
+        feedIds: List<FeedId>,
         feedItemIdFilter: FeedItemIdFilter?,
         limit: Int?
     ): Flow<UserFeedItem> {
@@ -316,14 +316,14 @@ class H2FeedRepository(
                 |SELECT 
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
-                |WHERE FI.feed_id = :feed_id 
+                |WHERE FI.feed_id IN (:feed_ids)
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${feedItemIdFilter.toWhereStatement()} 
                 |ORDER BY FI.id DESC
                 |${limitIfNotNull(limit)}
             """.trimMargin()
             )
-            .bind("feed_id", feedId.id)
+            .bind("feed_ids", feedIds.map { it.id })
             .bind("user_id", userId.id)
             .bindIfNotNull(feedItemIdFilter)
             .mapToUserFeedItem()
@@ -334,7 +334,7 @@ class H2FeedRepository(
         when (this) {
             is FeedItemIdFilter.MaxIdFilter -> "AND FI.id  <= :max_feed_item_id "
             is FeedItemIdFilter.SinceIdFilter -> "AND FI.id > :since_feed_item_id"
-            is FeedItemIdFilter.WithIdFilter -> "AND FI.id in (:with_feed_item_id)"
+            is FeedItemIdFilter.WithIdFilter -> "AND FI.id IN (:with_feed_item_id)"
             null -> ""
         }
 
@@ -365,7 +365,7 @@ class H2FeedRepository(
 
     override suspend fun getAllFeedItemIdsOfFeed(
         userId: UserId,
-        feedId: FeedId,
+        feedIds: List<FeedId>,
         filter: FeedItemFilter?
     ): Flow<FeedItemId> {
         val filterQuery = filter.toWhereClause()
@@ -375,13 +375,13 @@ class H2FeedRepository(
                 """
                 |SELECT FI.id 
                 |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
-                |WHERE FI.feed_id = :feed_id 
+                |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |$filterQuery 
                 |ORDER BY FI.id DESC
             """.trimMargin()
             )
-            .bind("feed_id", feedId.id)
+            .bind("feed_ids", feedIds.map { it.id })
             .bind("user_id", userId.id)
             .map { row -> row.getInt("id").toFeedItemId() }
             .flow()
