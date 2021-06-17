@@ -19,7 +19,7 @@ class H2FeedRepository(
 ) : FeedRepository {
 
     init {
-        runBlocking(Dispatchers.Default) {
+        runBlocking {
             client.sql(
                 """CREATE TABLE IF NOT EXISTS feed( 
                     |id SERIAL PRIMARY KEY, 

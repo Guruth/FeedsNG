@@ -1,6 +1,5 @@
 package sh.weller.feedsng.database.postgres
 
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.DatabaseClient
@@ -22,7 +21,7 @@ class PostgresUserRepository(
 ) : UserRepository {
 
     init {
-        runBlocking(Dispatchers.Default) {
+        runBlocking {
             client.sql(
                 """CREATE TABLE IF NOT EXISTS account ( 
                     |id SERIAL PRIMARY KEY, 
