@@ -28,7 +28,8 @@ interface FeedRepository {
         userId: UserId,
         feedIds: List<FeedId>,
         feedItemIdFilter: FeedItemIdFilter? = null,
-        limit: Int? = null
+        limit: Int? = null,
+        offset: Int = 0
     ): Flow<UserFeedItem>
 
     suspend fun getAllFeedItemIdsOfFeed(

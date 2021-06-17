@@ -35,9 +35,10 @@ class FeedQueryServiceImpl(
         userId: UserId,
         feedIdList: List<FeedId>?,
         feedItemIdFilter: FeedItemIdFilter?,
-        limit: Int?
+        limit: Int?,
+        offset: Int
     ): Flow<UserFeedItem> {
-        logger.debug("Getting UserFeedItems of feeds $feedIdList with feedItemFilter $feedItemIdFilter of user $userId")
+        logger.debug("Getting $limit with offset $offset UserFeedItems of feeds $feedIdList with feedItemFilter $feedItemIdFilter of user $userId")
         val feedsToFetch = if (feedIdList.isNullOrEmpty()) {
             getFeeds(userId).map { it.feedId }.toList()
         } else {
@@ -48,7 +49,8 @@ class FeedQueryServiceImpl(
             userId,
             feedsToFetch,
             feedItemIdFilter,
-            limit
+            limit,
+            offset
         )
     }
 

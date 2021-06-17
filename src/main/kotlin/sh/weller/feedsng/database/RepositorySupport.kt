@@ -23,9 +23,16 @@ internal fun andWhereIfNotNull(fieldName: String, parameterName: String, operato
 
 internal fun limitIfNotNull(limit: Int?): String =
     if (limit != null) {
-        "LIMIT $limit"
+        "LIMIT :limit"
     } else {
         ""
+    }
+
+internal fun DatabaseClient.GenericExecuteSpec.bindLimitIfNotNull(limit: Int?): DatabaseClient.GenericExecuteSpec =
+    if (limit != null) {
+        this.bind("limit", limit)
+    } else {
+        this
     }
 
 internal fun DatabaseClient.GenericExecuteSpec.bindIfNotNull(

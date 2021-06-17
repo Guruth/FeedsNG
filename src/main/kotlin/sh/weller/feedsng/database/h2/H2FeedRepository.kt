@@ -308,7 +308,8 @@ class H2FeedRepository(
         userId: UserId,
         feedIds: List<FeedId>,
         feedItemIdFilter: FeedItemIdFilter?,
-        limit: Int?
+        limit: Int?,
+        offset: Int
     ): Flow<UserFeedItem> {
         return client
             .sql(
@@ -321,11 +322,14 @@ class H2FeedRepository(
                 |${feedItemIdFilter.toWhereStatement()} 
                 |ORDER BY FI.id DESC
                 |${limitIfNotNull(limit)}
+                |OFFSET :offset
             """.trimMargin()
             )
             .bind("feed_ids", feedIds.map { it.id })
             .bind("user_id", userId.id)
             .bindIfNotNull(feedItemIdFilter)
+            .bindLimitIfNotNull(limit)
+            .bind("offset", offset)
             .mapToUserFeedItem()
             .flow()
     }
