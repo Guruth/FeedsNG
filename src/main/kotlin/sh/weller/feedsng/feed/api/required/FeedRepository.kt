@@ -21,6 +21,7 @@ interface FeedRepository {
     suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId)
     suspend fun addFeedToUser(userId: UserId, feedId: FeedId)
     suspend fun getAllFeedsOfUser(userId: UserId): Flow<Feed>
+    suspend fun getAllFeedIdsOfUser(userId: UserId): Flow<FeedId>
 
     suspend fun updateFeedItemOfUser(userId: UserId, feedItemIdFlow: Flow<FeedItemId>, updateAction: FeedUpdateAction)
 

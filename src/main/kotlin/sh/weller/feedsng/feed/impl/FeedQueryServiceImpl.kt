@@ -15,19 +15,25 @@ import sh.weller.feedsng.user.api.provided.UserId
 class FeedQueryServiceImpl(
     private val feedRepository: FeedRepository
 ) : FeedQueryService {
+
     override suspend fun getFeed(feedId: FeedId): Feed? {
-        logger.debug("Getting feed $feedId")
+        logger.trace("Getting feed $feedId")
         return feedRepository.getFeed(feedId)
     }
 
     override suspend fun getGroups(userId: UserId): Flow<Group> {
-        logger.debug("Getting groups of  $userId")
+        logger.trace("Getting groups of  $userId")
         return feedRepository.getAllUserGroups(userId)
     }
 
     override suspend fun getFeeds(userId: UserId): Flow<Feed> {
-        logger.debug("Getting feeds of  $userId")
+        logger.trace("Getting feeds of  $userId")
         return feedRepository.getAllFeedsOfUser(userId)
+    }
+
+    override suspend fun getFeedIds(userId: UserId): Flow<FeedId> {
+        logger.trace("Getting feedIds of  $userId")
+        return feedRepository.getAllFeedIdsOfUser(userId)
     }
 
     @OptIn(FlowPreview::class)
@@ -38,7 +44,7 @@ class FeedQueryServiceImpl(
         limit: Int?,
         offset: Int
     ): Flow<UserFeedItem> {
-        logger.debug("Getting $limit with offset $offset UserFeedItems of feeds $feedIdList with feedItemFilter $feedItemIdFilter of user $userId")
+        logger.trace("Getting $limit with offset $offset UserFeedItems of feeds $feedIdList with feedItemFilter $feedItemIdFilter of user $userId")
         val feedsToFetch = if (feedIdList.isNullOrEmpty()) {
             getFeeds(userId).map { it.feedId }.toList()
         } else {
@@ -60,7 +66,7 @@ class FeedQueryServiceImpl(
         feedIdList: List<FeedId>?,
         filter: FeedItemFilter?
     ): Flow<FeedItemId> {
-        logger.debug("Getting FeedItemIds of feeds $feedIdList with filter $filter of user $userId")
+        logger.trace("Getting FeedItemIds of feeds $feedIdList with filter $filter of user $userId")
         val feedsToFetch: List<FeedId> = feedIdList
             ?: getFeeds(userId).map { it.feedId }.toList()
 
@@ -72,7 +78,7 @@ class FeedQueryServiceImpl(
     }
 
     override suspend fun countFeedItems(userId: UserId, feedId: FeedId, filter: FeedItemFilter?): Int {
-        logger.debug("Counting FeedItems of user $userId and feed $feedId with filter $filter ")
+        logger.trace("Counting FeedItems of user $userId and feed $feedId with filter $filter ")
         return feedRepository.countFeedItemsOfFeedOfUser(userId, feedId, filter)
     }
 

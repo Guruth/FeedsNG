@@ -1,42 +1,55 @@
 <div class="column">
-    {{#feedItems}}
-        <div class="card my-2">
-            <header class="card-header {{#isRead}}has-background-grey-light{{/isRead}}"
-                    onclick="toggleReaderContentVisibility({{-index}})">
-                <p class="card-header-title"><a href="{{url}}">{{title}}</a></p>
-                <span id="show-content-{{-index}}" class="card-header-icon">
+    <div class="container">
+        {{#feedItems}}
+            <div class="card my-2">
+                <header class="card-header {{#isRead}}has-background-grey-light{{/isRead}}"
+                        onclick="toggleReaderContentVisibility({{-index}})">
+                    <p class="card-header-title"><a href="{{url}}">{{title}}</a></p>
+                    <span id="show-content-{{-index}}" class="card-header-icon">
                   <span class="icon">
                     <i class="fas fa-angle-down" aria-hidden="true"></i>
                   </span>
                 </span>
-                <span id="hide-content-{{-index}}" class="card-header-icon is-hidden">
+                    <span id="hide-content-{{-index}}" class="card-header-icon is-hidden">
                   <span class="icon">
                     <i class="fas fa-angle-up" aria-hidden="true"></i>
                   </span>
                 </span>
-            </header>
-            <div id="content-{{-index}}" class="is-hidden">
-                <div class="card-content">
-                    <div class="content" style="overflow: auto">
-                        {{&html}}
+                </header>
+                <div id="content-{{-index}}" class="is-hidden">
+                    <div class="card-content">
+                        <div class="content" style="overflow: auto">
+                            {{&html}}
+                        </div>
                     </div>
+                    <!--                <footer class="card-footer">-->
+                    <!--                    <a class="card-footer-item">Favorite</a>-->
+                    <!--                    <a class="card-footer-item">Unread</a>-->
+                    <!--                </footer>-->
                 </div>
-                <!--                <footer class="card-footer">-->
-                <!--                    <a class="card-footer-item">Favorite</a>-->
-                <!--                    <a class="card-footer-item">Unread</a>-->
-                <!--                </footer>-->
             </div>
-        </div>
-    {{/feedItems}}
-    {{^feedItems}}
-        <div class="card mx-2 mb-2">
-            <header class="card-header">
-                <p class="card-header-title">No articles!</p>
-            </header>
-        </div>
-    {{/feedItems}}
+        {{/feedItems}}
+        {{^feedItems}}
+            <div class="card mx-2 mb-2">
+                <header class="card-header">
+                    <p class="card-header-title">No articles!</p>
+                </header>
+            </div>
+        {{/feedItems}}
+    </div>
+    {{#pagination}}
+        <nav class="pagination is-centered is-rounded my-5" role="navigation" aria-label="pagination">
+            <ul class="pagination-list">
+                {{#pages}}
+                    <li>
+                        <a class="pagination-link {{#isSelected}}is-current{{/isSelected}}"
+                           href="/reader/{{selectedFeed}}/{{pageNumber}}" aria-label="Goto page {{label}}">{{label}}</a>
+                    </li>
+                {{/pages}}
+            </ul>
+        </nav>
+    {{/pagination}}
 </div>
-
 <script>
     function toggleReaderContentVisibility(index) {
         document.getElementById("content-" + index).classList.toggle("is-hidden")

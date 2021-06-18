@@ -281,6 +281,38 @@ class PostgresFeedRepository(
         return flowOf(groupFeedFlow, userFeedFlow).flattenConcat()
     }
 
+    override suspend fun getAllFeedIdsOfUser(userId: UserId): Flow<FeedId> {
+        val groupFeedIdFlow = client
+            .sql(
+                """
+                |SELECT 
+                |F.id
+                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |LEFT JOIN feed AS F ON UGF.feed_id = F.id
+                |WHERE UG.user_id = :user_id 
+                |AND F.id IS NOT NULL
+                |""".trimMargin()
+            )
+            .bind("user_id", userId.id)
+            .map { row -> row.getInt("id").toFeedId() }
+            .flow()
+
+        val userFeedIdFlow = client
+            .sql(
+                """
+                |SELECT 
+                |F.id
+                |FROM user_feed AS UF LEFT JOIN feed AS F ON UF.feed_id = F.id
+                |WHERE UF.user_id = :user_id 
+            """.trimMargin()
+            )
+            .bind("user_id", userId.id)
+            .map { row -> row.getInt("id").toFeedId() }
+            .flow()
+
+        return flowOf(groupFeedIdFlow, userFeedIdFlow).flattenConcat()
+    }
+
     override suspend fun updateFeedItemOfUser(
         userId: UserId,
         feedItemIdFlow: Flow<FeedItemId>,

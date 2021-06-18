@@ -3,7 +3,6 @@ package sh.weller.feedsng.web.ui
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Serializable
 import org.springframework.http.HttpMethod
@@ -14,9 +13,13 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.common.onFailure
 import sh.weller.feedsng.feed.api.provided.*
+import sh.weller.feedsng.user.api.provided.User
 import sh.weller.feedsng.user.api.provided.UserQueryService
 import sh.weller.feedsng.web.support.WebRequestHandler
 import java.net.URI
+import kotlin.math.ceil
+import kotlin.math.max
+import kotlin.math.min
 
 @Component
 class MustacheHandler(
@@ -36,6 +39,7 @@ class MustacheHandler(
         coRouter {
             GET("/reader", ::getReaderPage)
             GET("/reader/{feedId}", ::getReaderPage)
+            GET("/reader/{feedId}/{page}", ::getReaderPage)
 //            PUT("/reader/feed", ::addFeed)
         }
 
@@ -47,40 +51,95 @@ class MustacheHandler(
             ?: return@coroutineScope ServerResponse.status(HttpStatus.UNAUTHORIZED).buildAndAwait()
 
         val selectedFeedId = request.pathVariables()["feedId"].toFeedIdOrNull()
-        val feeds = async {
-            feedQueryService
-                .getFeeds(user.userId)
-                .toList()
-                .map {
-                    async {
-                        val numberOfUnreadItems = feedQueryService
-                            .countFeedItems(user.userId, it.feedId, FeedItemFilter.UNREAD)
-                        val isSelected = (it.feedId == selectedFeedId)
-                        it.toFeedModel(isSelected, numberOfUnreadItems)
-                    }
-                }
-                .awaitAll()
-                .sortedByDescending { it.numberOfUnreadItems }
-        }
 
-        val feedItems = async {
-            if (selectedFeedId != null) {
-                feedQueryService
-                    .getFeedItems(user.userId, selectedFeedId, limit = 10)
-                    .map { it.toFeedItemModel() }
-                    .toList()
-            } else {
-                emptyList()
-            }
-        }
+        val selectedPage = request.pathVariables()["page"]?.toIntOrNull() ?: 0
+        val pageSize = request.queryParamOrNull("pageSize")?.toIntOrNull() ?: 15
+
+        val feedItemModels = async { getFeedItemModels(user, selectedFeedId, selectedPage, pageSize) }
+        val feedModels = async { getFeedModels(user, selectedFeedId) }
+        val paginationModel = async { getPaginationModel(user, selectedFeedId, selectedPage, pageSize) }
 
         val modelMap = request.getModelMap()
-        modelMap["feeds"] = feeds.await()
-        modelMap["feedItems"] = feedItems.await()
+        modelMap["feeds"] = feedModels.await()
+        modelMap["feedItems"] = feedItemModels.await()
+        modelMap["pagination"] = paginationModel.await()
 
         return@coroutineScope ServerResponse.ok()
             .renderAndAwait("sites/reader/reader", modelMap)
     }
+
+    private suspend fun getFeedItemModels(
+        user: User,
+        selectedFeedId: FeedId?,
+        selectedPage: Int,
+        pageSize: Int
+    ): List<FeedItemModel> {
+        return if (selectedFeedId != null) {
+            feedQueryService
+                .getFeedItems(user.userId, selectedFeedId, limit = pageSize, offset = selectedPage * pageSize)
+                .toList()
+                .map { it.toFeedItemModel() }
+        } else {
+            emptyList()
+        }
+    }
+
+    private suspend fun getFeedModels(user: User, selectedFeedId: FeedId?): List<FeedModel> =
+        coroutineScope {
+            feedQueryService
+                .getFeedIds(user.userId)
+                .toList()
+                .map {
+                    async {
+                        val feed = async { feedQueryService.getFeed(it) }
+                        val feedItemCount = async {
+                            feedQueryService
+                                .countFeedItems(user.userId, it, FeedItemFilter.UNREAD)
+                        }
+                        feed.await()?.toFeedModel(it == selectedFeedId, feedItemCount.await())
+                    }
+                }
+                .awaitAll()
+                .filterNotNull()
+                .sortedByDescending { it.numberOfUnreadItems }
+        }
+
+    private suspend fun getPaginationModel(
+        user: User,
+        selectedFeedId: FeedId?,
+        selectedPage: Int,
+        pageSize: Int
+    ): PaginationModel? =
+        if (selectedFeedId != null) {
+            val numberOfItems = feedQueryService.countFeedItems(user.userId, selectedFeedId)
+            val numberOfPages = ceil(numberOfItems.toDouble() / pageSize).toInt()
+
+            val (lowerBound, upperBound) = if (numberOfPages > 5) {
+                // Always have at least 5 items 0 - 5 or (size-5) - size
+                val lowerBound = min(max(0, selectedPage - 2), (numberOfPages - 5))
+                val upperBound = max(5, min(numberOfPages, selectedPage + 3))
+                lowerBound to upperBound
+            } else {
+                0 to numberOfPages
+            }
+
+
+            PaginationModel(
+                hasPrevious = selectedPage != 0,
+                hasNext = selectedPage < numberOfPages,
+                selectedFeed = selectedFeedId.id,
+                pages = (lowerBound until upperBound).map {
+                    PageLink(
+                        label = (it + 1).toString(),
+                        pageNumber = it,
+                        isSelected = it == selectedPage
+                    )
+                }
+            )
+        } else {
+            null
+        }
+
 
     private suspend fun addFeed(request: ServerRequest): ServerResponse {
         val username = request.getUsernameOrNull()
@@ -128,6 +187,19 @@ private fun UserFeedItem.toFeedItemModel() = FeedItemModel(
     url = feedItem.feedItemData.url,
     html = feedItem.feedItemData.html,
     isRead = isRead
+)
+
+private data class PaginationModel(
+    val hasPrevious: Boolean,
+    val hasNext: Boolean,
+    val selectedFeed: Int,
+    val pages: List<PageLink>
+)
+
+private data class PageLink(
+    val label: String,
+    val pageNumber: Int,
+    val isSelected: Boolean
 )
 
 @Serializable

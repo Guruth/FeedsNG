@@ -20,6 +20,11 @@ interface FeedQueryService {
     suspend fun getFeeds(userId: UserId): Flow<Feed>
 
     /**
+     * Fetches all [FeedId]s of a user
+     */
+    suspend fun getFeedIds(userId: UserId): Flow<FeedId>
+
+    /**
      * Fetches all [UserFeedItem]s of a user for the given list of [FeedId]s that match the [FeedItemFilter].
      */
     suspend fun getFeedItems(
