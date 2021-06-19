@@ -20,9 +20,9 @@ internal class FeedUpdateServiceImplTest {
 
     @Test
     fun `Automatically updates feeds`() {
-        val (cut, repo, fetcher) = getTestSetup()
-
         runBlocking {
+            val (cut, repo, fetcher) = getTestSetup()
+
             val feedDetails = fetcher
                 .fetchFeedDetails("https://blog.jetbrains.com/kotlin/feed/")
                 .valueOrNull()
@@ -32,29 +32,31 @@ internal class FeedUpdateServiceImplTest {
             val insertedFeed = repo.getFeed(feedId)
             assertNotNull(insertedFeed)
 
-            delay(2000)
             launch { cut.start() }
-            delay(2000)
+            delay(2500)
 
             val updatedFeed = repo.getFeed(feedId)
             assertNotNull(updatedFeed)
             assertTrue { insertedFeed.feedData.lastUpdated.isBefore(updatedFeed.feedData.lastUpdated) }
-        }
 
-        cut.stop()
+            cut.stop()
+        }
     }
 
 
-    private fun getTestSetup(): Triple<FeedUpdateServiceImpl, sh.weller.feedsng.feed.api.required.FeedRepository, FeedFetcherService> {
+    private suspend fun getTestSetup(): Triple<FeedUpdateServiceImpl, sh.weller.feedsng.feed.api.required.FeedRepository, FeedFetcherService> {
         val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
         val client = DatabaseClient.create(factory)
         val repo = H2FeedRepository(client)
+
+        // Wait to make sure the setup is complete
+        delay(2000)
 
         val fetcher = RomeFeedFetcherServiceImpl()
         val updater = FeedUpdateServiceImpl(
             repo,
             fetcher,
-            feedUpdateConfiguration = FeedUpdateConfiguration(100, 100)
+            feedUpdateConfiguration = FeedUpdateConfiguration(0, 10000)
         )
 
         return Triple(updater, repo, fetcher)
