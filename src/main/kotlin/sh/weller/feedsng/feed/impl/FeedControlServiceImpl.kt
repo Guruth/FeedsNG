@@ -14,6 +14,7 @@ import sh.weller.feedsng.feed.api.required.FeedFetcherService
 import sh.weller.feedsng.feed.api.required.FeedImportService
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
+import java.net.URL
 import java.time.Instant
 
 @OptIn(FlowPreview::class)
@@ -101,11 +102,28 @@ class FeedControlServiceImpl(
 
     override suspend fun addFeed(userId: UserId, feedUrl: String): Result<FeedId, String> {
         logger.info("Adding $feedUrl for $userId")
-        val feedId = getFeedByURLOrFetchAndInsert(feedUrl)
+
+        if (isFeedURLInvalid(feedUrl)) {
+            return "Invalid feed url".asFailure()
+        }
+
+        val feedId = getFeedByURLOrFetchAndInsert(URL(feedUrl).toExternalForm())
             .onFailure { return it }
 
         feedRepository.addFeedToUser(userId, feedId)
         return feedId.asSuccess()
+    }
+
+    private fun isFeedURLInvalid(feedUrl: String): Boolean {
+        val url = runCatching {
+            URL(feedUrl)
+        }.getOrElse {
+            return true
+        }
+
+        // TODO: Add check if the ip is an internet address
+
+        return false
     }
 
     override suspend fun updateGroup(userId: UserId, groupId: GroupId, action: FeedUpdateAction, before: Instant?) {
