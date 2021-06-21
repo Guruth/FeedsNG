@@ -31,7 +31,8 @@ class FeedUpdateServiceImpl(
     private val feedUpdateConfiguration: FeedUpdateConfiguration
 ) : SmartLifecycle {
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Default)
+    private val supervisor = SupervisorJob()
+    private val coroutineScope = CoroutineScope(Dispatchers.Default + supervisor)
 
     // This will change in future: https://github.com/Kotlin/kotlinx.coroutines/issues/540
     private lateinit var updateTicker: ReceiveChannel<Unit>
