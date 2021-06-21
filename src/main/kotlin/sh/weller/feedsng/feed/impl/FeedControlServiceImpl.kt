@@ -107,6 +107,11 @@ class FeedControlServiceImpl(
             return "Invalid feed url".asFailure()
         }
 
+        val userFeeds = feedRepository.getAllFeedsOfUser(userId).toList()
+        if (userFeeds.firstOrNull { it.feedData.feedUrl == feedUrl } != null) {
+            return "User already has feed".asFailure()
+        }
+
         val feedId = getFeedByURLOrFetchAndInsert(URL(feedUrl).toExternalForm())
             .onFailure { return it }
 

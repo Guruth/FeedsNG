@@ -4,6 +4,7 @@ import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
+import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.database.h2.H2FeedRepository
@@ -16,6 +17,7 @@ import strikt.assertions.*
 import java.io.File
 import java.util.*
 import kotlin.test.Test
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
 internal class FeedControlServiceImplTest {
@@ -54,6 +56,10 @@ internal class FeedControlServiceImplTest {
 
             val feedIdWithoutGroup = cut.addFeed(userId, "https://blog.jetbrains.com/kotlin/feed/").valueOrNull()
             assertNotNull(feedIdWithoutGroup)
+
+            val duplicateFeed = cut.addFeed(userId, "https://blog.jetbrains.com/kotlin/feed/")
+            assertIs<Failure<String>>(duplicateFeed)
+
             val feedIdWithGroup = cut.addFeedToGroup(userId, groupId, "https://blog.jetbrains.com/feed/").valueOrNull()
             assertNotNull(feedIdWithGroup)
 
