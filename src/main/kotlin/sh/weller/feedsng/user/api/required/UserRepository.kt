@@ -12,4 +12,8 @@ interface UserRepository {
 
     suspend fun getFeverAPIAuthentication(feverAPIKeyHash: String): User?
     suspend fun setFeverAPIAuthentication(userId: UserId, feverAPIKeyHash: String)
+
+    suspend fun insertInviteCode(issuerUserId: UserId, inviteCode: String)
+    suspend fun isInviteCodeUsed(inviteCode: String): Boolean
+    suspend fun setInviteCodeUsed(usedByUserId: UserId, inviteCode: String)
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.feed.api.provided.FeedControlService
+import sh.weller.feedsng.user.api.provided.CreateUserResult
 import sh.weller.feedsng.user.api.provided.UserControlService
 import sh.weller.feedsng.user.api.provided.UserQueryService
 
@@ -26,13 +27,14 @@ class StartupService(
         logger.info("Starting Startup Service")
         runBlocking {
             val userName = "FeedsNG"
-            if (userQueryService.getUserByUsername(userName) == null) {
-                val userId = userControlService.createUser(userName, "Some.Random.Password!")
-                val feverAPIKey = userControlService.enableFeverAPI(userId) as Success<String>
+            val createUserResult = userControlService.createUser(userName, "Some.Random.Password!")
+            if (createUserResult is CreateUserResult.Success) {
+                val feverAPIKey = userControlService.enableFeverAPI(createUserResult.userId) as Success<String>
                 logger.info("Created User $userName - Fever API Key: ${feverAPIKey.value}")
 
                 val startupOPMLContent = startupOPML.inputStream.reader().readText()
-                when (val importResult = feedControlService.importFromOPML(userId, startupOPMLContent)) {
+                val importResult = feedControlService.importFromOPML(createUserResult.userId, startupOPMLContent)
+                when (importResult) {
                     is Failure -> logger.info("Error during import: ${importResult.reason}")
                     is Success -> logger.info("Successfully imported all feeds")
                 }

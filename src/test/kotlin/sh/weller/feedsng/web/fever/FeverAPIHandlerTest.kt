@@ -10,6 +10,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.web.reactive.function.BodyInserters
 import sh.weller.feedsng.common.onFailure
 import sh.weller.feedsng.feed.api.provided.FeedControlService
+import sh.weller.feedsng.user.api.provided.CreateUserResult
 import sh.weller.feedsng.user.api.provided.User
 import sh.weller.feedsng.user.api.provided.UserControlService
 import sh.weller.feedsng.user.api.provided.UserQueryService
@@ -17,6 +18,7 @@ import strikt.api.expectThat
 import strikt.assertions.*
 import java.util.*
 import kotlin.test.Test
+import kotlin.test.assertIs
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -36,11 +38,12 @@ class FeverAPIHandlerTest(
         .build()
 
     private suspend fun getUserAndApiKey(): Pair<User, String> {
-        val userId = userControlService.createUser(UUID.randomUUID().toString(), "TestPassword")
-        val user = userQueryService.getUserByUserId(userId)!!
+        val createUserResult = userControlService.createUser(UUID.randomUUID().toString(), "TestPassword")
+        assertIs<CreateUserResult.Success>(createUserResult)
+        val user = userQueryService.getUserByUserId(createUserResult.userId)!!
 
-        userControlService.enableFeverAPI(userId)
-        val feverApiKey = userQueryService.getUserByUserId(userId)!!.userData.feverAPIKeyHash!!
+        userControlService.enableFeverAPI(createUserResult.userId)
+        val feverApiKey = userQueryService.getUserByUserId(createUserResult.userId)!!.userData.feverAPIKeyHash!!
 
         return user to feverApiKey
     }

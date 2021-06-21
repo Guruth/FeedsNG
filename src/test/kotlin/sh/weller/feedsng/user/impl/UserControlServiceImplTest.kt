@@ -7,6 +7,7 @@ import org.springframework.security.crypto.codec.Hex
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
 import sh.weller.feedsng.database.h2.H2UserRepository
+import sh.weller.feedsng.user.api.provided.CreateUserResult
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
@@ -15,6 +16,7 @@ import strikt.assertions.isNotNull
 import java.security.MessageDigest
 import java.util.*
 import kotlin.test.Test
+import kotlin.test.assertIs
 
 
 internal class UserControlServiceImplTest {
@@ -27,8 +29,9 @@ internal class UserControlServiceImplTest {
             val testUsername = "Foobar"
             val testPassword = "BarBaz"
 
-            val userId = cut.createUser(testUsername, testPassword)
-            val createdUser = repo.getByUserId(userId)
+            val createUserResult = cut.createUser(testUsername, testPassword)
+            assertIs<CreateUserResult.Success>(createUserResult)
+            val createdUser = repo.getByUserId(createUserResult.userId)
 
             expectThat(createdUser)
                 .isNotNull()
@@ -38,7 +41,7 @@ internal class UserControlServiceImplTest {
                     get { passwordHash }.isNotEqualTo(testPassword)
                 }
 
-            val generatedAPIKey = cut.enableFeverAPI(userId)
+            val generatedAPIKey = cut.enableFeverAPI(createUserResult.userId)
             expectThat(generatedAPIKey)
                 .isA<Success<String>>()
             val feverApiAuth = calcMD5Hash("$testUsername:${generatedAPIKey.valueOrNull()}")
