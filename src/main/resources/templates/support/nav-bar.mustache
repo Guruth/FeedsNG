@@ -13,16 +13,21 @@
         </div>
         <div class="navbar-end">
             {{#username}}
-                <a class="navbar-item">{{username}}</a>
+                <a class="navbar-item" href="/account">{{username}}</a>
                 <div class="navbar-item">
                     <button class="button is-warning is-outlined" onclick="logout()">Log out</button>
                 </div>
             {{/username}}
             {{^username}}
                 <div class="navbar-item">
-                    <a class="button is-light" href="/login">
-                        Log in
-                    </a>
+                    <div class="buttons">
+                        <a class="button is-light" href="/register">
+                            Register
+                        </a>
+                        <a class="button is-light" href="/login">
+                            Log in
+                        </a>
+                    </div>
                 </div>
             {{/username}}
         </div>

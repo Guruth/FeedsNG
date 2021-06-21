@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.CacheControl
 import org.springframework.http.codec.ServerCodecConfigurer
+import org.springframework.http.codec.json.KotlinSerializationJsonDecoder
 import org.springframework.http.codec.json.KotlinSerializationJsonEncoder
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
@@ -104,11 +105,15 @@ class WebConfiguration : WebFluxConfigurer {
         }
 
     override fun configureHttpMessageCodecs(configurer: ServerCodecConfigurer) {
+        val kotlinJson = Json {
+            encodeDefaults = false
+        }
         configurer
             .defaultCodecs()
-            .kotlinSerializationJsonEncoder(KotlinSerializationJsonEncoder(Json {
-                encodeDefaults = false
-            }))
+            .kotlinSerializationJsonEncoder(KotlinSerializationJsonEncoder(kotlinJson))
+        configurer
+            .defaultCodecs()
+            .kotlinSerializationJsonDecoder(KotlinSerializationJsonDecoder(kotlinJson))
     }
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {

@@ -5,12 +5,12 @@
 {{>support/nav-bar}}
 <div class="content-wrapper section">
     {{#username}}
-        <h2 class="title has-text-centered">You're already logged in</h2>
+        <h2 class="title has-text-centered">You're already logged in!</h2>
     {{/username}}
     {{^username}}
-        <h2 class="title">Please log in</h2>
+        <h2 class="title">Login</h2>
         <div class="field">
-            <label for="username" class="label">Name</label>
+            <label for="username" class="label">Username</label>
             <div class="control">
                 <input id="username" name="username" class="input" type="text" placeholder="Username">
             </div>
@@ -46,6 +46,14 @@
         if (!loginResult.ok) {
             showError()
         }
+    }
+
+    async function login(username, password) {
+        let result = await postJSON("/login", {"username": username, "password": password})
+        if (result.ok) {
+            window.location.replace("/reader")
+        }
+        return result
     }
 
     function showError() {

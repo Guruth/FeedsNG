@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+{{>support/head}}
+<body>
+{{>support/nav-bar}}
+<div class="content-wrapper section">
+    {{#username}}
+        <h2 class="title has-text-centered">You're already registered!</h2>
+    {{/username}}
+    {{^username}}
+        <h2 class="title">Register</h2>
+        <div class="field">
+            <label for="username" class="label">Username</label>
+            <div class="control">
+                <input id="username" name="username" class="input" type="text" placeholder="Username">
+            </div>
+        </div>
+        <div class="field">
+            <label for="password" class="label">Password</label>
+            <div class="control">
+                <input id="password" name="password" class="input" type="password" placeholder="Password">
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="invite" class="label">Invite Code</label>
+            <div class="control">
+                <input id="invite" name="invite" class="input" type="text" placeholder="Invite code">
+            </div>
+        </div>
+
+
+        <div id="errorText" class="box has-text-centered is-size-4 has-text-danger is-hidden"></div>
+
+        <div class="field">
+            <div class="control">
+                <button class="button" onclick="performRegister()">Submit</button>
+            </div>
+        </div>
+    {{/username}}
+</div>
+<script>
+    async function performRegister() {
+        hideError()
+        let username = document.getElementById("username").value
+        let password = document.getElementById("password").value
+        let inviteCode = document.getElementById("invite").value
+
+        let result = await postJSON("/register", {"username": username, "password": password, "inviteCode": inviteCode})
+        if (result.ok) {
+            window.location.replace("/login")
+        } else {
+            await showError(result)
+        }
+    }
+
+    async function showError(registerError) {
+        document.getElementById("errorText").innerText = await registerError.text()
+        document.getElementById("errorText").classList.remove("is-hidden")
+    }
+
+    function hideError() {
+        document.getElementById("errorText").innerText = ""
+        document.getElementById("errorText").classList.add("is-hidden")
+    }
+</script>
+{{>support/footer}}
+{{>support/scripts}}
+</body>
+</html>

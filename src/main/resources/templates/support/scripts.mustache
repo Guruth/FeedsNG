@@ -1,13 +1,4 @@
 <script>
-
-    async function login(username, password) {
-        let result = await postJSON("/login", {"username": username, "password": password})
-        if (result.ok) {
-            window.location.replace("/reader")
-        }
-        return result
-    }
-
     async function logout() {
         let result = await post("/logout")
         if (result.ok) {

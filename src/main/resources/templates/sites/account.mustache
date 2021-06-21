@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+{{>support/head}}
+<body>
+{{>support/nav-bar}}
+<div class="content-wrapper section">
+    <div class="box">
+        <button class="button" onclick="generateInviteCode()">Generate Invite Code</button>
+        <p id="inviteCode"></p>
+    </div>
+</div>
+<script>
+    async function generateInviteCode() {
+        let result = await post("/account/invite")
+        if (result.ok) {
+            document.getElementById("inviteCode").innerText = await result.text()
+        } else {
+            console.error("Could not generate error code: " + result.text())
+        }
+    }
+
+</script>
+{{>support/footer}}
+{{>support/scripts}}
+</body>
+</html>
