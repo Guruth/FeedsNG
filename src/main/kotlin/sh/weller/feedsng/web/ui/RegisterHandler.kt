@@ -46,6 +46,8 @@ class RegisterHandler(
                 .bodyValueAndAwait("Invite code is invalid!")
             CreateUserResult.PasswordNotValid -> ServerResponse.badRequest().contentType(MediaType.TEXT_PLAIN)
                 .bodyValueAndAwait("Password not valid! Must be at least 8 characters long.")
+            CreateUserResult.UsernameInvalid -> ServerResponse.badRequest().contentType(MediaType.TEXT_PLAIN)
+                .bodyValueAndAwait("Username is invalid! Must be at least 4 characters long.")
             CreateUserResult.UsernameAlreadyExist -> ServerResponse.badRequest().contentType(MediaType.TEXT_PLAIN)
                 .bodyValueAndAwait("Username already in use!")
             is CreateUserResult.Success -> ServerResponse.created(URI("/login")).buildAndAwait()

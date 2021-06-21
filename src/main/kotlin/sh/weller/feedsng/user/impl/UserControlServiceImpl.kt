@@ -21,12 +21,15 @@ class UserControlServiceImpl(
     private val passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()
 
     override suspend fun createUser(username: String, password: String): CreateUserResult {
-        val existingUser = repository.getByUsername(username)
-        if (existingUser != null) {
-            return CreateUserResult.UsernameAlreadyExist
+        if (isUsernameInvalid(username)) {
+            return CreateUserResult.UsernameInvalid
         }
         if (isPasswordInvalid(password)) {
             return CreateUserResult.PasswordNotValid
+        }
+        val existingUser = repository.getByUsername(username)
+        if (existingUser != null) {
+            return CreateUserResult.UsernameAlreadyExist
         }
 
         val userId = repository.insertUser(UserData(username, passwordEncoder.encode(password)))
@@ -35,14 +38,16 @@ class UserControlServiceImpl(
 
     @Transactional
     override suspend fun createUser(username: String, password: String, inviteCode: String): CreateUserResult {
-        val existingUser = repository.getByUsername(username)
-        if (existingUser != null) {
-            return CreateUserResult.UsernameAlreadyExist
+        if (isUsernameInvalid(username)) {
+            return CreateUserResult.UsernameInvalid
         }
         if (isPasswordInvalid(password)) {
             return CreateUserResult.PasswordNotValid
         }
-
+        val existingUser = repository.getByUsername(username)
+        if (existingUser != null) {
+            return CreateUserResult.UsernameAlreadyExist
+        }
         if (repository.isInviteCodeUsed(inviteCode)) {
             return CreateUserResult.InviteCodeInvalid
         }
@@ -57,6 +62,15 @@ class UserControlServiceImpl(
         if (password.isBlank()) {
             return true
         } else if (password.length < 8) {
+            return true
+        }
+        return false
+    }
+
+    private fun isUsernameInvalid(username: String): Boolean {
+        if (username.isBlank()) {
+            return true
+        } else if (username.length < 4) {
             return true
         }
         return false
@@ -97,3 +111,4 @@ class UserControlServiceImpl(
             .joinToString("")
     }
 }
+

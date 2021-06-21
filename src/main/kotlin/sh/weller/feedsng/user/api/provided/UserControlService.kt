@@ -14,6 +14,7 @@ interface UserControlService {
 sealed class CreateUserResult {
     data class Success(val userId: UserId) : CreateUserResult()
     object UsernameAlreadyExist : CreateUserResult()
+    object UsernameInvalid : CreateUserResult()
     object PasswordNotValid : CreateUserResult()
     object InviteCodeInvalid : CreateUserResult()
 }
