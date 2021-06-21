@@ -27,7 +27,7 @@ internal class UserControlServiceImplTest {
 
         runBlocking {
             val testUsername = "Foobar"
-            val testPassword = "BarBaz"
+            val testPassword = "BarBazFoo"
 
             val createUserResult = cut.createUser(testUsername, testPassword)
             assertIs<CreateUserResult.Success>(createUserResult)
