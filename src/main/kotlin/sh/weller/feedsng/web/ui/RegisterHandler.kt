@@ -5,6 +5,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.user.api.provided.CreateUserResult
@@ -20,7 +21,7 @@ class RegisterHandler(
         authorize("/register", permitAll)
     }
 
-    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? =
+    override fun getCSRFPathPatternMatcher(): ServerWebExchangeMatcher? =
         PathPatternParserServerWebExchangeMatcher("/register", HttpMethod.POST)
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> = coRouter {

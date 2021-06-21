@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.user.api.provided.UserControlService
@@ -20,7 +21,7 @@ class AccountHandlerHandler(
         authorize("/account/**", authenticated)
     }
 
-    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? =
+    override fun getCSRFPathPatternMatcher(): ServerWebExchangeMatcher? =
         PathPatternParserServerWebExchangeMatcher("/account/**", HttpMethod.POST)
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> = coRouter {

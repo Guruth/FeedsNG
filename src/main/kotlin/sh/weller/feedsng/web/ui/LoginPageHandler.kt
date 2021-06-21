@@ -3,6 +3,7 @@ package sh.weller.feedsng.web.ui
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.web.support.WebRequestHandler
@@ -13,7 +14,7 @@ class LoginPageHandler : WebRequestHandler {
         authorize("/login", permitAll)
     }
 
-    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? =
+    override fun getCSRFPathPatternMatcher(): ServerWebExchangeMatcher? =
         PathPatternParserServerWebExchangeMatcher("/login", HttpMethod.POST)
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> = coRouter {

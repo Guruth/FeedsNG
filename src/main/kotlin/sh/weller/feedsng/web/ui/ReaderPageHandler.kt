@@ -8,7 +8,9 @@ import kotlinx.serialization.Serializable
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.security.config.web.server.AuthorizeExchangeDsl
+import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.*
 import sh.weller.feedsng.common.onFailure
@@ -32,15 +34,19 @@ class MustacheHandler(
         authorize("/reader/**", authenticated)
     }
 
-    override fun getCSRFPathPatternMatcher(): PathPatternParserServerWebExchangeMatcher? =
-        PathPatternParserServerWebExchangeMatcher("/login", HttpMethod.PUT)
+    override fun getCSRFPathPatternMatcher(): ServerWebExchangeMatcher? =
+        AndServerWebExchangeMatcher(
+            PathPatternParserServerWebExchangeMatcher("/reader/**", HttpMethod.POST),
+            PathPatternParserServerWebExchangeMatcher("/reader/**", HttpMethod.PUT)
+        )
 
     override fun getRouterFunction(): RouterFunction<ServerResponse> =
         coRouter {
+            PUT("/reader/feed", ::addFeed)
+
             GET("/reader", ::getReaderPage)
             GET("/reader/{feedId}", ::getReaderPage)
             GET("/reader/{feedId}/{page}", ::getReaderPage)
-//            PUT("/reader/feed", ::addFeed)
         }
 
 
