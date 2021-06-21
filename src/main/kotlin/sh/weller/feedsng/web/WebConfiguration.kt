@@ -1,10 +1,13 @@
 package sh.weller.feedsng.web
 
 import kotlinx.serialization.json.Json
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.CacheControl
+import org.springframework.http.HttpStatus
 import org.springframework.http.codec.ServerCodecConfigurer
 import org.springframework.http.codec.json.KotlinSerializationJsonDecoder
 import org.springframework.http.codec.json.KotlinSerializationJsonEncoder
@@ -26,6 +29,9 @@ import org.springframework.session.config.annotation.web.server.EnableSpringWebS
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.RouterFunction
+import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.buildAndAwait
+import org.springframework.web.reactive.function.server.coRouter
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
@@ -128,9 +134,21 @@ class WebConfiguration : WebFluxConfigurer {
     }
 
     @Bean
-    fun routerFunction(handlers: List<WebRequestHandler>): RouterFunction<*> =
-        handlers
+    fun routerFunction(handlers: List<WebRequestHandler>): RouterFunction<*> {
+        val routerFunctions = handlers
             .map { it.getRouterFunction() }
             .reduce { acc, routerFunction -> acc.and(routerFunction) }
 
+        return coRouter {
+            onError<Exception> { throwable, serverRequest ->
+                defaultErrorHandlerLogger.error("Uncaught Error for url: ${serverRequest.uri()} ", throwable)
+                return@onError ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR).buildAndAwait()
+            }
+            add(routerFunctions)
+        }
+    }
+
+    companion object {
+        private val defaultErrorHandlerLogger: Logger = LoggerFactory.getLogger("DefaultWebErrorHandler")
+    }
 }
