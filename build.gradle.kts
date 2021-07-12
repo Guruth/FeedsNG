@@ -18,7 +18,6 @@ repositories {
 }
 
 dependencies {
-
     // Kotlin
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
@@ -49,8 +48,8 @@ dependencies {
     implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
 
     // RSS
-    implementation("com.rometools:rome:1.15.0")
-    implementation("com.rometools:rome-opml:1.15.0")
+    implementation("com.rometools:rome:1.16.0")
+    implementation("com.rometools:rome-opml:1.16.0")
 
     // Database
     implementation("org.springframework:spring-r2dbc")
@@ -62,7 +61,6 @@ dependencies {
     // Dev Dependencies
 //    developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
-
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
