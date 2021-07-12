@@ -87,7 +87,8 @@ class PostgresUserRepository(
         return client.sql("SELECT (CASE WHEN used_by IS NULL THEN false ELSE true END) as is_used FROM invite_code WHERE invite_code = :invite_code")
             .bind("invite_code", inviteCode)
             .map { row -> row.getReified<Boolean>("is_used") }
-            .awaitSingle()
+            .awaitSingleOrNull()
+            ?: false
     }
 
     override suspend fun setInviteCodeUsed(usedByUserId: UserId, inviteCode: String) {
