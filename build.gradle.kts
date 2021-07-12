@@ -25,7 +25,7 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.1-native-mt")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
