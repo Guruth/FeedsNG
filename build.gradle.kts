@@ -24,10 +24,10 @@ dependencies {
     implementation(kotlin("reflect"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
     implementation("io.projectreactor.tools:blockhound:1.0.6.RELEASE")
 
