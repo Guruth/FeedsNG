@@ -41,18 +41,6 @@ class RomeFeedFetcherServiceImpl : FeedFetcherService {
 
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    private val client: WebClient = WebClient
-        .builder()
-        .clientConnector(
-            ReactorClientHttpConnector(
-                HttpClient.create()
-                    .followRedirect(true)
-                    .responseTimeout(Duration.of(10, ChronoUnit.SECONDS))
-            )
-        )
-        .build()
-
-
     private val feedBuilder = SyndFeedInput()
         .apply {
             isAllowDoctypes = false
@@ -70,6 +58,16 @@ class RomeFeedFetcherServiceImpl : FeedFetcherService {
     }
 
     private suspend fun getFeedBytes(feedUrl: String): Result<WebclientResponse, String> {
+        val client: WebClient = WebClient
+            .builder()
+            .clientConnector(
+                ReactorClientHttpConnector(
+                    HttpClient.create()
+                        .followRedirect(true)
+                        .responseTimeout(Duration.of(10, ChronoUnit.SECONDS))
+                )
+            )
+            .build()
         return try {
             val responseEntity = client
                 .get()

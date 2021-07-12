@@ -31,8 +31,7 @@ class FeedUpdateServiceImpl(
     private val feedUpdateConfiguration: FeedUpdateConfiguration
 ) : SmartLifecycle {
 
-    private val supervisor = SupervisorJob()
-    private val coroutineScope = CoroutineScope(Dispatchers.Default + supervisor)
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     // This will change in future: https://github.com/Kotlin/kotlinx.coroutines/issues/540
     private lateinit var updateTicker: ReceiveChannel<Unit>
@@ -62,14 +61,16 @@ class FeedUpdateServiceImpl(
             for (tick in updateTicker) {
                 logger.info("Starting to update all feeds.")
                 val updateDuration = measureTime {
-                    feedRepository
-                        .getAllFeeds()
-                        .toList().map {
-                            async {
-                                updateFeed(it)
+                    supervisorScope {
+                        feedRepository
+                            .getAllFeeds()
+                            .toList().map {
+                                async {
+                                    updateFeed(it)
+                                }
                             }
-                        }
-                        .awaitAll()
+                            .awaitAll()
+                    }
                 }
                 logger.info("Finished all updating all feeds in took: ${updateDuration.inWholeSeconds} seconds")
             }
