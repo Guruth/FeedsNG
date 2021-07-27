@@ -72,7 +72,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
 
     testImplementation("io.strikt:strikt-core:0.31.0")
     testImplementation("io.strikt:strikt-jvm:0.31.0")
