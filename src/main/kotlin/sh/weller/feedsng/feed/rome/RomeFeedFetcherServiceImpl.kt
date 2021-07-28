@@ -142,33 +142,31 @@ class RomeFeedFetcherServiceImpl : FeedFetcherService {
 }
 
 private class RomeFeedDetails(
-    private val feedUrl: String,
+    feedUrl: String,
     private val syndFeed: SyndFeed
 ) : FeedDetails {
 
-    override val feedData: FeedData
-        get() = FeedData(
-            name = syndFeed.title,
-            description = syndFeed.description ?: "",
-            feedUrl = feedUrl,
-            siteUrl = syndFeed.link,
-            lastUpdated = syndFeed.getFeedUpdatedTimestamp(),
-        )
+    override val feedData: FeedData = FeedData(
+        name = syndFeed.title,
+        description = syndFeed.description ?: "",
+        feedUrl = feedUrl,
+        siteUrl = syndFeed.link,
+        lastUpdated = syndFeed.getFeedUpdatedTimestamp(),
+    )
 
-    override val feedItemData: Flow<FeedItemData>
-        get() = flow {
-            for (entry in syndFeed.entries) {
-                emit(
-                    FeedItemData(
-                        title = entry.getFeedItemTitle(),
-                        author = entry.author,
-                        html = entry.getFeedItemContent(),
-                        url = entry.link,
-                        created = entry.getFeedItemCreatedTimestamp()
-                    )
+    override val feedItemData: Flow<FeedItemData> = flow {
+        for (entry in syndFeed.entries) {
+            emit(
+                FeedItemData(
+                    title = entry.getFeedItemTitle(),
+                    author = entry.author,
+                    html = entry.getFeedItemContent(),
+                    url = entry.link,
+                    created = entry.getFeedItemCreatedTimestamp2()
                 )
-            }
+            )
         }
+    }
 
     private fun SyndFeed.getFeedUpdatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: Instant.now()
@@ -185,6 +183,21 @@ private class RomeFeedDetails(
 
     private fun SyndEntry.getFeedItemCreatedTimestamp(): Instant =
         this.publishedDate?.toInstant() ?: this.updatedDate?.toInstant() ?: Instant.now()
+
+
+    private val comparisonInstant = Instant.parse("1970-01-01T00:00:00Z")
+    private fun SyndEntry.getFeedItemCreatedTimestamp2(): Instant {
+        val createdTimestamp = when {
+            publishedDate != null -> publishedDate.toInstant()
+            updatedDate != null -> updatedDate.toInstant()
+            else -> Instant.now()
+        }
+        return if (createdTimestamp.isBefore(comparisonInstant)) {
+            Instant.now()
+        } else {
+            createdTimestamp
+        }
+    }
 
 }
 

@@ -61,16 +61,14 @@ class FeedUpdateServiceImpl(
             for (tick in updateTicker) {
                 logger.info("Starting to update all feeds.")
                 val updateDuration = measureTime {
-                    supervisorScope {
-                        feedRepository
-                            .getAllFeeds()
-                            .toList().map {
-                                async {
-                                    updateFeed(it)
-                                }
+                    feedRepository
+                        .getAllFeeds()
+                        .toList().map {
+                            async {
+                                updateFeed(it)
                             }
-                            .awaitAll()
-                    }
+                        }
+                        .awaitAll()
                 }
                 logger.info("Finished all updating all feeds in took: ${updateDuration.inWholeSeconds} seconds")
             }
@@ -86,8 +84,12 @@ class FeedUpdateServiceImpl(
                 return
             }
 
-        feedRepository.insertFeedItemsIfNotExist(feed.feedId, feedDetails.feedItemData).collect()
-        feedRepository.setFeedLastRefreshedTimestamp(feed.feedId)
+        runCatching {
+            feedRepository.insertFeedItemsIfNotExist(feed.feedId, feedDetails.feedItemData).collect()
+            feedRepository.setFeedLastRefreshedTimestamp(feed.feedId)
+        }.onFailure {
+            logger.error("Could not update feed ${feed.feedId} - ${feed.feedData.feedUrl}.", it)
+        }
     }
 
 
