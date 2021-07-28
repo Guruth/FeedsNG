@@ -1,7 +1,7 @@
 plugins {
     idea
 
-    id("org.springframework.boot") version "2.5.2"
+    id("org.springframework.boot") version "2.5.3"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
     kotlin("jvm") version "1.5.20"
@@ -73,7 +73,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     testImplementation("org.testcontainers:testcontainers:1.15.3")
-    testImplementation("org.testcontainers:postgresql:1.15.3")
+    testImplementation("org.testcontainers:postgresql:1.16.0")
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
 
