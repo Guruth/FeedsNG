@@ -39,7 +39,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-logging")
     implementation("io.netty:netty-tcnative-boringssl-static")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
 
     // UI
     implementation("org.springframework.boot:spring-boot-starter-mustache")
@@ -58,8 +58,11 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
+    // Misc
+    implementation("io.github.microutils:kotlin-logging:2.0.10")
+
     // Dev Dependencies
-//    developmentOnly("org.springframework.boot:spring-boot-devtools")
+    // developmentOnly("org.springframework.boot:spring-boot-devtools")
     developmentOnly("org.springframework.boot:spring-boot-starter-actuator")
 
     // Test
@@ -72,7 +75,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.15.3")
     testImplementation("org.testcontainers:postgresql:1.15.3")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
 
     testImplementation("io.strikt:strikt-core:0.31.0")
     testImplementation("io.strikt:strikt-jvm:0.31.0")
