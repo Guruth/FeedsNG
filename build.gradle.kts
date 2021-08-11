@@ -72,7 +72,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    testImplementation("org.testcontainers:testcontainers:1.15.3")
+    testImplementation("org.testcontainers:testcontainers:1.16.0")
     testImplementation("org.testcontainers:postgresql:1.16.0")
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
