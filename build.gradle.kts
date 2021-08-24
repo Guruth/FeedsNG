@@ -59,7 +59,7 @@ dependencies {
     implementation("io.r2dbc:r2dbc-postgresql")
 
     // Misc
-    implementation("io.github.microutils:kotlin-logging:2.0.10")
+    implementation("io.github.microutils:kotlin-logging:2.0.11")
 
     // Dev Dependencies
     // developmentOnly("org.springframework.boot:spring-boot-devtools")
