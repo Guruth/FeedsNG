@@ -2,20 +2,29 @@ package sh.weller.feedsng.database
 
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.await
 import sh.weller.feedsng.user.api.provided.UserData
 import sh.weller.feedsng.user.api.provided.UserId
 import sh.weller.feedsng.user.api.required.UserRepository
 import strikt.api.expectThat
 import strikt.assertions.*
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 
-internal abstract class AbstractUserRepositoryTest {
+internal abstract class AbstractUserRepositoryTest(
+    private val databaseClient: DatabaseClient,
+    private val repo: UserRepository
+) {
+
+    @BeforeTest
+    fun cleanupDatabase(): Unit = runBlocking {
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.ACCOUNT").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.INVITE_CODE").await()
+    }
 
     @Test
     fun `insertUser, getByUsername, getByUserId`() {
-        val (_, repo) = getTestSetup()
-
         runBlocking {
             val testUserData = UserData("test", "123")
             val createdUserId = repo.insertUser(testUserData)
@@ -42,8 +51,6 @@ internal abstract class AbstractUserRepositoryTest {
 
     @Test
     fun `insertUser, setFeverAPIKeyHash, getByFeverAPIKey`() {
-        val (_, repo) = getTestSetup()
-
         runBlocking {
             val testUserData = UserData("test", "123")
             val createdUserId = repo.insertUser(testUserData)
@@ -67,8 +74,6 @@ internal abstract class AbstractUserRepositoryTest {
 
     @Test
     fun `insertInviteCode, inviteCodeUnused and setInviteCodeUsed`() {
-        val (_, repo) = getTestSetup()
-
         runBlocking {
             val issuingUser = UserId(1)
             val usingUser = UserId(2)
@@ -87,6 +92,4 @@ internal abstract class AbstractUserRepositoryTest {
                 .isTrue()
         }
     }
-
-    abstract fun getTestSetup(): Pair<DatabaseClient, UserRepository>
 }

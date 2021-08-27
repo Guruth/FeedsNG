@@ -1,30 +1,35 @@
 package sh.weller.feedsng.user.impl
 
-import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.runBlocking
-import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.security.crypto.codec.Hex
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
-import sh.weller.feedsng.database.h2.H2UserRepository
 import sh.weller.feedsng.user.api.provided.CreateUserResult
+import sh.weller.feedsng.user.api.provided.UserControlService
+import sh.weller.feedsng.user.api.required.UserRepository
 import strikt.api.expectThat
 import strikt.assertions.isA
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotEqualTo
 import strikt.assertions.isNotNull
 import java.security.MessageDigest
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertIs
 
-
-internal class UserControlServiceImplTest {
+@SpringBootTest(
+    properties = [
+        "spring.r2dbc.url=r2dbc:h2:mem:///~/db/testdb"
+    ]
+)
+internal class UserControlServiceImplTest(
+    @Autowired private val repo: UserRepository,
+    @Autowired private val cut: UserControlService
+) {
 
     @Test
     fun `createUser, enableFeverAPI`() {
-        val (repo, cut) = getTestSetup()
-
         runBlocking {
             val testUsername = "Foobar"
             val testPassword = "BarBazFoo"
@@ -62,14 +67,5 @@ internal class UserControlServiceImplTest {
         md5Digest.update(value.toByteArray())
         val md5Bytes = md5Digest.digest()
         return Hex.encode(md5Bytes).concatToString()
-    }
-
-    private fun getTestSetup(): Pair<sh.weller.feedsng.user.api.required.UserRepository, UserControlServiceImpl> {
-        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
-        val client = DatabaseClient.create(factory)
-        val repo = H2UserRepository(client)
-
-        val cut = UserControlServiceImpl(repo)
-        return repo to cut
     }
 }

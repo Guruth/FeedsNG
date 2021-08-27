@@ -2,8 +2,8 @@ package sh.weller.feedsng.database.h2
 
 import org.springframework.context.annotation.Condition
 import org.springframework.context.annotation.ConditionContext
+import org.springframework.context.annotation.Conditional
 import org.springframework.core.type.AnnotatedTypeMetadata
-
 
 class H2Condition : Condition {
     override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean {
@@ -11,3 +11,6 @@ class H2Condition : Condition {
         return r2dbcURL == null || r2dbcURL.startsWith("r2dbc:h2:")
     }
 }
+
+@Conditional(H2Condition::class)
+annotation class H2RepositoryCondition

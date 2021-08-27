@@ -1,15 +1,16 @@
 package sh.weller.feedsng.database.h2
 
-import io.r2dbc.h2.H2ConnectionFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
 import sh.weller.feedsng.database.AbstractUserRepositoryTest
-import java.util.*
 
-internal class H2UserRepositoryTest : AbstractUserRepositoryTest() {
-    override fun getTestSetup(): Pair<DatabaseClient, H2UserRepository> {
-        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
-        val client = DatabaseClient.create(factory)
-        val repo = H2UserRepository(client)
-        return Pair(client, repo)
-    }
-}
+@SpringBootTest(
+    properties = [
+        "spring.r2dbc.url=r2dbc:h2:mem:///~/db/testdb"
+    ]
+)
+internal class H2UserRepositoryTest(
+    @Autowired databaseClient: DatabaseClient,
+    @Autowired private val userRepository: H2UserRepository
+) : AbstractUserRepositoryTest(databaseClient, userRepository)

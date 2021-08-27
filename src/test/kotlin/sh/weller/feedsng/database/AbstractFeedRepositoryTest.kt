@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.await
 import sh.weller.feedsng.feed.api.provided.*
 import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
@@ -12,20 +13,32 @@ import strikt.api.expectThat
 import strikt.assertions.*
 import strikt.java.time.isAfter
 import java.time.Instant
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 
-internal abstract class AbstractFeedRepositoryTest {
+internal abstract class AbstractFeedRepositoryTest(
+    private val databaseClient: DatabaseClient,
+    private val repository: FeedRepository
+) {
+
+    @BeforeTest
+    fun cleanupDatabase(): Unit = runBlocking {
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.FEED_ITEM").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_GROUP").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_GROUP_FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_FEED_ITEM").await()
+    }
 
     @Test
     fun `insertFeed, getFeed, getFeedWithFeedURL, getAllFeeds`() {
-        val (_, cut) = getTestSetup()
-
         runBlocking {
-            val insertedId = cut.insertFeed(firstTestFeed)
-            cut.insertFeed(secondTestFeed)
+            val insertedId = repository.insertFeed(firstTestFeed)
+            repository.insertFeed(secondTestFeed)
 
-            val queryById = cut.getFeed(insertedId)
+            val queryById = repository.getFeed(insertedId)
             expectThat(queryById)
                 .isNotNull()
                 .and {
@@ -40,7 +53,7 @@ internal abstract class AbstractFeedRepositoryTest {
                         }
                 }
 
-            val queryByFeedURL = cut.getFeedWithFeedURL(firstTestFeed.feedUrl)
+            val queryByFeedURL = repository.getFeedWithFeedURL(firstTestFeed.feedUrl)
             expectThat(queryByFeedURL)
                 .isNotNull()
                 .and {
@@ -55,7 +68,7 @@ internal abstract class AbstractFeedRepositoryTest {
                         }
                 }
 
-            val allFeeds = cut.getAllFeeds().toList()
+            val allFeeds = repository.getAllFeeds().toList()
             expectThat(allFeeds)
                 .isNotEmpty()
                 .and {
@@ -67,16 +80,14 @@ internal abstract class AbstractFeedRepositoryTest {
 
     @Test
     fun `insertFeed, setFeedLastRefreshedTimestamp, getFeed`() {
-        val (_, cut) = getTestSetup()
-
         runBlocking {
-            val insertedId = cut.insertFeed(firstTestFeed)
+            val insertedId = repository.insertFeed(firstTestFeed)
 
             val currentTimestamp = Instant.now()
             delay(500)
 
-            cut.setFeedLastRefreshedTimestamp(insertedId)
-            val feed = cut.getFeed(insertedId)
+            repository.setFeedLastRefreshedTimestamp(insertedId)
+            val feed = repository.getFeed(insertedId)
 
             expectThat(feed)
                 .isNotNull()
@@ -88,26 +99,27 @@ internal abstract class AbstractFeedRepositoryTest {
 
     @Test
     fun `insertFeed, insertFeedItemsIfNotExist, getFeedItems, getFeedItem, getAllFeedItemIdsOfFeed`() {
-        val (_, cut) = getTestSetup()
-
         runBlocking {
-            val feedId = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
+            val feedId = repository.insertFeed(firstTestFeed)
+            val feedItemIds =
+                repository.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(feedItemIds)
                 .isNotEmpty()
                 .hasSize(3)
 
-            val duplicatedItems = cut.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
+            val duplicatedItems =
+                repository.insertFeedItemsIfNotExist(feedId, flowOf(*testFeedItems.toTypedArray())).toList()
             expectThat(duplicatedItems)
                 .isNotEmpty()
                 .containsExactlyInAnyOrder(feedItemIds)
 
-            val allFeedIds = cut.getAllFeedItemIdsOfFeed(feedId).toList()
+            val allFeedIds = repository.getAllFeedItemIdsOfFeed(feedId).toList()
             expectThat(allFeedIds)
                 .isNotEmpty()
                 .containsExactlyInAnyOrder(feedItemIds)
 
-            val feedIdsBefore = cut.getAllFeedItemIdsOfFeed(feedId, before = testFeedItems.last().created).toList()
+            val feedIdsBefore =
+                repository.getAllFeedItemIdsOfFeed(feedId, before = testFeedItems.last().created).toList()
             expectThat(feedIdsBefore)
                 .isNotEmpty()
                 .hasSize(2)
@@ -116,24 +128,22 @@ internal abstract class AbstractFeedRepositoryTest {
 
     @Test
     fun `insertUserGroup, addFeedToUserGroup, getAllUserGroups`() {
-        val (_, cut) = getTestSetup()
-
         runBlocking {
             val firstUser = UserId(1)
             val secondUser = UserId(2)
 
-            val firstGroup = cut.insertUserGroup(firstUser, GroupData("firstGroup", emptyList()))
-            cut.addFeedToUserGroup(firstGroup, FeedId(1))
-            cut.addFeedToUserGroup(firstGroup, FeedId(2))
+            val firstGroup = repository.insertUserGroup(firstUser, GroupData("firstGroup", emptyList()))
+            repository.addFeedToUserGroup(firstGroup, FeedId(1))
+            repository.addFeedToUserGroup(firstGroup, FeedId(2))
 
-            val secondGroup = cut.insertUserGroup(firstUser, GroupData("secondGroup", emptyList()))
-            cut.addFeedToUserGroup(secondGroup, FeedId(3))
+            val secondGroup = repository.insertUserGroup(firstUser, GroupData("secondGroup", emptyList()))
+            repository.addFeedToUserGroup(secondGroup, FeedId(3))
 
-            val thirdGroup = cut.insertUserGroup(secondUser, GroupData("thirdGroup", emptyList()))
-            cut.addFeedToUserGroup(thirdGroup, FeedId(4))
-            cut.addFeedToUserGroup(thirdGroup, FeedId(5))
+            val thirdGroup = repository.insertUserGroup(secondUser, GroupData("thirdGroup", emptyList()))
+            repository.addFeedToUserGroup(thirdGroup, FeedId(4))
+            repository.addFeedToUserGroup(thirdGroup, FeedId(5))
 
-            val userGroups = cut.getAllUserGroups(firstUser).toList()
+            val userGroups = repository.getAllUserGroups(firstUser).toList()
             expectThat(userGroups)
                 .hasSize(2)
                 .and {
@@ -149,21 +159,19 @@ internal abstract class AbstractFeedRepositoryTest {
 
     @Test
     fun `insertFeed, addFeedToUserGroup, addFeedToUser, getAllFeedsOfUser`() {
-        val (_, cut) = getTestSetup()
-
         runBlocking {
             val user = UserId(1)
 
-            val firstFeed = cut.insertFeed(firstTestFeed)
-            val secondFeed = cut.insertFeed(secondTestFeed)
+            val firstFeed = repository.insertFeed(firstTestFeed)
+            val secondFeed = repository.insertFeed(secondTestFeed)
 
-            val firstGroup = cut.insertUserGroup(user, GroupData("firstGroup", emptyList()))
-            cut.addFeedToUserGroup(firstGroup, firstFeed)
-            cut.addFeedToUser(user, secondFeed)
+            val firstGroup = repository.insertUserGroup(user, GroupData("firstGroup", emptyList()))
+            repository.addFeedToUserGroup(firstGroup, firstFeed)
+            repository.addFeedToUser(user, secondFeed)
 
-            cut.insertUserGroup(user, GroupData("emptyGroup", emptyList()))
+            repository.insertUserGroup(user, GroupData("emptyGroup", emptyList()))
 
-            val feeds = cut.getAllFeedsOfUser(user).toList()
+            val feeds = repository.getAllFeedsOfUser(user).toList()
             expectThat(feeds)
                 .hasSize(2)
                 .map { it.feedData.name }
@@ -173,24 +181,23 @@ internal abstract class AbstractFeedRepositoryTest {
 
     @Test
     fun `getAllFeedItemsOfUser, insertFeed, insertFeedItem, updateUserFeedItem`() {
-        val (_, cut) = getTestSetup()
-
         runBlocking {
             val user = UserId(1)
 
-            val firstFeedId = cut.insertFeed(firstTestFeed)
-            val feedItemIds = cut.insertFeedItemsIfNotExist(firstFeedId, flowOf(*testFeedItems.toTypedArray())).toList()
+            val firstFeedId = repository.insertFeed(firstTestFeed)
+            val feedItemIds =
+                repository.insertFeedItemsIfNotExist(firstFeedId, flowOf(*testFeedItems.toTypedArray())).toList()
 
-            val secondFeedId = cut.insertFeed(secondTestFeed)
-            cut.insertFeedItemsIfNotExist(
+            val secondFeedId = repository.insertFeed(secondTestFeed)
+            repository.insertFeedItemsIfNotExist(
                 secondFeedId,
                 flowOf(FeedItemData("Test3", "Test", "asdfasdf", "adfsadf", Instant.now()))
             )
 
-            cut.addFeedToUser(user, firstFeedId)
-            cut.updateFeedItemOfUser(user, flowOf(feedItemIds.first()), FeedUpdateAction.READ)
+            repository.addFeedToUser(user, firstFeedId)
+            repository.updateFeedItemOfUser(user, flowOf(feedItemIds.first()), FeedUpdateAction.READ)
 
-            val userFeedItems = cut.getAllFeedItemsOfUser(
+            val userFeedItems = repository.getAllFeedItemsOfUser(
                 user,
                 listOf(firstFeedId)
             ).toList()
@@ -203,7 +210,7 @@ internal abstract class AbstractFeedRepositoryTest {
                         .containsExactly(false, false, false)
                 }
 
-            val sinceFilteredItems = cut.getAllFeedItemsOfUser(
+            val sinceFilteredItems = repository.getAllFeedItemsOfUser(
                 user,
                 listOf(firstFeedId),
                 FeedItemIdFilter.SinceIdFilter(userFeedItems.last().feedItem.feedItemId)
@@ -211,7 +218,7 @@ internal abstract class AbstractFeedRepositoryTest {
             expectThat(sinceFilteredItems)
                 .hasSize(2)
 
-            val maxFilteredItems = cut.getAllFeedItemsOfUser(
+            val maxFilteredItems = repository.getAllFeedItemsOfUser(
                 user,
                 listOf(firstFeedId),
                 FeedItemIdFilter.MaxIdFilter(userFeedItems.first().feedItem.feedItemId)
@@ -219,7 +226,7 @@ internal abstract class AbstractFeedRepositoryTest {
             expectThat(maxFilteredItems)
                 .hasSize(3)
 
-            val withIdsFilteredItems = cut.getAllFeedItemsOfUser(
+            val withIdsFilteredItems = repository.getAllFeedItemsOfUser(
                 user,
                 listOf(firstFeedId),
                 FeedItemIdFilter.WithIdFilter(userFeedItems.drop(1).map { it.feedItem.feedItemId })
@@ -228,7 +235,7 @@ internal abstract class AbstractFeedRepositoryTest {
                 .hasSize(2)
 
             val limitedUserFeedItems =
-                cut.getAllFeedItemsOfUser(
+                repository.getAllFeedItemsOfUser(
                     user,
                     listOf(firstFeedId),
                     limit = 1
@@ -236,20 +243,18 @@ internal abstract class AbstractFeedRepositoryTest {
             expectThat(limitedUserFeedItems)
                 .hasSize(1)
 
-            val countedFeedItems = cut.countFeedItemsOfFeedOfUser(user, firstFeedId, null)
+            val countedFeedItems = repository.countFeedItemsOfFeedOfUser(user, firstFeedId, null)
             expectThat(countedFeedItems)
                 .isEqualTo(3)
 
-            val countedFeedItemsWitFilter = cut.countFeedItemsOfFeedOfUser(user, firstFeedId, FeedItemFilter.UNREAD)
+            val countedFeedItemsWitFilter =
+                repository.countFeedItemsOfFeedOfUser(user, firstFeedId, FeedItemFilter.UNREAD)
             expectThat(countedFeedItemsWitFilter)
                 .isEqualTo(2)
         }
     }
 
     // TODO Test with Date 0000-12-30T00:00:00Z
-
-
-    abstract fun getTestSetup(): Pair<DatabaseClient, FeedRepository>
 
     private val firstTestFeed = FeedData(
         name = "Test",
@@ -289,5 +294,4 @@ internal abstract class AbstractFeedRepositoryTest {
             created = Instant.now()
         )
     )
-
 }

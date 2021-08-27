@@ -1,8 +1,9 @@
 package sh.weller.feedsng.database.h2
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
-import org.springframework.context.annotation.Conditional
 import org.springframework.r2dbc.core.*
 import org.springframework.stereotype.Repository
 import sh.weller.feedsng.database.*
@@ -11,70 +12,17 @@ import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
 import java.time.Instant
 
-@OptIn(FlowPreview::class)
-@Conditional(H2Condition::class)
+@H2RepositoryCondition
 @Repository
 class H2FeedRepository(
     private val client: DatabaseClient
 ) : FeedRepository {
 
-    init {
-        runBlocking {
-            client.sql(
-                """CREATE TABLE IF NOT EXISTS feed( 
-                    |id SERIAL PRIMARY KEY, 
-                    |name VARCHAR(256), 
-                    |description VARCHAR(2048), 
-                    |feed_url VARCHAR(2048) UNIQUE, 
-                    |site_url VARCHAR(2048), 
-                    |last_updated TIMESTAMP WITH TIME ZONE)""".trimMargin()
-            ).await()
-
-            client.sql(
-                """CREATE TABLE IF NOT EXISTS feed_item( 
-                    |id SERIAL PRIMARY KEY, 
-                    |feed_id INTEGER, 
-                    |title VARCHAR(2048), 
-                    |author VARCHAR(256), 
-                    |html TEXT, 
-                    |item_url VARCHAR(2048), 
-                    |created TIMESTAMP WITH TIME ZONE) """.trimMargin()
-            ).await()
-
-            client.sql(
-                """CREATE TABLE IF NOT EXISTS user_group( 
-                    |id SERIAL PRIMARY KEY, 
-                    |user_id INTEGER, 
-                    |name VARCHAR(256))""".trimMargin()
-            ).await()
-
-            client.sql(
-                """CREATE TABLE IF NOT EXISTS user_group_feed( 
-                    |group_id INTEGER, 
-                    |feed_id INTEGER)""".trimMargin()
-            ).await()
-
-            client.sql(
-                """CREATE TABLE IF NOT EXISTS user_feed( 
-                    |user_id INTEGER, 
-                    |feed_id INTEGER)""".trimMargin()
-            ).await()
-
-            client.sql(
-                """CREATE TABLE IF NOT EXISTS user_feed_item( 
-                    |feed_item_id INTEGER, 
-                    |user_id INTEGER, 
-                    |saved BOOLEAN DEFAULT FALSE, 
-                    |read BOOLEAN DEFAULT FALSE)""".trimMargin()
-            ).await()
-        }
-    }
-
     override suspend fun insertFeed(feedData: FeedData): FeedId =
         client
             .sql(
                 """
-           INSERT INTO feed(
+           INSERT INTO FEEDSNG.feed(
                 name,
                 description,
                 feed_url,
@@ -101,14 +49,14 @@ class H2FeedRepository(
 
     override suspend fun setFeedLastRefreshedTimestamp(feedId: FeedId) =
         client
-            .sql("UPDATE feed SET last_updated = CURRENT_TIMESTAMP WHERE id = :id")
+            .sql("UPDATE FEEDSNG.feed SET last_updated = CURRENT_TIMESTAMP WHERE id = :id")
             .bind("id", feedId.id)
             .await()
 
 
     override suspend fun getFeedWithFeedURL(feedUrl: String): Feed? =
         client
-            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE feed_url = :feed_url")
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM FEEDSNG.feed WHERE feed_url = :feed_url")
             .bind("feed_url", feedUrl)
             .mapToFeed()
             .awaitOneOrNull()
@@ -116,7 +64,7 @@ class H2FeedRepository(
 
     override suspend fun getFeed(feedId: FeedId): Feed? =
         client
-            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE id = :id")
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM FEEDSNG.feed WHERE id = :id")
             .bind("id", feedId.id)
             .mapToFeed()
             .awaitOneOrNull()
@@ -124,7 +72,7 @@ class H2FeedRepository(
 
     override suspend fun getAllFeeds(): Flow<Feed> =
         client
-            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed")
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM FEEDSNG.feed")
             .mapToFeed()
             .flow()
 
@@ -135,7 +83,7 @@ class H2FeedRepository(
                 val feedItemId = client
                     .sql(
                         """
-                    |MERGE INTO feed_item (feed_id, title, author, html, item_url, created) 
+                    |MERGE INTO FEEDSNG.feed_item (feed_id, title, author, html, item_url, created) 
                     |KEY (feed_id, item_url)
                     |VALUES (:feed_id, :title, :author, :html, :item_url, :created)""".trimMargin()
                     )
@@ -156,7 +104,7 @@ class H2FeedRepository(
         client
             .sql(
                 """
-                |SELECT id FROM feed_item 
+                |SELECT id FROM FEEDSNG.feed_item 
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", "createdBefore", "<", before)} 
                 |ORDER BY id DESC
@@ -172,7 +120,7 @@ class H2FeedRepository(
         client
             .sql(
                 """
-                |INSERT INTO user_group (user_id, name)
+                |INSERT INTO FEEDSNG.user_group (user_id, name)
                 |VALUES (:user_id, :name)
             """.trimMargin()
             )
@@ -189,7 +137,7 @@ class H2FeedRepository(
                 """
                 |SELECT 
                 |UG.id, UG.name, UGF.feed_id
-                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |FROM FEEDSNG.user_group AS UG LEFT JOIN FEEDSNG.user_group_feed AS UGF ON UG.id = UGF.group_id 
                 |WHERE UG.user_id = :user_id 
                 |ORDER BY UG.id DESC
                 |""".trimMargin()
@@ -230,7 +178,7 @@ class H2FeedRepository(
 
     override suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId) =
         client
-            .sql("INSERT INTO user_group_feed (group_id, feed_id) VALUES (:group_id, :feed_id)")
+            .sql("INSERT INTO FEEDSNG.user_group_feed (group_id, feed_id) VALUES (:group_id, :feed_id)")
             .bind("group_id", groupId.id)
             .bind("feed_id", feedId.id)
             .await()
@@ -238,7 +186,7 @@ class H2FeedRepository(
 
     override suspend fun addFeedToUser(userId: UserId, feedId: FeedId) =
         client
-            .sql("INSERT INTO user_feed (user_id, feed_id) VALUES (:user_id, :feed_id)")
+            .sql("INSERT INTO FEEDSNG.user_feed (user_id, feed_id) VALUES (:user_id, :feed_id)")
             .bind("user_id", userId.id)
             .bind("feed_id", feedId.id)
             .await()
@@ -250,8 +198,8 @@ class H2FeedRepository(
                 """
                 |SELECT 
                 |F.id, F.name, F.description, F.feed_url, F.site_url, F.last_updated 
-                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
-                |LEFT JOIN feed AS F ON UGF.feed_id = F.id
+                |FROM FEEDSNG.user_group AS UG LEFT JOIN FEEDSNG.user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |LEFT JOIN FEEDSNG.feed AS F ON UGF.feed_id = F.id
                 |WHERE UG.user_id = :user_id 
                 |AND F.id IS NOT NULL
                 |""".trimMargin()
@@ -265,7 +213,7 @@ class H2FeedRepository(
                 """
                 |SELECT 
                 |F.id, F.name, F.description, F.feed_url, F.site_url, F.last_updated 
-                |FROM user_feed AS UF LEFT JOIN feed AS F ON UF.feed_id = F.id
+                |FROM FEEDSNG.user_feed AS UF LEFT JOIN FEEDSNG.feed AS F ON UF.feed_id = F.id
                 |WHERE UF.user_id = :user_id 
             """.trimMargin()
             )
@@ -282,8 +230,8 @@ class H2FeedRepository(
                 """
                 |SELECT 
                 |F.id
-                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
-                |LEFT JOIN feed AS F ON UGF.feed_id = F.id
+                |FROM FEEDSNG.user_group AS UG LEFT JOIN FEEDSNG.user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |LEFT JOIN FEEDSNG.feed AS F ON UGF.feed_id = F.id
                 |WHERE UG.user_id = :user_id 
                 |AND F.id IS NOT NULL
                 |""".trimMargin()
@@ -297,7 +245,7 @@ class H2FeedRepository(
                 """
                 |SELECT 
                 |F.id
-                |FROM user_feed AS UF LEFT JOIN feed AS F ON UF.feed_id = F.id
+                |FROM FEEDSNG.user_feed AS UF LEFT JOIN FEEDSNG.feed AS F ON UF.feed_id = F.id
                 |WHERE UF.user_id = :user_id 
             """.trimMargin()
             )
@@ -323,7 +271,7 @@ class H2FeedRepository(
                     client
                         .sql(
                             """
-                |MERGE INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
+                |MERGE INTO FEEDSNG.user_feed_item (feed_item_id, user_id, $columnToUpdate) 
                 |KEY (feed_item_id, user_id) 
                 |VALUES (:feed_item_id, :user_id, :updateValue) 
             """.trimMargin()
@@ -348,7 +296,7 @@ class H2FeedRepository(
                 """
                 |SELECT 
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
-                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id IN (:feed_ids)
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${feedItemIdFilter.toWhereStatement()} 
@@ -387,7 +335,7 @@ class H2FeedRepository(
             .sql(
                 """
                 |SELECT CAST(COUNT(FI.id) AS Int) as count
-                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id = :feed_id 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${filter.toWhereClause()}
@@ -410,7 +358,7 @@ class H2FeedRepository(
             .sql(
                 """
                 |SELECT FI.id 
-                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |$filterQuery 
@@ -437,7 +385,7 @@ class H2FeedRepository(
                 """
                 |SELECT
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read
-                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id
+                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id
                 |WHERE FI.ID = :feed_item_id
                 |AND FI.feed_id = :feed_id
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)

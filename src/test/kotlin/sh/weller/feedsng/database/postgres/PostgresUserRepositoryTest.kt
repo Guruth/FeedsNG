@@ -1,46 +1,41 @@
 package sh.weller.feedsng.database.postgres
 
-import io.r2dbc.postgresql.PostgresqlConnectionFactory
-import io.r2dbc.postgresql.PostgresqlConnectionFactoryProvider
-import io.r2dbc.spi.ConnectionFactoryOptions
-import kotlinx.coroutines.runBlocking
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.util.TestPropertyValues
+import org.springframework.context.ApplicationContextInitializer
+import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.r2dbc.core.DatabaseClient
-import org.springframework.r2dbc.core.await
+import org.springframework.test.context.ContextConfiguration
 import org.testcontainers.containers.PostgreSQLContainer
 import sh.weller.feedsng.database.AbstractUserRepositoryTest
+import sh.weller.feedsng.database.FlywayContextInitializer
 
-internal class PostgresUserRepositoryTest : AbstractUserRepositoryTest() {
-    private val testSetup: Pair<DatabaseClient, PostgresUserRepository>
+@SpringBootTest
+@ContextConfiguration(
+    initializers = [
+        PostgresUserRepositoryTest.PostgresInitializer::class,
+        FlywayContextInitializer::class
+    ]
+)
+internal class PostgresUserRepositoryTest(
+    @Autowired databaseClient: DatabaseClient,
+    @Autowired feedRepository: PostgresUserRepository
+) : AbstractUserRepositoryTest(databaseClient, feedRepository) {
 
-    init {
-        val postgresContainer = PostgreSQLContainer<Nothing>("postgres")
-        postgresContainer.start()
-
-        val factory = PostgresqlConnectionFactory(
-            PostgresqlConnectionFactoryProvider
-                .builder(
-                    ConnectionFactoryOptions
-                        .parse(
-                            "r2dbc:postgresql://${postgresContainer.username}:${postgresContainer.password}@${postgresContainer.host}:${
-                                postgresContainer.getMappedPort(5432)
-                            }/${postgresContainer.databaseName}"
-                        )
-                )
-                .build()
-        )
-
-        val client = DatabaseClient.create(factory)
-        val repo = PostgresUserRepository(client)
-
-        testSetup = Pair(client, repo)
+    companion object {
+        val postgresContainer = PostgreSQLContainer<Nothing>("postgres").apply {
+            start()
+        }
     }
 
-
-    override fun getTestSetup(): Pair<DatabaseClient, PostgresUserRepository> {
-        runBlocking {
-            testSetup.first.sql("TRUNCATE ACCOUNT").await()
+    class PostgresInitializer : ApplicationContextInitializer<ConfigurableApplicationContext> {
+        override fun initialize(applicationContext: ConfigurableApplicationContext) {
+            TestPropertyValues.of(
+                "spring.r2dbc.url=r2dbc:postgresql://${postgresContainer.host}:${postgresContainer.getMappedPort(5432)}/${postgresContainer.databaseName}",
+                "spring.r2dbc.username=${postgresContainer.username}",
+                "spring.r2dbc.password=${postgresContainer.password}"
+            ).applyTo(applicationContext.environment)
         }
-
-        return testSetup
     }
 }

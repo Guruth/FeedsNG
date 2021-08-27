@@ -1,30 +1,53 @@
 package sh.weller.feedsng.feed.impl
 
-import io.r2dbc.h2.H2ConnectionFactory
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.await
 import sh.weller.feedsng.common.Failure
 import sh.weller.feedsng.common.Success
 import sh.weller.feedsng.common.valueOrNull
-import sh.weller.feedsng.database.h2.H2FeedRepository
+import sh.weller.feedsng.feed.api.provided.FeedControlService
 import sh.weller.feedsng.feed.api.provided.FeedUpdateAction
-import sh.weller.feedsng.feed.rome.RomeFeedFetcherServiceImpl
-import sh.weller.feedsng.feed.rome.RomeOPMLFeedImportServiceImpl
+import sh.weller.feedsng.feed.api.required.FeedRepository
 import sh.weller.feedsng.user.api.provided.UserId
 import strikt.api.expectThat
 import strikt.assertions.*
 import java.io.File
-import java.util.*
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
-internal class FeedControlServiceImplTest {
+
+@SpringBootTest(
+    properties = [
+        "spring.r2dbc.url=r2dbc:h2:mem:///~/db/testdb"
+    ]
+)
+internal class FeedControlServiceImplTest(
+    @Autowired private val databaseClient: DatabaseClient,
+    @Autowired private val repo: FeedRepository,
+    @Autowired private val cut: FeedControlService
+) {
+
+    @BeforeTest
+    fun cleanupDatabase(): Unit = runBlocking {
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.FEED_ITEM").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_GROUP").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_GROUP_FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_FEED_ITEM").await()
+
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.ACCOUNT").await()
+        databaseClient.sql("TRUNCATE TABLE FEEDSNG.INVITE_CODE").await()
+    }
 
     @Test
     fun importFromOPML() {
-        val (repo, cut) = getTestSetup()
         val userId = UserId(1)
         val testFileContents = File(javaClass.classLoader.getResource("ValidOPML.xml")!!.file).readText()
 
@@ -42,7 +65,6 @@ internal class FeedControlServiceImplTest {
 
     @Test
     fun `addGroup, addFeed and addFeedToGroup`() {
-        val (repo, cut) = getTestSetup()
         val userId = UserId(1)
 
         runBlocking {
@@ -73,7 +95,6 @@ internal class FeedControlServiceImplTest {
 
     @Test
     fun `updateGroup, updateFeed, updateFeedItem`() {
-        val (repo, cut) = getTestSetup()
         val userId = UserId(1)
 
         runBlocking {
@@ -109,19 +130,5 @@ internal class FeedControlServiceImplTest {
                     get { isSaved }.isEqualTo(true)
                 }
         }
-    }
-
-
-    private fun getTestSetup(): Pair<sh.weller.feedsng.feed.api.required.FeedRepository, FeedControlServiceImpl> {
-        val factory = H2ConnectionFactory.inMemory(UUID.randomUUID().toString())
-        val client = DatabaseClient.create(factory)
-        val repo = H2FeedRepository(client)
-
-        val fetcher = RomeFeedFetcherServiceImpl()
-
-        val importer = RomeOPMLFeedImportServiceImpl()
-
-        val cut = FeedControlServiceImpl(repo, fetcher, importer)
-        return repo to cut
     }
 }

@@ -58,6 +58,10 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("io.r2dbc:r2dbc-postgresql")
 
+    runtimeOnly("org.springframework:spring-jdbc")
+    runtimeOnly("org.flywaydb:flyway-core")
+    runtimeOnly("org.postgresql:postgresql")
+
     // Misc
     implementation("io.github.microutils:kotlin-logging:2.0.11")
 

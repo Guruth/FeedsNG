@@ -20,7 +20,12 @@ import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertIs
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = [
+        "spring.r2dbc.url=r2dbc:h2:mem:///~/db/testdb"
+    ]
+)
 @AutoConfigureWebTestClient
 class FeverAPIHandlerTest(
     @Autowired private val feedControlService: FeedControlService,
