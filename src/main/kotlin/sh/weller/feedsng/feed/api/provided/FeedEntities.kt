@@ -105,7 +105,7 @@ enum class FeedUpdateAction {
             when (value) {
                 "read" -> READ
                 "unread" -> UNREAD
-                "save" -> SAVE
+                "saved" -> SAVE
                 "unsave" -> UNSAVE
                 else -> null
             }
