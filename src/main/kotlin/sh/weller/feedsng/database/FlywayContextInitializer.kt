@@ -23,7 +23,6 @@ class FlywayContextInitializer : ApplicationContextInitializer<ConfigurableAppli
         }
 
         val properties = Properties()
-        properties["spring.flyway.schemas"] = "FEEDSNG"
         properties["spring.flyway.locations"] = "classpath:db/migration/{vendor}"
         properties.setIfNotNull("spring.flyway.url", flywayURL)
         properties.setIfNotNull("spring.flyway.user", r2dbcUsername)

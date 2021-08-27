@@ -8,9 +8,6 @@ plugins {
     kotlin("kapt") version "1.5.30"
     kotlin("plugin.spring") version "1.5.30"
     kotlin("plugin.serialization") version "1.5.30"
-
-
-    id("io.gitlab.arturbosch.detekt") version "1.18.0"
 }
 
 group = "sh.weller"
@@ -111,14 +108,4 @@ idea {
         isDownloadJavadoc = true
         isDownloadSources = true
     }
-}
-
-
-detekt {
-    buildUponDefaultConfig = true
-    config = files("$projectDir/config/detekt/detekt.yml")
-    baseline = file("$projectDir/config/detekt/baseline.xml")
-}
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
-    jvmTarget = "11"
 }
