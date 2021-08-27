@@ -36,7 +36,7 @@ class FeedUpdateServiceImpl(
     private var isStarted = false
 
     override fun start() {
-        logger.info("Starting to update feeds every ${feedUpdateConfiguration.updateInterval}ms in ${feedUpdateConfiguration.initialDelay}ms")
+        logger.info("Starting to update feeds every ${feedUpdateConfiguration.updateInterval} in ${feedUpdateConfiguration.initialDelay}")
 
         updateTimer = fixedRateTimer(
             initialDelay = feedUpdateConfiguration.initialDelay.toMillis(),
