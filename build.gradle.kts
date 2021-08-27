@@ -1,13 +1,16 @@
 plugins {
     idea
 
-    id("org.springframework.boot") version "2.5.3"
+    id("org.springframework.boot") version "2.5.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
-    kotlin("jvm") version "1.5.21"
-    kotlin("kapt") version "1.5.21"
-    kotlin("plugin.spring") version "1.5.21"
-    kotlin("plugin.serialization") version "1.5.21"
+    kotlin("jvm") version "1.5.30"
+    kotlin("kapt") version "1.5.30"
+    kotlin("plugin.spring") version "1.5.30"
+    kotlin("plugin.serialization") version "1.5.30"
+
+
+    id("io.gitlab.arturbosch.detekt") version "1.18.0"
 }
 
 group = "sh.weller"
@@ -27,7 +30,6 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
-    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions") // Magic Speedup
     implementation("io.projectreactor.tools:blockhound:1.0.6.RELEASE")
 
     // General Spring & Web
@@ -37,8 +39,6 @@ dependencies {
     implementation("org.springframework.session:spring-session-core")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
-    implementation("io.netty:netty-tcnative-boringssl-static")
-
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
 
     // UI
@@ -59,7 +59,7 @@ dependencies {
     implementation("io.r2dbc:r2dbc-postgresql")
 
     // Misc
-    implementation("io.github.microutils:kotlin-logging:2.0.10")
+    implementation("io.github.microutils:kotlin-logging:2.0.11")
 
     // Dev Dependencies
     // developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -107,4 +107,14 @@ idea {
         isDownloadJavadoc = true
         isDownloadSources = true
     }
+}
+
+
+detekt {
+    buildUponDefaultConfig = true
+    config = files("$projectDir/config/detekt/detekt.yml")
+    baseline = file("$projectDir/config/detekt/baseline.xml")
+}
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    jvmTarget = "11"
 }
