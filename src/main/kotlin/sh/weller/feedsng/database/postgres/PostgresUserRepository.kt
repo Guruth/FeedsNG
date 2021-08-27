@@ -18,27 +18,27 @@ class PostgresUserRepository(
 
 
     override suspend fun getByUserId(userId: UserId): User? =
-        client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM FEEDSNG.account WHERE id = :id")
+        client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM account WHERE id = :id")
             .bind("id", userId.id)
             .mapToUser()
             .awaitOneOrNull()
 
     override suspend fun getByUsername(username: String): User? =
-        client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM FEEDSNG.account WHERE username = :username")
+        client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM account WHERE username = :username")
             .bind("username", username)
             .mapToUser()
             .awaitOneOrNull()
 
 
     override suspend fun getFeverAPIAuthentication(feverAPIKeyHash: String): User? =
-        client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM FEEDSNG.account WHERE fever_api_key_hash = :feverAPIKeyHash")
+        client.sql("SELECT id, username, password_hash, fever_api_key_hash FROM account WHERE fever_api_key_hash = :feverAPIKeyHash")
             .bind("feverAPIKeyHash", feverAPIKeyHash)
             .mapToUser()
             .awaitOneOrNull()
 
 
     override suspend fun insertUser(userData: UserData): UserId =
-        client.sql("INSERT INTO FEEDSNG.account(username, password_hash) VALUES (:username, :passwordHash)")
+        client.sql("INSERT INTO account(username, password_hash) VALUES (:username, :passwordHash)")
             .bind("username", userData.username)
             .bind("passwordHash", userData.passwordHash)
             .filter { s -> s.returnGeneratedValues() }
@@ -48,21 +48,21 @@ class PostgresUserRepository(
 
 
     override suspend fun setFeverAPIAuthentication(userId: UserId, feverAPIKeyHash: String) =
-        client.sql("UPDATE FEEDSNG.account SET fever_api_key_hash = :feverApiKeyHash WHERE id = :id")
+        client.sql("UPDATE account SET fever_api_key_hash = :feverApiKeyHash WHERE id = :id")
             .bind("id", userId.id)
             .bind("feverApiKeyHash", feverAPIKeyHash)
             .await()
 
 
     override suspend fun insertInviteCode(issuerUserId: UserId, inviteCode: String) {
-        client.sql("INSERT INTO FEEDSNG.invite_code(issued_by, invite_code) VALUES (:issued_by, :invite_code)")
+        client.sql("INSERT INTO invite_code(issued_by, invite_code) VALUES (:issued_by, :invite_code)")
             .bind("issued_by", issuerUserId.id)
             .bind("invite_code", inviteCode)
             .await()
     }
 
     override suspend fun isInviteCodeUsed(inviteCode: String): Boolean {
-        return client.sql("SELECT (CASE WHEN used_by IS NULL THEN false ELSE true END) as is_used FROM FEEDSNG.invite_code WHERE invite_code = :invite_code")
+        return client.sql("SELECT (CASE WHEN used_by IS NULL THEN false ELSE true END) as is_used FROM invite_code WHERE invite_code = :invite_code")
             .bind("invite_code", inviteCode)
             .map { row -> row.getReified<Boolean>("is_used") }
             .awaitSingleOrNull()
@@ -70,7 +70,7 @@ class PostgresUserRepository(
     }
 
     override suspend fun setInviteCodeUsed(usedByUserId: UserId, inviteCode: String) {
-        client.sql("UPDATE FEEDSNG.invite_code SET used_by = :user_id WHERE invite_code = :invite_code")
+        client.sql("UPDATE invite_code SET used_by = :user_id WHERE invite_code = :invite_code")
             .bind("user_id", usedByUserId.id)
             .bind("invite_code", inviteCode)
             .await()

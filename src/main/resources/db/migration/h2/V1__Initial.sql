@@ -1,7 +1,6 @@
-CREATE SCHEMA IF NOT EXISTS FEEDSNG;
 
 // Feed
-CREATE TABLE FEEDSNG.feed
+CREATE TABLE feed
 (
     id           SERIAL PRIMARY KEY,
     name         VARCHAR(256),
@@ -11,7 +10,7 @@ CREATE TABLE FEEDSNG.feed
     last_updated TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE FEEDSNG.feed_item
+CREATE TABLE feed_item
 (
     id       SERIAL PRIMARY KEY,
     feed_id  INTEGER,
@@ -22,26 +21,26 @@ CREATE TABLE FEEDSNG.feed_item
     created  TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE FEEDSNG.user_group
+CREATE TABLE user_group
 (
     id      SERIAL PRIMARY KEY,
     user_id INTEGER,
     name    VARCHAR(256)
 );
 
-CREATE TABLE FEEDSNG.user_group_feed
+CREATE TABLE user_group_feed
 (
     group_id INTEGER,
     feed_id  INTEGER
 );
 
-CREATE TABLE FEEDSNG.user_feed
+CREATE TABLE user_feed
 (
     user_id INTEGER,
     feed_id INTEGER
 );
 
-CREATE TABLE FEEDSNG.user_feed_item
+CREATE TABLE user_feed_item
 (
     feed_item_id INTEGER,
     user_id      INTEGER,
@@ -50,14 +49,14 @@ CREATE TABLE FEEDSNG.user_feed_item
 );
 
 // User
-CREATE TABLE FEEDSNG.account
+CREATE TABLE account
 (
     id                 SERIAL PRIMARY KEY,
     username           VARCHAR(256) UNIQUE,
     password_hash      VARCHAR(256),
     fever_api_key_hash VARCHAR(2048)
 );
-CREATE TABLE FEEDSNG.invite_code
+CREATE TABLE invite_code
 (
     issued_by   INTEGER,
     invite_code VARCHAR(256) UNIQUE,

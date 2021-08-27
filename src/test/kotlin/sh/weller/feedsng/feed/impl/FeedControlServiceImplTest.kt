@@ -35,15 +35,15 @@ internal class FeedControlServiceImplTest(
 
     @BeforeTest
     fun cleanupDatabase(): Unit = runBlocking {
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.FEED").await()
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.FEED_ITEM").await()
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_GROUP").await()
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_GROUP_FEED").await()
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_FEED").await()
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.USER_FEED_ITEM").await()
+        databaseClient.sql("TRUNCATE TABLE FEED").await()
+        databaseClient.sql("TRUNCATE TABLE FEED_ITEM").await()
+        databaseClient.sql("TRUNCATE TABLE USER_GROUP").await()
+        databaseClient.sql("TRUNCATE TABLE USER_GROUP_FEED").await()
+        databaseClient.sql("TRUNCATE TABLE USER_FEED").await()
+        databaseClient.sql("TRUNCATE TABLE USER_FEED_ITEM").await()
 
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.ACCOUNT").await()
-        databaseClient.sql("TRUNCATE TABLE FEEDSNG.INVITE_CODE").await()
+        databaseClient.sql("TRUNCATE TABLE ACCOUNT").await()
+        databaseClient.sql("TRUNCATE TABLE INVITE_CODE").await()
     }
 
     @Test

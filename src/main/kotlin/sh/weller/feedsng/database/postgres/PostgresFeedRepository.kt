@@ -22,7 +22,7 @@ class PostgresFeedRepository(
         client
             .sql(
                 """
-           INSERT INTO FEEDSNG.feed(
+           INSERT INTO feed(
                 name,
                 description,
                 feed_url,
@@ -49,14 +49,14 @@ class PostgresFeedRepository(
 
     override suspend fun setFeedLastRefreshedTimestamp(feedId: FeedId) =
         client
-            .sql("UPDATE FEEDSNG.feed SET last_updated = CURRENT_TIMESTAMP WHERE id = :id")
+            .sql("UPDATE feed SET last_updated = CURRENT_TIMESTAMP WHERE id = :id")
             .bind("id", feedId.id)
             .await()
 
 
     override suspend fun getFeedWithFeedURL(feedUrl: String): Feed? =
         client
-            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM FEEDSNG.feed WHERE feed_url = :feed_url")
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE feed_url = :feed_url")
             .bind("feed_url", feedUrl)
             .mapToFeed()
             .awaitOneOrNull()
@@ -64,7 +64,7 @@ class PostgresFeedRepository(
 
     override suspend fun getFeed(feedId: FeedId): Feed? =
         client
-            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM FEEDSNG.feed WHERE id = :id")
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed WHERE id = :id")
             .bind("id", feedId.id)
             .mapToFeed()
             .awaitOneOrNull()
@@ -72,7 +72,7 @@ class PostgresFeedRepository(
 
     override suspend fun getAllFeeds(): Flow<Feed> =
         client
-            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM FEEDSNG.feed")
+            .sql("SELECT id, name, description, feed_url, site_url, last_updated FROM feed")
             .mapToFeed()
             .flow()
 
@@ -83,7 +83,7 @@ class PostgresFeedRepository(
                 client
                     .sql(
                         """
-                    |INSERT INTO FEEDSNG.feed_item (feed_id, title, author, html, item_url, created) 
+                    |INSERT INTO feed_item (feed_id, title, author, html, item_url, created) 
                     |VALUES (:feed_id, :title, :author, :html, :item_url, :created)
                     |ON CONFLICT DO NOTHING""".trimMargin()
                     )
@@ -96,7 +96,7 @@ class PostgresFeedRepository(
                     .await()
 
                 val feedItemId =
-                    client.sql("SELECT id FROM FEEDSNG.feed_item WHERE feed_id = :feedId and item_url = :itemURL")
+                    client.sql("SELECT id FROM feed_item WHERE feed_id = :feedId and item_url = :itemURL")
                         .bind("feedId", feedId.id)
                         .bind("itemURL", it.url)
                         .map { row -> row.get("id", Integer::class.java)!!.toInt().toFeedItemId() }
@@ -108,7 +108,7 @@ class PostgresFeedRepository(
         client
             .sql(
                 """
-                |SELECT id FROM FEEDSNG.feed_item 
+                |SELECT id FROM feed_item 
                 |WHERE feed_id = :feed_id 
                 |${andWhereIfNotNull("created", "createdBefore", "<", before)} 
                 |ORDER BY id DESC
@@ -124,7 +124,7 @@ class PostgresFeedRepository(
         client
             .sql(
                 """
-                |INSERT INTO FEEDSNG.user_group (user_id, name)
+                |INSERT INTO user_group (user_id, name)
                 |VALUES (:user_id, :name)
             """.trimMargin()
             )
@@ -141,7 +141,7 @@ class PostgresFeedRepository(
                 """
                 |SELECT 
                 |UG.id, UG.name, UGF.feed_id
-                |FROM FEEDSNG.user_group AS UG LEFT JOIN FEEDSNG.user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
                 |WHERE UG.user_id = :user_id 
                 |ORDER BY UG.id DESC
                 |""".trimMargin()
@@ -182,7 +182,7 @@ class PostgresFeedRepository(
 
     override suspend fun addFeedToUserGroup(groupId: GroupId, feedId: FeedId) =
         client
-            .sql("INSERT INTO FEEDSNG.user_group_feed (group_id, feed_id) VALUES (:group_id, :feed_id)")
+            .sql("INSERT INTO user_group_feed (group_id, feed_id) VALUES (:group_id, :feed_id)")
             .bind("group_id", groupId.id)
             .bind("feed_id", feedId.id)
             .await()
@@ -190,7 +190,7 @@ class PostgresFeedRepository(
 
     override suspend fun addFeedToUser(userId: UserId, feedId: FeedId) =
         client
-            .sql("INSERT INTO FEEDSNG.user_feed (user_id, feed_id) VALUES (:user_id, :feed_id)")
+            .sql("INSERT INTO user_feed (user_id, feed_id) VALUES (:user_id, :feed_id)")
             .bind("user_id", userId.id)
             .bind("feed_id", feedId.id)
             .await()
@@ -202,8 +202,8 @@ class PostgresFeedRepository(
                 """
                 |SELECT 
                 |F.id, F.name, F.description, F.feed_url, F.site_url, F.last_updated 
-                |FROM FEEDSNG.user_group AS UG LEFT JOIN FEEDSNG.user_group_feed AS UGF ON UG.id = UGF.group_id 
-                |LEFT JOIN FEEDSNG.feed AS F ON UGF.feed_id = F.id
+                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |LEFT JOIN feed AS F ON UGF.feed_id = F.id
                 |WHERE UG.user_id = :user_id 
                 |AND F.id IS NOT NULL
                 |""".trimMargin()
@@ -217,7 +217,7 @@ class PostgresFeedRepository(
                 """
                 |SELECT 
                 |F.id, F.name, F.description, F.feed_url, F.site_url, F.last_updated 
-                |FROM FEEDSNG.user_feed AS UF LEFT JOIN FEEDSNG.feed AS F ON UF.feed_id = F.id
+                |FROM user_feed AS UF LEFT JOIN feed AS F ON UF.feed_id = F.id
                 |WHERE UF.user_id = :user_id 
             """.trimMargin()
             )
@@ -234,8 +234,8 @@ class PostgresFeedRepository(
                 """
                 |SELECT 
                 |F.id
-                |FROM FEEDSNG.user_group AS UG LEFT JOIN FEEDSNG.user_group_feed AS UGF ON UG.id = UGF.group_id 
-                |LEFT JOIN FEEDSNG.feed AS F ON UGF.feed_id = F.id
+                |FROM user_group AS UG LEFT JOIN user_group_feed AS UGF ON UG.id = UGF.group_id 
+                |LEFT JOIN feed AS F ON UGF.feed_id = F.id
                 |WHERE UG.user_id = :user_id 
                 |AND F.id IS NOT NULL
                 |""".trimMargin()
@@ -249,7 +249,7 @@ class PostgresFeedRepository(
                 """
                 |SELECT 
                 |F.id
-                |FROM FEEDSNG.user_feed AS UF LEFT JOIN FEEDSNG.feed AS F ON UF.feed_id = F.id
+                |FROM user_feed AS UF LEFT JOIN feed AS F ON UF.feed_id = F.id
                 |WHERE UF.user_id = :user_id 
             """.trimMargin()
             )
@@ -275,7 +275,7 @@ class PostgresFeedRepository(
                     client
                         .sql(
                             """
-                |INSERT INTO FEEDSNG.user_feed_item (feed_item_id, user_id, $columnToUpdate) 
+                |INSERT INTO user_feed_item (feed_item_id, user_id, $columnToUpdate) 
                 |VALUES (:feed_item_id, :user_id, :updateValue) 
                 |ON CONFLICT (feed_item_id, user_id) DO UPDATE SET $columnToUpdate = :updateValue
             """.trimMargin()
@@ -301,7 +301,7 @@ class PostgresFeedRepository(
                 """
                 |SELECT 
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read 
-                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${feedItemIdFilter.toWhereStatement()}
@@ -341,7 +341,7 @@ class PostgresFeedRepository(
             .sql(
                 """
                 |SELECT COUNT(FI.id) as count
-                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |${filter.toWhereClause()}
@@ -364,7 +364,7 @@ class PostgresFeedRepository(
             .sql(
                 """
                 |SELECT FI.id 
-                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id 
                 |WHERE FI.feed_id IN (:feed_ids) 
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL) 
                 |$filterQuery 
@@ -391,7 +391,7 @@ class PostgresFeedRepository(
                 """
                 |SELECT
                 |FI.id, FI.feed_id, FI.title, FI.author, FI.html, FI.item_url, FI.created, UFI.saved, UFI.read
-                |FROM FEEDSNG.feed_item AS FI LEFT JOIN FEEDSNG.user_feed_item AS UFI ON FI.id = UFI.feed_item_id
+                |FROM feed_item AS FI LEFT JOIN user_feed_item AS UFI ON FI.id = UFI.feed_item_id
                 |WHERE FI.ID = :feed_item_id
                 |AND FI.feed_id = :feed_id
                 |AND (UFI.user_id = :user_id OR UFI.user_id IS NULL)
