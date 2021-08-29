@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/src/main/kotlin/sh/weller/feedsng/database/h2/H2FeedRepository.kt" dialect="H2" />
+    <file url="file://$PROJECT_DIR$/src/main/kotlin/sh/weller/feedsng/database/h2/H2UserRepository.kt" dialect="H2" />
+    <file url="file://$PROJECT_DIR$/src/main/kotlin/sh/weller/feedsng/database/postgres/PostgresFeedRepository.kt" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/kotlin/sh/weller/feedsng/database/postgres/PostgresUserRepository.kt" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/h2/V1__Initial.sql" dialect="H2" />
+    <file url="file://$PROJECT_DIR$/src/main/resources/db/migration/postgresql/V1__Initial.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/test/kotlin/sh/weller/feedsng/database/AbstractFeedRepositoryTest.kt" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/src/test/kotlin/sh/weller/feedsng/database/AbstractUserRepositoryTest.kt" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/src/test/kotlin/sh/weller/feedsng/database/postgres/PostgresFeedRepositoryTest.kt" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/test/kotlin/sh/weller/feedsng/database/postgres/PostgresUserRepositoryTest.kt" dialect="PostgreSQL" />
+  </component>
+</project>
