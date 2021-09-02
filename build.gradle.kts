@@ -24,7 +24,7 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
     implementation("io.projectreactor.tools:blockhound:1.0.6.RELEASE")
