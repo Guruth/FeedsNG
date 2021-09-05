@@ -4,11 +4,14 @@ plugins {
     id("org.springframework.boot") version "2.5.4"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
-    kotlin("jvm") version "1.5.30"
-    kotlin("kapt") version "1.5.30"
-    kotlin("plugin.spring") version "1.5.30"
-    kotlin("plugin.serialization") version "1.5.30"
+
+    val kotlinCompilerVersion = "1.5.30"
+    kotlin("jvm") version kotlinCompilerVersion
+    kotlin("kapt") version kotlinCompilerVersion
+    kotlin("plugin.spring") version kotlinCompilerVersion
+    kotlin("plugin.serialization") version kotlinCompilerVersion
 }
+
 
 group = "sh.weller"
 version = "0.0.1-SNAPSHOT"
@@ -23,10 +26,12 @@ dependencies {
     implementation(kotlin("reflect"))
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:1.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
+    val kotlinCoroutinesVersion = "1.5.2"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:$kotlinCoroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$kotlinCoroutinesVersion")
+
     implementation("io.projectreactor.tools:blockhound:1.0.6.RELEASE")
 
     // General Spring & Web
@@ -45,8 +50,9 @@ dependencies {
     implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
 
     // RSS
-    implementation("com.rometools:rome:1.16.0")
-    implementation("com.rometools:rome-opml:1.16.0")
+    val romeToolsVersion = "1.16.0"
+    implementation("com.rometools:rome:$romeToolsVersion")
+    implementation("com.rometools:rome-opml:$romeToolsVersion")
 
     // Database
     implementation("org.springframework:spring-r2dbc")
@@ -73,13 +79,15 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    testImplementation("org.testcontainers:testcontainers:1.16.0")
-    testImplementation("org.testcontainers:postgresql:1.16.0")
+    val testContainersVersion = "1.16.0"
+    testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
+    testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutinesVersion")
 
-    testImplementation("io.strikt:strikt-core:0.31.0")
-    testImplementation("io.strikt:strikt-jvm:0.31.0")
+    val striktVersion = "0.32.0"
+    testImplementation("io.strikt:strikt-core:$striktVersion")
+    testImplementation("io.strikt:strikt-jvm:$striktVersion")
 }
 
 tasks {
