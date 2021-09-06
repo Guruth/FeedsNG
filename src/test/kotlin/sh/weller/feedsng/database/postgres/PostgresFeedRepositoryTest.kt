@@ -1,5 +1,7 @@
 package sh.weller.feedsng.database.postgres
 
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.util.TestPropertyValues
@@ -19,6 +21,7 @@ import sh.weller.feedsng.database.FlywayContextInitializer
         FlywayContextInitializer::class
     ]
 )
+@EnabledOnOs(OS.LINUX)
 internal class PostgresFeedRepositoryTest(
     @Autowired databaseClient: DatabaseClient,
     @Autowired feedRepository: PostgresFeedRepository

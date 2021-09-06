@@ -76,7 +76,9 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     // testImplementation("org.springframework.security:spring-security-test")
 
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-common"))
+    testImplementation(kotlin("test-annotations-common"))
+    testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     val testContainersVersion = "1.16.0"
