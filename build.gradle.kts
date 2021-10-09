@@ -1,11 +1,11 @@
 plugins {
     idea
 
-    id("org.springframework.boot") version "2.5.4"
+    id("org.springframework.boot") version "2.5.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
 
 
-    val kotlinCompilerVersion = "1.5.30"
+    val kotlinCompilerVersion = "1.5.31"
     kotlin("jvm") version kotlinCompilerVersion
     kotlin("kapt") version kotlinCompilerVersion
     kotlin("plugin.spring") version kotlinCompilerVersion
@@ -41,13 +41,13 @@ dependencies {
     implementation("org.springframework.session:spring-session-core")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-logging")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
 
     // UI
     implementation("org.springframework.boot:spring-boot-starter-mustache")
-    implementation("org.webjars:webjars-locator:0.41")
-    implementation("org.webjars.npm:bulma:0.9.2")
-    implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.3")
+    implementation("org.webjars:webjars-locator:0.42")
+    implementation("org.webjars.npm:bulma:0.9.3")
+    implementation("org.webjars.npm:fortawesome__fontawesome-free:5.15.4")
 
     // RSS
     val romeToolsVersion = "1.16.0"
