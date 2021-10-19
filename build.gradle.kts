@@ -81,7 +81,7 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    val testContainersVersion = "1.16.0"
+    val testContainersVersion = "1.16.1"
     testImplementation("org.testcontainers:testcontainers:$testContainersVersion")
     testImplementation("org.testcontainers:postgresql:$testContainersVersion")
 
