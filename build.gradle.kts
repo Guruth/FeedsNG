@@ -66,7 +66,7 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     // Misc
-    implementation("io.github.microutils:kotlin-logging:2.0.11")
+    implementation("io.github.microutils:kotlin-logging:2.1.16")
 
     // Dev Dependencies
     // developmentOnly("org.springframework.boot:spring-boot-devtools")
