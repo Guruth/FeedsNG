@@ -26,7 +26,7 @@ dependencies {
     implementation(kotlin("reflect"))
 
     // Coroutines
-    val kotlinCoroutinesVersion = "1.6.0"
+    val kotlinCoroutinesVersion = "1.7.3"
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinCoroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinCoroutinesVersion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-debug:$kotlinCoroutinesVersion")
