@@ -2,7 +2,7 @@ plugins {
     idea
 
     id("org.springframework.boot") version "2.6.2"
-    id("io.spring.dependency-management") version "1.0.11.RELEASE"
+    id("io.spring.dependency-management") version "1.1.3"
 
 
     val kotlinCompilerVersion = "1.5.31"
